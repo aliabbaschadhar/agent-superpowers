@@ -1,0 +1,33 @@
+# Source and tooling
+src/
+scripts/
+test/
+.github/
+.vscode/
+.eslintrc.json
+tsconfig.json
+tsconfig.test.json
+esbuild.config.js
+*.tgz
+
+# Node modules (esbuild bundles everything into dist/)
+node_modules/
+npm-debug.log
+package-lock.json
+
+# Generated artifacts that should not double-ship
+out/
+test-out/
+
+# Development files
+.gitignore
+*.map
+
+# Keep in vsix:
+# dist/extension.js
+# assets/
+# media/
+# package.json
+# README.md
+# CHANGELOG.md
+# LICENSE

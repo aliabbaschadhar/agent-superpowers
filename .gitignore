@@ -1,0 +1,8 @@
+node_modules/
+dist/
+assets/
+out/
+test-out/
+*.vsix
+.vscode-test/
+npm-debug.log*

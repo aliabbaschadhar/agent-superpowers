@@ -1,0 +1,186 @@
+{
+  "name": "agent-superpowers",
+  "displayName": "AI Agent Skills",
+  "description": "Browse, preview, and install 900+ AI agent skills for Claude Code, Cursor, GitHub Copilot, and more.",
+  "version": "1.0.0",
+  "publisher": "aliabbaschadhar",
+  "license": "MIT",
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aliabbaschadhar/ai-agent-skills-extension"
+  },
+  "homepage": "https://github.com/aliabbaschadhar/ai-agent-skills-extension#readme",
+  "bugs": {
+    "url": "https://github.com/aliabbaschadhar/ai-agent-skills-extension/issues"
+  },
+  "keywords": [
+    "claude-code",
+    "cursor",
+    "copilot",
+    "ai-skills",
+    "agentic",
+    "skill-picker",
+    "llm",
+    "ai-agent",
+    "gemini-cli"
+  ],
+  "categories": ["AI", "Other", "Snippets"],
+  "engines": { "vscode": "^1.85.0" },
+  "main": "./dist/extension.js",
+  "activationEvents": ["onStartupFinished"],
+  "contributes": {
+    "commands": [
+      {
+        "command": "aiSkills.browse",
+        "title": "Browse & Copy Skill ID",
+        "category": "AI Skills"
+      },
+      {
+        "command": "aiSkills.install",
+        "title": "Install Skill to Agent",
+        "category": "AI Skills"
+      },
+      {
+        "command": "aiSkills.preview",
+        "title": "Preview Skill Content",
+        "category": "AI Skills",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "aiSkills.copyId",
+        "title": "Copy Skill ID",
+        "category": "AI Skills",
+        "icon": "$(clippy)"
+      },
+      {
+        "command": "aiSkills.installFromTree",
+        "title": "Install from Sidebar",
+        "category": "AI Skills",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "aiSkills.refreshTree",
+        "title": "Refresh Skills Tree",
+        "category": "AI Skills",
+        "icon": "$(refresh)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "aiSkillsContainer",
+          "title": "AI Agent Skills",
+          "icon": "media/sidebar-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "aiSkillsContainer": [
+        {
+          "id": "aiSkillsTree",
+          "name": "Skills",
+          "type": "tree"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "aiSkills.browse",
+          "when": "view == aiSkillsTree",
+          "group": "navigation@1"
+        },
+        {
+          "command": "aiSkills.refreshTree",
+          "when": "view == aiSkillsTree",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "aiSkills.preview",
+          "when": "view == aiSkillsTree && viewItem == skill",
+          "group": "inline@1"
+        },
+        {
+          "command": "aiSkills.copyId",
+          "when": "view == aiSkillsTree && viewItem == skill",
+          "group": "inline@2"
+        },
+        {
+          "command": "aiSkills.installFromTree",
+          "when": "view == aiSkillsTree && viewItem == skill",
+          "group": "inline@3"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "aiSkills.browse",
+        "key": "ctrl+shift+/",
+        "mac": "cmd+shift+/"
+      }
+    ],
+    "configuration": {
+      "title": "AI Agent Skills",
+      "properties": {
+        "aiSkills.defaultAgent": {
+          "type": "string",
+          "enum": ["auto", "claude", "cursor", "copilot", "generic"],
+          "default": "auto",
+          "description": "Default install target. 'auto' detects from the running editor."
+        },
+        "aiSkills.claudeSkillsPath": {
+          "type": "string",
+          "default": "",
+          "description": "Override directory for Claude Code skills. Leave empty for ~/.claude/skills."
+        },
+        "aiSkills.cursorScope": {
+          "type": "string",
+          "enum": ["project", "global"],
+          "default": "project",
+          "description": "Install Cursor rules at project (.cursor/rules/) or global level (~/.cursor/rules/)."
+        },
+        "aiSkills.confirmOverwrite": {
+          "type": "boolean",
+          "default": true,
+          "description": "Ask before overwriting an already-installed skill file."
+        },
+        "aiSkills.showRiskBadge": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show risk level badge in the skill QuickPick list."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "prebuild": "node scripts/prebuild.js",
+    "compile": "node esbuild.config.js",
+    "compile:watch": "node esbuild.config.js --watch",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "pretest": "node scripts/prebuild.js && node esbuild.config.js && tsc -p tsconfig.test.json",
+    "test": "node ./test-out/test/runTests.js",
+    "vscode:prepublish": "node scripts/prebuild.js && node esbuild.config.js --production",
+    "package": "npm run vscode:prepublish && vsce package --no-dependencies",
+    "publish": "vsce publish --no-dependencies",
+    "clean": "rimraf dist assets test-out"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "@vscode/test-electron": "^2.3.9",
+    "@vscode/vsce": "^2.24.0",
+    "esbuild": "^0.20.1",
+    "eslint": "^8.57.0",
+    "glob": "^10.3.10",
+    "mocha": "^10.3.0",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.3.3"
+  }
+}
