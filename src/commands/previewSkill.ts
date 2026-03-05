@@ -38,8 +38,11 @@ export function registerPreviewCommand(
 
       const filePath = manager.contentPath(skill);
       try {
-        const uri = vscode.Uri.file(filePath);
-        await vscode.commands.executeCommand('markdown.showPreviewToSide', uri);
+        await vscode.window.showTextDocument(vscode.Uri.file(filePath), {
+          viewColumn: vscode.ViewColumn.Beside,
+          preview: true,
+          preserveFocus: true,
+        });
       } catch {
         vscode.window.showErrorMessage(
           `AI Skills: Could not open SKILL.md for '${resolvedId}'.`
