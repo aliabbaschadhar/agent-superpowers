@@ -143,7 +143,14 @@ export function registerInstallFromTreeCommand(
 ): vscode.Disposable {
   return vscode.commands.registerCommand(
     'aiSkills.installFromTree',
-    async (skillId?: string) => {
+    async (item?: any) => {
+      // item is a SkillItem from the tree context
+      let skillId: string | undefined;
+      if (item && typeof item === 'object' && 'skill' in item) {
+        skillId = item.skill.id;
+      } else if (typeof item === 'string') {
+        skillId = item;
+      }
       await vscode.commands.executeCommand('aiSkills.install', skillId);
     }
   );
