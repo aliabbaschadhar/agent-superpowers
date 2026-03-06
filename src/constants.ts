@@ -1,6 +1,9 @@
 /** Remote Syncing */
-export const REMOTE_INDEX_URL = 'https://raw.githubusercontent.com/aliabbaschadhar/agent-superpowers/main/assets/skills_index.json';
-export const REMOTE_BASE_URL = 'https://raw.githubusercontent.com/aliabbaschadhar/agent-superpowers/main/assets/';
+export const REMOTE_INDEX_URL = 'https://raw.githubusercontent.com/sickn33/antigravity-awesome-skills/main/skills_index.json';
+
+// Trailing slash so `${REMOTE_BASE_URL}${skill.path}/SKILL.md` concatenates correctly.
+// skill.path from the antigravity index is relative, e.g. "skills/bug-hunter"
+export const REMOTE_BASE_URL = 'https://raw.githubusercontent.com/sickn33/antigravity-awesome-skills/main/';
 
 /** UI / display */
 export const DESCRIPTION_TRUNCATE_LENGTH = 60;

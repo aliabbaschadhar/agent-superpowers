@@ -14,11 +14,11 @@ jobs:
       - name: Checkout agent-superpowers
         uses: actions/checkout@v4
 
-      - name: Checkout ai-skills (source of truth)
+      - name: Checkout antigravity-awesome-skills (source of truth)
         uses: actions/checkout@v4
         with:
-          repository: aliabbaschadhar/ai-skills # change if private: add token
-          path: ai-skills-repo
+          repository: sickn33/antigravity-awesome-skills
+          path: antigravity-skills-repo
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -28,7 +28,7 @@ jobs:
       - name: Run prebuild
         run: node scripts/prebuild.js
         env:
-          AI_SKILLS_ROOT: ${{ github.workspace }}/ai-skills-repo
+          AI_SKILLS_ROOT: ${{ github.workspace }}/antigravity-skills-repo
 
       - name: Commit updated assets
         run: |

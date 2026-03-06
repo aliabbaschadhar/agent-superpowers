@@ -5,11 +5,11 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-// Extension is at Work/agent-superpowers/; skills repo is at Work/ai-skills/.
-// Support CI override via env var, fall back to the sibling ai-skills directory.
+// Extension is at Work/agent-superpowers/; skills repo is expected at Work/antigravity-awesome-skills/.
+// Support CI override via env var (set by sync-assets.yml), or fall back to the sibling clone.
 const AI_SKILLS_ROOT =
   process.env.AI_SKILLS_ROOT ||
-  path.resolve(__dirname, '..', '..', 'ai-skills');
+  path.resolve(__dirname, '..', '..', 'antigravity-awesome-skills');
 
 const SKILLS_INDEX = path.join(AI_SKILLS_ROOT, 'skills_index.json');
 const ASSETS_DIR = path.join(__dirname, '..', 'assets');
