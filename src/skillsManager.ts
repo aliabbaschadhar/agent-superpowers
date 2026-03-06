@@ -16,7 +16,7 @@ export class SkillsManager {
   private skills: SkillEntry[] = [];
   private readonly assetsPath: string;
 
-  constructor(private readonly context: vscode.ExtensionContext) {
+  constructor(context: vscode.ExtensionContext) {
     this.assetsPath = path.join(context.extensionPath, 'assets');
   }
 

@@ -3,6 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 // Extension is at Work/agent-superpowers/; skills repo is at Work/ai-skills/.
 // Support CI override via env var, fall back to the sibling ai-skills directory.
@@ -66,6 +67,11 @@ function run() {
   );
 
   console.log('[prebuild] manifest.json written.');
+
+  // Always re-categorize after copying the index, since the upstream
+  // ai-skills repo ships most skills as "uncategorized".
+  console.log('[prebuild] Running skill categorization...');
+  execSync(`node ${path.join(__dirname, 'categorize-skills.js')}`, { stdio: 'inherit' });
 }
 
 run();

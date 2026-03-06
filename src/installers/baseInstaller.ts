@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 import { InstallOptions, InstallResult } from './types';
+import { logError } from '../logger';
 
 export abstract class BaseInstaller {
   abstract label: string;
@@ -38,6 +39,7 @@ export abstract class BaseInstaller {
       return { success: true, destPath, message: `Installed to ${destPath}` };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
+      logError(`Install failed for '${opts.skillId}'`, err);
       return { success: false, destPath, message: `Failed: ${msg}` };
     }
   }

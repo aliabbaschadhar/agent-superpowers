@@ -1,6 +1,6 @@
 {
   "name": "agent-superpowers",
-  "displayName": "AI Agent Skills",
+  "displayName": "AI Agent Superpowers",
   "description": "Browse, preview, and install 900+ AI agent skills for Claude Code, Cursor, GitHub Copilot, and more.",
   "version": "1.0.0",
   "publisher": "aliabbaschadhar",
@@ -8,11 +8,11 @@
   "icon": "media/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/aliabbaschadhar/ai-agent-skills-extension"
+    "url": "https://github.com/aliabbaschadhar/agent-superpowers"
   },
-  "homepage": "https://github.com/aliabbaschadhar/ai-agent-skills-extension#readme",
+  "homepage": "https://github.com/aliabbaschadhar/agent-superpowers#readme",
   "bugs": {
-    "url": "https://github.com/aliabbaschadhar/ai-agent-skills-extension/issues"
+    "url": "https://github.com/aliabbaschadhar/agent-superpowers/issues"
   },
   "keywords": [
     "claude-code",
@@ -42,6 +42,12 @@
         "category": "AI Skills"
       },
       {
+        "command": "aiSkills.uninstall",
+        "title": "Uninstall Skill",
+        "category": "AI Skills",
+        "icon": "$(trash)"
+      },
+      {
         "command": "aiSkills.preview",
         "title": "Preview Skill Content",
         "category": "AI Skills",
@@ -64,6 +70,12 @@
         "title": "Refresh Skills Tree",
         "category": "AI Skills",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "aiSkills.filterTree",
+        "title": "Filter Skills",
+        "category": "AI Skills",
+        "icon": "$(filter)"
       }
     ],
     "viewsContainers": {
@@ -87,14 +99,19 @@
     "menus": {
       "view/title": [
         {
-          "command": "aiSkills.browse",
+          "command": "aiSkills.filterTree",
           "when": "view == aiSkillsTree",
           "group": "navigation@1"
         },
         {
-          "command": "aiSkills.refreshTree",
+          "command": "aiSkills.browse",
           "when": "view == aiSkillsTree",
           "group": "navigation@2"
+        },
+        {
+          "command": "aiSkills.refreshTree",
+          "when": "view == aiSkillsTree",
+          "group": "navigation@3"
         }
       ],
       "view/item/context": [
@@ -112,6 +129,11 @@
           "command": "aiSkills.installFromTree",
           "when": "view == aiSkillsTree && viewItem == skill",
           "group": "inline@3"
+        },
+        {
+          "command": "aiSkills.uninstall",
+          "when": "view == aiSkillsTree && viewItem == skill",
+          "group": "inline@4"
         }
       ]
     },
@@ -151,6 +173,13 @@
           "type": "boolean",
           "default": true,
           "description": "Show risk level badge in the skill QuickPick list."
+        },
+        "aiSkills.autoPasteDelayMs": {
+          "type": "number",
+          "default": 80,
+          "minimum": 0,
+          "maximum": 2000,
+          "description": "Delay in milliseconds between focus and paste when sending a skill ID to Claude Code chat. Increase on slower machines."
         }
       }
     }
@@ -170,16 +199,16 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
-    "@types/node": "^20.11.0",
+    "@types/node": "^25.3.3",
     "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
     "@vscode/test-electron": "^2.3.9",
-    "@vscode/vsce": "^2.24.0",
-    "esbuild": "^0.20.1",
-    "eslint": "^8.57.0",
-    "glob": "^10.3.10",
-    "mocha": "^10.3.0",
+    "@vscode/vsce": "^3.7.1",
+    "esbuild": "^0.27.3",
+    "eslint": "^10.0.1",
+    "glob": "^13.0.5",
+    "mocha": "^11.7.4",
     "rimraf": "^5.0.5",
     "typescript": "^5.3.3"
   }

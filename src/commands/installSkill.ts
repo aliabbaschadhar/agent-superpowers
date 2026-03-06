@@ -5,14 +5,17 @@ import { ClaudeInstaller } from '../installers/claudeInstaller';
 import { CursorInstaller } from '../installers/cursorInstaller';
 import { CopilotInstaller } from '../installers/copilotInstaller';
 import { GenericInstaller } from '../installers/genericInstaller';
-import { InstallOptions } from '../installers/types';
+import { InstallOptions, InstallResult } from '../installers/types';
+import { ERR_SKILL_NOT_FOUND, ERR_CONTENT_MISSING } from '../constants';
+import { RecentSkills } from '../recentSkills';
 
 interface AgentOption extends vscode.QuickPickItem {
   id: string;
 }
 
 export function registerInstallCommand(
-  manager: SkillsManager
+  manager: SkillsManager,
+  recentSkills: RecentSkills
 ): vscode.Disposable {
   return vscode.commands.registerCommand(
     'aiSkills.install',
@@ -33,17 +36,13 @@ export function registerInstallCommand(
 
       const skill = manager.findById(resolvedId);
       if (!skill) {
-        vscode.window.showErrorMessage(
-          `AI Skills: Skill '${resolvedId}' not found in index.`
-        );
+        vscode.window.showErrorMessage(ERR_SKILL_NOT_FOUND(resolvedId));
         return;
       }
 
       const content = manager.readContent(skill);
       if (!content) {
-        vscode.window.showErrorMessage(
-          `AI Skills: Content for skill '${resolvedId}' is missing from bundle.`
-        );
+        vscode.window.showErrorMessage(ERR_CONTENT_MISSING(resolvedId));
         return;
       }
 
@@ -95,28 +94,38 @@ export function registerInstallCommand(
         workspaceRoot,
       };
 
-      let result;
-      switch (agentChoice.id) {
-        case 'claude':
-          result = await new ClaudeInstaller().install(opts);
-          break;
-        case 'cursor-project':
-          result = await new CursorInstaller(false).install(opts);
-          break;
-        case 'cursor-global':
-          result = await new CursorInstaller(true).install(opts);
-          break;
-        case 'copilot':
-          result = await new CopilotInstaller().install(opts);
-          break;
-        case 'generic':
-          result = await new GenericInstaller().install(opts);
-          break;
-        default:
-          return;
-      }
+      let result: InstallResult | undefined;
+      await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: `Installing '${resolvedId}'…`,
+          cancellable: false,
+        },
+        async () => {
+          switch (agentChoice.id) {
+            case 'claude':
+              result = await new ClaudeInstaller().install(opts);
+              break;
+            case 'cursor-project':
+              result = await new CursorInstaller(false).install(opts);
+              break;
+            case 'cursor-global':
+              result = await new CursorInstaller(true).install(opts);
+              break;
+            case 'copilot':
+              result = await new CopilotInstaller().install(opts);
+              break;
+            case 'generic':
+              result = await new GenericInstaller().install(opts);
+              break;
+          }
+        }
+      );
+
+      if (!result) { return; }
 
       if (result.success) {
+        recentSkills.add(resolvedId);
         const action = await vscode.window.showInformationMessage(
           result.message,
           'Open File'
@@ -137,13 +146,16 @@ export function registerInstallCommand(
   );
 }
 
+/** Argument shapes that VSCode may pass from tree context menus */
+type TreeItemArg = { skill: { id: string } } | string | undefined;
+
 /** Also register the tree-context install command (same handler, different command id). */
 export function registerInstallFromTreeCommand(
-  manager: SkillsManager
+  _manager: SkillsManager
 ): vscode.Disposable {
   return vscode.commands.registerCommand(
     'aiSkills.installFromTree',
-    async (item?: any) => {
+    async (item?: TreeItemArg) => {
       // item is a SkillItem from the tree context
       let skillId: string | undefined;
       if (item && typeof item === 'object' && 'skill' in item) {

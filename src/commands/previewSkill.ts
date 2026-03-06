@@ -1,20 +1,28 @@
 import * as vscode from 'vscode';
 import { SkillsManager } from '../skillsManager';
+import { ERR_SKILL_NOT_FOUND, ERR_OPEN_FILE } from '../constants';
+
+/** Argument shapes that VSCode may pass to the preview command */
+type SkillArgument =
+  | string
+  | { skill: { id: string } }
+  | { id: string }
+  | undefined;
 
 export function registerPreviewCommand(
   manager: SkillsManager
 ): vscode.Disposable {
   return vscode.commands.registerCommand(
     'aiSkills.preview',
-    async (skillId?: string | any) => {
+    async (arg?: SkillArgument) => {
       // VS Code may pass the SkillItem tree node instead of the string id
       let resolvedId: string | undefined;
-      if (typeof skillId === 'string') {
-        resolvedId = skillId;
-      } else if (skillId?.skill?.id) {
-        resolvedId = skillId.skill.id;
-      } else if (skillId?.id && typeof skillId.id === 'string') {
-        resolvedId = skillId.id;
+      if (typeof arg === 'string') {
+        resolvedId = arg;
+      } else if (arg && typeof arg === 'object' && 'skill' in arg) {
+        resolvedId = arg.skill.id;
+      } else if (arg && typeof arg === 'object' && 'id' in arg && typeof arg.id === 'string') {
+        resolvedId = arg.id;
       }
 
       if (!resolvedId) {
@@ -30,9 +38,7 @@ export function registerPreviewCommand(
 
       const skill = manager.findById(resolvedId);
       if (!skill) {
-        vscode.window.showErrorMessage(
-          `AI Skills: Skill '${resolvedId}' not found.`
-        );
+        vscode.window.showErrorMessage(ERR_SKILL_NOT_FOUND(resolvedId));
         return;
       }
 
@@ -44,9 +50,7 @@ export function registerPreviewCommand(
           preserveFocus: true,
         });
       } catch {
-        vscode.window.showErrorMessage(
-          `AI Skills: Could not open SKILL.md for '${resolvedId}'.`
-        );
+        vscode.window.showErrorMessage(ERR_OPEN_FILE(resolvedId));
       }
     }
   );

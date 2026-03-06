@@ -614,9 +614,25 @@ const CATEGORY_RULES = [
 ];
 
 /**
+ * Remap legacy or vendor-specific category names that arrive from the upstream
+ * ai-skills repo into the canonical category names used by this extension.
+ * Applied BEFORE the "keep existing" guard, so these always get normalized.
+ */
+const CATEGORY_REMAP = {
+  'libreoffice': 'office-productivity',
+  'general': 'uncategorized',       // normalise to the standard fallback
+  'meta': 'uncategorized',          // upstream "meta" bucket → let rules decide
+};
+
+/**
  * Determine a category for a given skill entry.
  */
 function categorize(skill) {
+  // Normalise any legacy / upstream category names first
+  if (skill.category && CATEGORY_REMAP[skill.category]) {
+    skill.category = CATEGORY_REMAP[skill.category];
+  }
+
   // Keep explicitly categorized skills (not a catch-all) as is
   if (skill.category && skill.category !== 'uncategorized' && skill.category !== 'general') {
     return skill.category;
