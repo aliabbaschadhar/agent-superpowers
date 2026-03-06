@@ -22,14 +22,14 @@ jobs:
 
       - name: Fetch ai-skills data
         run: |
-          git clone --depth=1 https://github.com/aliabbaschadhar/ai-skills.git /tmp/ai-skills || \
-          git clone --depth=1 https://github.com/sickn33/antigravity-awesome-skills.git /tmp/ai-skills
+          git clone --depth=1 https://github.com/aliabbaschadhar/antigravity-awesome-skills.git /tmp/agent-superpowers || \
+          git clone --depth=1 https://github.com/sickn33/antigravity-awesome-skills.git /tmp/agent-superpowers
         continue-on-error: true
 
       - name: Run prebuild
         run: node scripts/prebuild.js
         env:
-          AI_SKILLS_ROOT: /tmp/ai-skills
+          AI_SKILLS_ROOT: /tmp/agent-superpowers
 
       - name: Build production bundle
         run: node esbuild.config.js --production

@@ -25,6 +25,7 @@ jobs:
         # In CI the parent ai-skills repo is not present at ../
         # Clone it to /tmp/ai-skills and point AI_SKILLS_ROOT at it
         run: |
+          git clone --depth=1 https://github.com/aliabbaschadhar/antigravity-awesome-skills.git /tmp/agent-superpowers || \
           git clone --depth=1 https://github.com/sickn33/antigravity-awesome-skills.git /tmp/agent-superpowers
         continue-on-error: true
 
