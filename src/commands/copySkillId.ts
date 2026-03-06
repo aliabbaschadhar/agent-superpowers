@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { SkillItem } from '../skillsTreeProvider';
+import { SkillItem } from '../tree/nodes';
 
 type CopyIdArg = string | SkillItem | undefined;
 

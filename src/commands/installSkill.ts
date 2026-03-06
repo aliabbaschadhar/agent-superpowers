@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { SkillsManager } from '../skillsManager';
+import { SkillsManager } from '../skills/SkillsManager';
 import { recommendedAgent } from '../editorDetector';
 import { ClaudeInstaller } from '../installers/claudeInstaller';
 import { GeminiInstaller } from '../installers/geminiInstaller';

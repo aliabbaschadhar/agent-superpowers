@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { SkillsManager } from '../skillsManager';
+import { SkillsManager } from '../skills/SkillsManager';
 import { ERR_SKILL_NOT_FOUND, ERR_OPEN_FILE } from '../constants';
 
 /** Argument shapes that VSCode may pass to the preview command */

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { SkillsManager } from './skillsManager';
-import { SkillsTreeProvider } from './skillsTreeProvider';
+import { createSkillsManager } from './skills/SkillsManager';
+import { SkillsTreeProvider } from './tree/SkillsTreeProvider';
 import { registerBrowseCommand } from './commands/browseSkills';
 import { registerInstallCommand, registerInstallFromTreeCommand } from './commands/installSkill';
 import { registerPreviewCommand } from './commands/previewSkill';
@@ -17,7 +17,7 @@ export async function activate(
   initLogger(context);
   log('Extension activating…');
 
-  const manager = new SkillsManager(context);
+  const manager = createSkillsManager(context);
   const healthy = await manager.init();
 
   if (!healthy) {

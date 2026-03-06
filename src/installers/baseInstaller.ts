@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { InstallOptions, InstallResult } from './types';
 import { logError } from '../logger';
@@ -34,7 +35,7 @@ export abstract class BaseInstaller {
         }
       }
 
-      const skillDir = require('path').dirname(destPath);
+      const skillDir = path.dirname(destPath);
       fs.mkdirSync(skillDir, { recursive: true });
       fs.writeFileSync(destPath, opts.skillContent, 'utf-8');
 
@@ -42,8 +43,8 @@ export abstract class BaseInstaller {
       if (opts.skillFiles) {
         for (const [relPath, content] of opts.skillFiles) {
           if (relPath === 'SKILL.md') { continue; }   // already written above
-          const companionDest = require('path').join(skillDir, relPath);
-          fs.mkdirSync(require('path').dirname(companionDest), { recursive: true });
+          const companionDest = path.join(skillDir, relPath);
+          fs.mkdirSync(path.dirname(companionDest), { recursive: true });
           fs.writeFileSync(companionDest, content, 'utf-8');
         }
       }

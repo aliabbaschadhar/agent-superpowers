@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { SkillsManager, SkillEntry } from '../skillsManager';
+import { SkillsManager, SkillEntry } from '../skills/SkillsManager';
 import { ERR_NO_SKILLS } from '../constants';
 import { RecentSkills } from '../recentSkills';
 import { recommendedAgent } from '../editorDetector';

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { SkillsManager } from '../skillsManager';
+import { SkillsManager } from '../skills/SkillsManager';
 
 /**
  * Shows a multi-select QuickPick of all skills.
