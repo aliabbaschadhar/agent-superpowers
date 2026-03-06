@@ -112,7 +112,7 @@ export class SummaryItem extends vscode.TreeItem {
     const notInstalled = total - installed;
     this.description = `${total} total · ${installed} installed · ${notInstalled} available`;
     this.tooltip = new vscode.MarkdownString(
-      `**Skills Overview**\n\n` +
+      '**Skills Overview**\n\n' +
       `- Total: **${total}**\n` +
       `- Installed: **${installed}**\n` +
       `- Not installed: **${notInstalled}**`
