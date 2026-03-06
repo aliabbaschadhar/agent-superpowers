@@ -104,6 +104,23 @@ const CATEGORY_ICONS: Record<string, string> = {
   'performance': 'dashboard',
 };
 
+export class SummaryItem extends vscode.TreeItem {
+  readonly contextValue = 'summary';
+
+  constructor(total: number, installed: number) {
+    super('Skills Summary', vscode.TreeItemCollapsibleState.None);
+    const notInstalled = total - installed;
+    this.description = `${total} total · ${installed} installed · ${notInstalled} available`;
+    this.tooltip = new vscode.MarkdownString(
+      `**Skills Overview**\n\n` +
+      `- Total: **${total}**\n` +
+      `- Installed: **${installed}**\n` +
+      `- Not installed: **${notInstalled}**`
+    );
+    this.iconPath = new vscode.ThemeIcon('library');
+  }
+}
+
 export class CategoryItem extends vscode.TreeItem {
   readonly contextValue = 'category';
 
@@ -150,7 +167,7 @@ export class SkillItem extends vscode.TreeItem {
   }
 }
 
-export type SkillTreeNode = CategoryItem | SkillItem;
+export type SkillTreeNode = SummaryItem | CategoryItem | SkillItem;
 
 export class SkillsTreeProvider
   implements vscode.TreeDataProvider<SkillTreeNode> {
@@ -181,10 +198,16 @@ export class SkillsTreeProvider
 
     if (!el) {
       const categories = this.manager.getCategories();
+      const total = this.manager.getAll().length;
+      const installed = this.manager.countInstalled();
+
       if (!filter) {
-        return categories.map(
-          cat => new CategoryItem(cat, this.manager.getByCategory(cat).length)
-        );
+        return [
+          new SummaryItem(total, installed),
+          ...categories.map(
+            cat => new CategoryItem(cat, this.manager.getByCategory(cat).length)
+          ),
+        ];
       }
       // Only categories that have at least one matching skill
       return categories

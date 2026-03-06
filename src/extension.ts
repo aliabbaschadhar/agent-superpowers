@@ -6,6 +6,7 @@ import { registerInstallCommand, registerInstallFromTreeCommand } from './comman
 import { registerPreviewCommand } from './commands/previewSkill';
 import { registerCopyIdCommand } from './commands/copySkillId';
 import { registerUninstallCommand } from './commands/uninstallSkill';
+import { registerBulkCopySkillsCommand } from './commands/bulkCopySkills';
 import { ERR_BUNDLE_INCOMPLETE } from './constants';
 import { initLogger, log } from './logger';
 import { RecentSkills } from './recentSkills';
@@ -46,6 +47,7 @@ export async function activate(
     registerPreviewCommand(manager),
     registerCopyIdCommand(),
     registerUninstallCommand(manager),
+    registerBulkCopySkillsCommand(manager),
     vscode.commands.registerCommand('aiSkills.refreshTree', async () => {
       await vscode.window.withProgress(
         {
@@ -60,17 +62,6 @@ export async function activate(
           }
         }
       );
-    }),
-    vscode.commands.registerCommand('aiSkills.filterTree', async () => {
-      const text = await vscode.window.showInputBox({
-        placeHolder: 'Filter skills by name or description… (leave empty to clear)',
-        prompt: 'Filter the skills tree',
-      });
-      if (text === undefined) { return; } // user pressed Escape
-      treeProvider.setFilter(text);
-      if (text.trim()) {
-        vscode.window.showInformationMessage(`AI Skills: Showing results for "${text}"`);
-      }
     }),
     vscode.workspace.onDidChangeConfiguration(e => {
       if (e.affectsConfiguration('aiSkills.localSkillsPath')) {

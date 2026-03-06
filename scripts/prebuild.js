@@ -23,6 +23,24 @@ function copyFile(src, dest) {
   fs.copyFileSync(src, dest);
 }
 
+/**
+ * Recursively copy everything under srcDir into destDir.
+ * Preserves the full subdirectory structure (scripts/, examples/, resources/, etc.).
+ */
+function copyDirRecursive(srcDir, destDir) {
+  ensureDir(destDir);
+  const entries = fs.readdirSync(srcDir, { withFileTypes: true });
+  for (const entry of entries) {
+    const srcEntry = path.join(srcDir, entry.name);
+    const destEntry = path.join(destDir, entry.name);
+    if (entry.isDirectory()) {
+      copyDirRecursive(srcEntry, destEntry);
+    } else {
+      copyFile(srcEntry, destEntry);
+    }
+  }
+}
+
 function run() {
   if (!fs.existsSync(SKILLS_INDEX)) {
     console.error(`[prebuild] ERROR: skills_index.json not found at ${SKILLS_INDEX}`);
@@ -38,15 +56,17 @@ function run() {
   let copied = 0;
   let missing = 0;
 
-  console.log(`[prebuild] Copying ${index.length} SKILL.md files...`);
+  console.log(`[prebuild] Copying ${index.length} skill directories...`);
 
   for (const skill of index) {
     // skill.path is relative to AI_SKILLS_ROOT, e.g. "skills/3d-web-experience"
-    const srcSkillFile = path.join(AI_SKILLS_ROOT, skill.path, 'SKILL.md');
-    const destSkillFile = path.join(ASSETS_DIR, skill.path, 'SKILL.md');
+    const srcSkillDir = path.join(AI_SKILLS_ROOT, skill.path);
+    const destSkillDir = path.join(ASSETS_DIR, skill.path);
+    const srcSkillFile = path.join(srcSkillDir, 'SKILL.md');
 
     if (fs.existsSync(srcSkillFile)) {
-      copyFile(srcSkillFile, destSkillFile);
+      // Copy the entire skill directory (SKILL.md + any companion files/scripts/resources)
+      copyDirRecursive(srcSkillDir, destSkillDir);
       copied++;
     } else {
       console.warn(`[prebuild] WARN: Missing SKILL.md for skill '${skill.id}' at ${srcSkillFile}`);

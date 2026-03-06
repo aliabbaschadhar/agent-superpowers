@@ -41,7 +41,8 @@ export function registerInstallCommand(
         return;
       }
 
-      const content = await manager.readContent(skill);
+      const skillFiles = await manager.readSkillDirectory(skill);
+      const content = skillFiles.get('SKILL.md') ?? await manager.readContent(skill);
       if (!content) {
         vscode.window.showErrorMessage(ERR_CONTENT_MISSING(resolvedId));
         return;
@@ -98,6 +99,7 @@ export function registerInstallCommand(
       const opts: InstallOptions = {
         skillId: resolvedId,
         skillContent: content,
+        skillFiles: skillFiles.size > 1 ? skillFiles : undefined,
         workspaceRoot,
       };
 

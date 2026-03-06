@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import { REMOTE_INDEX_URL, REMOTE_BASE_URL } from './constants';
 
@@ -91,6 +92,24 @@ export class SkillsManager {
     return this.skills;
   }
 
+  /**
+   * Returns the number of skills currently installed in the Claude skills
+   * directory (or the user-configured override path).
+   */
+  countInstalled(): number {
+    const config = vscode.workspace.getConfiguration('aiSkills');
+    const override = config.get<string>('claudeSkillsPath', '').trim();
+    const baseDir = override || path.join(os.homedir(), '.claude', 'skills');
+    if (!fs.existsSync(baseDir)) { return 0; }
+    try {
+      return this.skills.filter(s =>
+        fs.existsSync(path.join(baseDir, s.id, 'SKILL.md'))
+      ).length;
+    } catch {
+      return 0;
+    }
+  }
+
   /** Returns sorted unique categories; 'personal' second-to-last, 'uncategorized' always last. */
   getCategories(): string[] {
     const cats = [...new Set(this.skills.map(s => s.category))].sort();
@@ -143,6 +162,111 @@ export class SkillsManager {
     } catch {
       return null;
     }
+  }
+
+  /**
+   * Returns all files for a skill as a Map<relPath, content>.
+   * Keys are relative to the skill root, e.g. "SKILL.md", "rest.md",
+   * "scripts/api_validator.py".  Falls back to a single-entry map
+   * containing only SKILL.md when companion files cannot be found.
+   */
+  async readSkillDirectory(skill: SkillEntry): Promise<Map<string, string>> {
+    // 0. Local absolute-path skill — walk the directory directly
+    if (path.isAbsolute(skill.path)) {
+      const files = this.walkDir(skill.path);
+      if (files.size > 0) { return files; }
+      // Fallback: try reading just SKILL.md
+      const single = await this.readContent(skill);
+      return single ? new Map([['SKILL.md', single]]) : new Map();
+    }
+
+    // 1. Bundled assets — entire directory present after prebuild
+    const bundledDir = path.join(this.assetsPath, skill.path);
+    if (fs.existsSync(path.join(bundledDir, 'SKILL.md'))) {
+      return this.walkDir(bundledDir);
+    }
+
+    // 2. Storage cache — may already have companion files from a prior fetch
+    const cachedDir = path.join(this.storagePath, skill.path);
+    if (fs.existsSync(path.join(cachedDir, 'SKILL.md'))) {
+      const cached = this.walkDir(cachedDir);
+      // If we only have SKILL.md cached, attempt to fetch companions remotely
+      if (cached.size === 1) {
+        await this.fetchCompanionFiles(skill, cached.get('SKILL.md')!, cachedDir);
+        return this.walkDir(cachedDir);
+      }
+      return cached;
+    }
+
+    // 3. Remote fetch — get SKILL.md first, then discover and fetch companions
+    try {
+      const mainUrl = `${REMOTE_BASE_URL}${skill.path}/SKILL.md`;
+      const res = await fetch(mainUrl);
+      if (!res.ok) { return new Map(); }
+      const mainContent = await res.text();
+
+      fs.mkdirSync(cachedDir, { recursive: true });
+      fs.writeFileSync(path.join(cachedDir, 'SKILL.md'), mainContent, 'utf-8');
+
+      await this.fetchCompanionFiles(skill, mainContent, cachedDir);
+      return this.walkDir(cachedDir);
+    } catch {
+      return new Map();
+    }
+  }
+
+  /**
+   * Walks `dir` recursively and returns a Map<relPath, content> for every
+   * file found.  `relPath` uses forward slashes and is relative to `dir`.
+   */
+  private walkDir(dir: string, base = dir): Map<string, string> {
+    const result = new Map<string, string>();
+    if (!fs.existsSync(dir)) { return result; }
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      const rel  = path.relative(base, full).replace(/\\/g, '/');
+      if (entry.isDirectory()) {
+        for (const [k, v] of this.walkDir(full, base)) {
+          result.set(k, v);
+        }
+      } else {
+        try { result.set(rel, fs.readFileSync(full, 'utf-8')); } catch { /* skip unreadable */ }
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Parses `mainContent` (SKILL.md) for backtick-quoted file references such as
+   * `rest.md` or `scripts/api_validator.py`, fetches each from the remote,
+   * and writes them into `cacheDir` (creating subdirs as needed).
+   */
+  private async fetchCompanionFiles(
+    skill: SkillEntry,
+    mainContent: string,
+    cacheDir: string
+  ): Promise<void> {
+    // Match backtick-quoted relative file paths, e.g. `api-style.md` or `scripts/foo.py`
+    const pattern = /`([a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_.:-]+)*\.[a-zA-Z0-9]+)`/g;
+    const refs = new Set<string>();
+    let m: RegExpExecArray | null;
+    while ((m = pattern.exec(mainContent)) !== null) {
+      const ref = m[1];
+      if (ref !== 'SKILL.md') { refs.add(ref); }
+    }
+
+    await Promise.allSettled([...refs].map(async (ref) => {
+      const destFile = path.join(cacheDir, ref);
+      if (fs.existsSync(destFile)) { return; }       // already cached
+      try {
+        const url = `${REMOTE_BASE_URL}${skill.path}/${ref}`;
+        const res = await fetch(url);
+        if (!res.ok) { return; }
+        const content = await res.text();
+        fs.mkdirSync(path.dirname(destFile), { recursive: true });
+        fs.writeFileSync(destFile, content, 'utf-8');
+      } catch { /* best-effort */ }
+    }));
   }
 
   /** Returns the absolute path to the bundled or cached SKILL.md. */

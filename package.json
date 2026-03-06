@@ -72,10 +72,10 @@
         "icon": "$(refresh)"
       },
       {
-        "command": "aiSkills.filterTree",
-        "title": "Filter Skills",
+        "command": "aiSkills.bulkCopy",
+        "title": "Bulk Copy Skill IDs to Clipboard",
         "category": "AI Skills",
-        "icon": "$(filter)"
+        "icon": "$(copy)"
       }
     ],
     "viewsContainers": {
@@ -99,19 +99,14 @@
     "menus": {
       "view/title": [
         {
-          "command": "aiSkills.filterTree",
+          "command": "aiSkills.bulkCopy",
           "when": "view == aiSkillsTree",
           "group": "navigation@1"
         },
         {
-          "command": "aiSkills.browse",
-          "when": "view == aiSkillsTree",
-          "group": "navigation@2"
-        },
-        {
           "command": "aiSkills.refreshTree",
           "when": "view == aiSkillsTree",
-          "group": "navigation@3"
+          "group": "navigation@2"
         }
       ],
       "view/item/context": [
@@ -225,7 +220,6 @@
     "esbuild": "^0.27.3",
     "eslint": "^10.0.1",
     "glob": "^13.0.5",
-    "mocha": "^11.7.4",
     "rimraf": "^5.0.5",
     "typescript": "^5.3.3"
   }

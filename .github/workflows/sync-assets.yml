@@ -3,7 +3,7 @@ name: Sync Skills Assets
 on:
   # Run manually from the Actions tab
   workflow_dispatch:
-  # Triggered by a repository_dispatch event from the ai-skills repo
+  # Triggered by a repository_dispatch event from the agent-superpowers repo
   repository_dispatch:
     types: [skills-updated]
 
@@ -11,16 +11,20 @@ jobs:
   sync:
     name: Sync skills from source repo
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout agent-superpowers
         uses: actions/checkout@v4
 
-      - name: Checkout ai-skills (source of truth)
+      - name: Checkout antigravity-awesome-skills (source of truth)
         uses: actions/checkout@v4
         with:
-          repository: aliabbaschadhar/ai-skills
-          path: ai-skills-repo
+          repository: aliabbaschadhar/antigravity-awesome-skills
+          token: ${{ secrets.GH_PAT }}
+          ref: main
+          path: antigravity-awesome-skills-repo
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -31,7 +35,7 @@ jobs:
       - name: Run prebuild
         run: node scripts/prebuild.js
         env:
-          AI_SKILLS_ROOT: ${{ github.workspace }}/ai-skills-repo
+          AI_SKILLS_ROOT: ${{ github.workspace }}/antigravity-awesome-skills-repo
 
       - name: Commit updated assets
         run: |
