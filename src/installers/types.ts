@@ -1,5 +1,6 @@
 export type AgentKind =
   | 'claude'
+  | 'gemini'
   | 'cursor-project'
   | 'cursor-global'
   | 'copilot'

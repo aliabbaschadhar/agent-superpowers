@@ -2,6 +2,13 @@
 
 All notable changes to the AI Agent Skills extension will be documented here.
 
+## [1.1.0] - 2026-03-06
+
+### Added
+- **Gemini CLI Support**: Official installer for Gemini CLI skills (`~/.gemini/skills/`)
+- **Updated Skill Count**: Now includes 940+ curated AI agent skills
+- Configurable `aiSkills.geminiSkillsPath` to override the default Gemini skills directory
+
 ## [1.0.0] - 2026-03-05
 
 ### Added

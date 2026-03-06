@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 export type EditorKind = 'cursor' | 'vscode' | 'codium' | 'other';
-export type AgentName = 'claude' | 'cursor' | 'copilot' | 'generic';
+export type AgentName = 'claude' | 'gemini' | 'cursor' | 'copilot' | 'generic';
 
 /** Detect which editor is running based on vscode.env.appName. */
 export function detectEditor(): EditorKind {

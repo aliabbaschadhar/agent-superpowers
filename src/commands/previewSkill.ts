@@ -42,6 +42,8 @@ export function registerPreviewCommand(
         return;
       }
 
+      // Ensure content is fetched (downloads if missing)
+      await manager.readContent(skill);
       const filePath = manager.contentPath(skill);
       try {
         await vscode.window.showTextDocument(vscode.Uri.file(filePath), {

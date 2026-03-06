@@ -33,6 +33,11 @@ export async function activate(
     showCollapseAll: true,
   });
 
+  // Background remote sync — refresh tree only when new skills are found
+  manager.syncRemote().then(added => {
+    if (added > 0) { treeProvider.refresh(); }
+  }).catch(() => { /* ignore network errors */ });
+
   context.subscriptions.push(
     treeView,
     registerBrowseCommand(manager, recentSkills),
@@ -42,8 +47,19 @@ export async function activate(
     registerCopyIdCommand(),
     registerUninstallCommand(manager),
     vscode.commands.registerCommand('aiSkills.refreshTree', async () => {
-      await manager.init();
-      treeProvider.refresh();
+      await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: 'Syncing AI Skills…',
+        },
+        async () => {
+          const added = await manager.syncRemote();
+          treeProvider.refresh();
+          if (added > 0) {
+            vscode.window.showInformationMessage(`AI Skills: Found ${added} new skill(s)!`);
+          }
+        }
+      );
     }),
     vscode.commands.registerCommand('aiSkills.filterTree', async () => {
       const text = await vscode.window.showInputBox({
@@ -54,6 +70,12 @@ export async function activate(
       treeProvider.setFilter(text);
       if (text.trim()) {
         vscode.window.showInformationMessage(`AI Skills: Showing results for "${text}"`);
+      }
+    }),
+    vscode.workspace.onDidChangeConfiguration(e => {
+      if (e.affectsConfiguration('aiSkills.localSkillsPath')) {
+        manager.loadLocalSources();
+        treeProvider.refresh();
       }
     })
   );

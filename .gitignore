@@ -1,6 +1,7 @@
 node_modules/
 dist/
-assets/
+# assets/ is intentionally tracked so remote sync can fetch skills_index.json
+# and individual SKILL.md files from raw.githubusercontent.com
 out/
 test-out/
 *.vsix

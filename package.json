@@ -1,8 +1,8 @@
 {
   "name": "agent-superpowers",
   "displayName": "AI Agent Superpowers",
-  "description": "Browse, preview, and install 900+ AI agent skills for Claude Code, Cursor, GitHub Copilot, and more.",
-  "version": "1.0.0",
+  "description": "Browse, preview, and install 940+ AI agent skills for Claude Code, Gemini CLI, Cursor, GitHub Copilot, and more.",
+  "version": "1.1.0",
   "publisher": "aliabbaschadhar",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -149,7 +149,7 @@
       "properties": {
         "aiSkills.defaultAgent": {
           "type": "string",
-          "enum": ["auto", "claude", "cursor", "copilot", "generic"],
+          "enum": ["auto", "claude", "gemini", "cursor", "copilot", "generic"],
           "default": "auto",
           "description": "Default install target. 'auto' detects from the running editor."
         },
@@ -157,6 +157,11 @@
           "type": "string",
           "default": "",
           "description": "Override directory for Claude Code skills. Leave empty for ~/.claude/skills."
+        },
+        "aiSkills.geminiSkillsPath": {
+          "type": "string",
+          "default": "",
+          "description": "Override directory for Gemini CLI skills. Leave empty for ~/.gemini/skills."
         },
         "aiSkills.cursorScope": {
           "type": "string",
@@ -180,6 +185,16 @@
           "minimum": 0,
           "maximum": 2000,
           "description": "Delay in milliseconds between focus and paste when sending a skill ID to Claude Code chat. Increase on slower machines."
+        },
+        "aiSkills.localSkillsPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to a local folder of custom skills (e.g. ~/my-ai-rules/). Each subfolder containing a SKILL.md is treated as a skill."
+        },
+        "aiSkills.remoteIndexUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Override the remote skills index URL (GitHub raw URL or Gist). Leave empty to use the built-in default."
         }
       }
     }

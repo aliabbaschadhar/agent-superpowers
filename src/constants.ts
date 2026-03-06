@@ -1,3 +1,7 @@
+/** Remote Syncing */
+export const REMOTE_INDEX_URL = 'https://raw.githubusercontent.com/aliabbaschadhar/agent-superpowers/main/assets/skills_index.json';
+export const REMOTE_BASE_URL = 'https://raw.githubusercontent.com/aliabbaschadhar/agent-superpowers/main/assets/';
+
 /** UI / display */
 export const DESCRIPTION_TRUNCATE_LENGTH = 60;
 

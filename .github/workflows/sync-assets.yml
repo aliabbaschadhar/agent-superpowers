@@ -1,0 +1,39 @@
+name: Sync Skills Assets
+
+on:
+  # Run manually from the Actions tab
+  workflow_dispatch:
+  # Or trigger from a repository_dispatch sent by your ai-skills repo
+  repository_dispatch:
+    types: [skills-updated]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout agent-superpowers
+        uses: actions/checkout@v4
+
+      - name: Checkout ai-skills (source of truth)
+        uses: actions/checkout@v4
+        with:
+          repository: aliabbaschadhar/ai-skills # change if private: add token
+          path: ai-skills-repo
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run prebuild
+        run: node scripts/prebuild.js
+        env:
+          AI_SKILLS_ROOT: ${{ github.workspace }}/ai-skills-repo
+
+      - name: Commit updated assets
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add assets/
+          git diff --cached --quiet && echo "No changes" || git commit -m "chore: sync skills assets [skip ci]"
+          git push

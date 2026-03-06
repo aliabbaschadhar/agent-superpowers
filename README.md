@@ -1,6 +1,6 @@
 # AI Agent Skills
 
-> Browse, preview, and install 900+ AI agent skills for Claude Code, Cursor, GitHub Copilot, and any other AI coding assistant.
+> Browse, preview, and install 940+ AI agent skills for Claude Code, Gemini CLI, Cursor, GitHub Copilot, and any other AI coding assistant.
 
 ![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/aliabbaschadhar.ai-agent-skills)
 ![Installs](https://img.shields.io/visual-studio-marketplace/i/aliabbaschadhar.ai-agent-skills)
@@ -11,10 +11,10 @@
 ## Features
 
 ### Sidebar Skills Browser
-A dedicated Activity Bar panel organizes all 900+ skills by category. Click any skill to preview its content instantly in a side panel.
+A dedicated Activity Bar panel organizes all 940+ skills by category. Click any skill to preview its content instantly in a side panel.
 
 ### Browse & Paste (Ctrl+Shift+/)
-Open a searchable QuickPick over all skills. Selecting one copies `/<skill-id>` to your clipboard and attempts to paste it directly into Claude Code chat.
+Open a searchable QuickPick over all skills. Selecting one copies `/<skill-id>` to your clipboard and attempts to paste it directly into Claude Code or Gemini CLI chat.
 
 ### Install to Your AI Agent
 Right-click any skill in the sidebar (or use the Command Palette) to install it as a persistent file to:
@@ -22,6 +22,7 @@ Right-click any skill in the sidebar (or use the Command Palette) to install it 
 | Agent | Installed To |
 |-------|-------------|
 | **Claude Code** | `~/.claude/skills/{id}/SKILL.md` |
+| **Gemini CLI** | `~/.gemini/skills/{id}/SKILL.md` |
 | **Cursor** (project) | `.cursor/rules/{id}.mdc` |
 | **Cursor** (global) | `~/.cursor/rules/{id}.mdc` |
 | **GitHub Copilot** | `.github/copilot-instructions.md` (append) |
@@ -71,7 +72,7 @@ Open `Ctrl+Shift+P` and type `AI Skills:` to see all commands.
 
 Skills are reusable AI instruction files (`SKILL.md`) that give your AI assistant specialized knowledge and behavior. Invoke one with `/<skill-id>` in Claude Code chat, or install it persistently to your agent's rules directory so it's always active.
 
-Examples: `ai-engineer`, `api-design-principles`, `react-patterns`, `security-review`, `3d-web-experience`, and 900+ more.
+Examples: `ai-engineer`, `api-design-principles`, `react-patterns`, `security-review`, `3d-web-experience`, and 940+ more.
 
 ---
 

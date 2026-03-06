@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { SkillsManager } from '../skillsManager';
 import { recommendedAgent } from '../editorDetector';
 import { ClaudeInstaller } from '../installers/claudeInstaller';
+import { GeminiInstaller } from '../installers/geminiInstaller';
 import { CursorInstaller } from '../installers/cursorInstaller';
 import { CopilotInstaller } from '../installers/copilotInstaller';
 import { GenericInstaller } from '../installers/genericInstaller';
@@ -40,7 +41,7 @@ export function registerInstallCommand(
         return;
       }
 
-      const content = manager.readContent(skill);
+      const content = await manager.readContent(skill);
       if (!content) {
         vscode.window.showErrorMessage(ERR_CONTENT_MISSING(resolvedId));
         return;
@@ -53,6 +54,12 @@ export function registerInstallCommand(
           description: '~/.claude/skills/{id}/SKILL.md',
           detail: recommended === 'claude' ? '★ Recommended for your editor' : undefined,
           id: 'claude',
+        },
+        {
+          label: '$(sparkle) Gemini CLI',
+          description: '~/.gemini/skills/{id}/SKILL.md',
+          detail: recommended === 'gemini' ? '★ Recommended for your editor' : undefined,
+          id: 'gemini',
         },
         {
           label: '$(tools) Cursor (Project)',
@@ -105,6 +112,9 @@ export function registerInstallCommand(
           switch (agentChoice.id) {
             case 'claude':
               result = await new ClaudeInstaller().install(opts);
+              break;
+            case 'gemini':
+              result = await new GeminiInstaller().install(opts);
               break;
             case 'cursor-project':
               result = await new CursorInstaller(false).install(opts);

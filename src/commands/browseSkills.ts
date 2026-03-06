@@ -16,6 +16,12 @@ function getChatFocusCommands(agent: string): string[] {
         'workbench.view.extension.claude-code',
         'workbench.action.chat.open',
       ];
+    case 'gemini':
+      return [
+        'gemini.focusChat',
+        'workbench.view.extension.gemini',
+        'workbench.action.chat.open',
+      ];
     case 'copilot':
       return [
         'workbench.action.chat.open',
