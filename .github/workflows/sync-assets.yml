@@ -3,37 +3,41 @@ name: Sync Skills Assets
 on:
   # Run manually from the Actions tab
   workflow_dispatch:
-  # Or trigger from a repository_dispatch sent by your ai-skills repo
+  # Triggered by a repository_dispatch event from the ai-skills repo
   repository_dispatch:
     types: [skills-updated]
 
 jobs:
   sync:
+    name: Sync skills from source repo
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout agent-superpowers
         uses: actions/checkout@v4
 
-      - name: Checkout antigravity-awesome-skills (source of truth)
+      - name: Checkout ai-skills (source of truth)
         uses: actions/checkout@v4
         with:
-          repository: sickn33/antigravity-awesome-skills
-          path: antigravity-skills-repo
+          repository: aliabbaschadhar/ai-skills
+          path: ai-skills-repo
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
 
       - name: Run prebuild
         run: node scripts/prebuild.js
         env:
-          AI_SKILLS_ROOT: ${{ github.workspace }}/antigravity-skills-repo
+          AI_SKILLS_ROOT: ${{ github.workspace }}/ai-skills-repo
 
       - name: Commit updated assets
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add assets/
-          git diff --cached --quiet && echo "No changes" || git commit -m "chore: sync skills assets [skip ci]"
+          git diff --cached --quiet && echo "No changes to commit" || \
+            git commit -m "chore: sync skills assets [skip ci]"
           git push
