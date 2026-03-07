@@ -1,7 +1,5 @@
 // esbuild.config.js
-'use strict';
-
-const esbuild = require('esbuild');
+import esbuild from 'esbuild';
 
 const isProduction = process.argv.includes('--production');
 const isWatch = process.argv.includes('--watch');

@@ -14,36 +14,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install
 
       - name: Fetch ai-skills data
         run: |
-          git clone --depth=1 https://github.com/aliabbaschadhar/ai-skills.git /tmp/ai-skills || \
-          git clone --depth=1 https://github.com/sickn33/antigravity-awesome-skills.git /tmp/ai-skills
+          git clone --depth=1 https://github.com/aliabbaschadhar/antigravity-awesome-skills.git /tmp/agent-superpowers || \
+          git clone --depth=1 https://github.com/sickn33/antigravity-awesome-skills.git /tmp/agent-superpowers
         continue-on-error: true
 
       - name: Run prebuild
         run: node scripts/prebuild.js
         env:
-          AI_SKILLS_ROOT: /tmp/ai-skills
+          AI_SKILLS_ROOT: /tmp/agent-superpowers
 
       - name: Build production bundle
         run: node esbuild.config.js --production
 
       - name: Package .vsix
-        run: npm run package
+        run: bunx vsce package --no-dependencies
 
       - name: Upload .vsix artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ai-agent-skills-vsix
+          name: agent-superpowers-vsix
           path: "*.vsix"
           retention-days: 90
 
@@ -54,6 +51,6 @@ jobs:
           generate_release_notes: true
 
       - name: Publish to VS Code Marketplace
-        run: npx vsce publish --no-dependencies
+        run: bunx vsce publish --no-dependencies
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}

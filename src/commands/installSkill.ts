@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
-import { SkillsManager } from '../skillsManager';
-import { recommendedAgent } from '../editorDetector';
+import { SkillsManager } from '../skills/SkillsManager';
 import { ClaudeInstaller } from '../installers/claudeInstaller';
 import { GeminiInstaller } from '../installers/geminiInstaller';
 import { CursorInstaller } from '../installers/cursorInstaller';
@@ -9,10 +8,7 @@ import { GenericInstaller } from '../installers/genericInstaller';
 import { InstallOptions, InstallResult } from '../installers/types';
 import { ERR_SKILL_NOT_FOUND, ERR_CONTENT_MISSING } from '../constants';
 import { RecentSkills } from '../recentSkills';
-
-interface AgentOption extends vscode.QuickPickItem {
-  id: string;
-}
+import { AgentOption, buildAgentOptions } from './agentPicker';
 
 export function registerInstallCommand(
   manager: SkillsManager,
@@ -41,49 +37,14 @@ export function registerInstallCommand(
         return;
       }
 
-      const content = await manager.readContent(skill);
+      const skillFiles = await manager.readSkillDirectory(skill);
+      const content = skillFiles.get('SKILL.md') ?? await manager.readContent(skill);
       if (!content) {
         vscode.window.showErrorMessage(ERR_CONTENT_MISSING(resolvedId));
         return;
       }
 
-      const recommended = recommendedAgent();
-      const agentOptions: AgentOption[] = [
-        {
-          label: '$(terminal) Claude Code',
-          description: '~/.claude/skills/{id}/SKILL.md',
-          detail: recommended === 'claude' ? '★ Recommended for your editor' : undefined,
-          id: 'claude',
-        },
-        {
-          label: '$(sparkle) Gemini CLI',
-          description: '~/.gemini/skills/{id}/SKILL.md',
-          detail: recommended === 'gemini' ? '★ Recommended for your editor' : undefined,
-          id: 'gemini',
-        },
-        {
-          label: '$(tools) Cursor (Project)',
-          description: '.cursor/rules/{id}.mdc',
-          detail: recommended === 'cursor' ? '★ Recommended for your editor' : undefined,
-          id: 'cursor-project',
-        },
-        {
-          label: '$(tools) Cursor (Global)',
-          description: '~/.cursor/rules/{id}.mdc',
-          id: 'cursor-global',
-        },
-        {
-          label: '$(github) GitHub Copilot',
-          description: '.github/copilot-instructions.md (append)',
-          detail: recommended === 'copilot' ? '★ Recommended for your editor' : undefined,
-          id: 'copilot',
-        },
-        {
-          label: '$(folder-opened) Custom Path',
-          description: 'You choose the directory',
-          id: 'generic',
-        },
-      ];
+      const agentOptions: AgentOption[] = buildAgentOptions();
 
       const agentChoice = await vscode.window.showQuickPick(agentOptions, {
         placeHolder: `Install '${resolvedId}' to which agent?`,
@@ -98,6 +59,7 @@ export function registerInstallCommand(
       const opts: InstallOptions = {
         skillId: resolvedId,
         skillContent: content,
+        skillFiles: skillFiles.size > 1 ? skillFiles : undefined,
         workspaceRoot,
       };
 

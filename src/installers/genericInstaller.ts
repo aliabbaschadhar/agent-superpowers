@@ -21,8 +21,20 @@ export class GenericInstaller {
     const dest = path.join(destDir.trim(), opts.skillId, 'SKILL.md');
 
     try {
-      fs.mkdirSync(path.dirname(dest), { recursive: true });
+      const skillDir = path.dirname(dest);
+      fs.mkdirSync(skillDir, { recursive: true });
       fs.writeFileSync(dest, opts.skillContent, 'utf-8');
+
+      // Write companion files (e.g. rest.md, scripts/api_validator.py) when present
+      if (opts.skillFiles) {
+        for (const [relPath, content] of opts.skillFiles) {
+          if (relPath === 'SKILL.md') { continue; }
+          const companionDest = path.join(skillDir, relPath);
+          fs.mkdirSync(path.dirname(companionDest), { recursive: true });
+          fs.writeFileSync(companionDest, content, 'utf-8');
+        }
+      }
+
       return { success: true, destPath: dest, message: `Installed to ${dest}` };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);

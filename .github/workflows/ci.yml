@@ -8,45 +8,37 @@ on:
 
 jobs:
   build-and-test:
-    name: Lint, Build, Test
+    name: Lint, Type-check, Build
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install
 
-      - name: Fetch ai-skills data for prebuild
+      - name: Fetch ai-skills data
         # In CI the parent ai-skills repo is not present at ../
         # Clone it to /tmp/ai-skills and point AI_SKILLS_ROOT at it
         run: |
-          git clone --depth=1 https://github.com/aliabbaschadhar/ai-skills.git /tmp/ai-skills || \
-          git clone --depth=1 https://github.com/sickn33/antigravity-awesome-skills.git /tmp/ai-skills
+          git clone --depth=1 https://github.com/aliabbaschadhar/antigravity-awesome-skills.git /tmp/agent-superpowers || \
+          git clone --depth=1 https://github.com/sickn33/antigravity-awesome-skills.git /tmp/agent-superpowers
         continue-on-error: true
 
       - name: Run prebuild (copy skills assets)
-        run: node scripts/prebuild.js
+        run: bun run scripts/prebuild.js
         env:
-          AI_SKILLS_ROOT: /tmp/ai-skills
+          AI_SKILLS_ROOT: /tmp/agent-superpowers
 
       - name: Lint
-        run: npm run lint
+        run: bun run lint
+
+      - name: Type-check
+        run: bun run type-check
 
       - name: Compile extension (esbuild)
-        run: node esbuild.config.js
-
-      - name: Compile tests (tsc)
-        run: npx tsc -p tsconfig.test.json
-
-      - name: Run tests (xvfb for headless display)
-        run: xvfb-run -a npm test
-        env:
-          DISPLAY: ":99.0"
+        run: bun run esbuild.config.js

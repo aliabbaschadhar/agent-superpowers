@@ -26,7 +26,9 @@
     "gemini-cli"
   ],
   "categories": ["AI", "Other", "Snippets"],
-  "engines": { "vscode": "^1.85.0" },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
   "main": "./dist/extension.js",
   "activationEvents": ["onStartupFinished"],
   "contributes": {
@@ -72,8 +74,26 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "aiSkills.bulkCopy",
+        "title": "Bulk Copy Skill IDs to Clipboard",
+        "category": "AI Skills",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "aiSkills.installCategory",
+        "title": "Install All in Category",
+        "category": "AI Skills",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "aiSkills.installAll",
+        "title": "Install All Skills",
+        "category": "AI Skills",
+        "icon": "$(cloud-download)"
+      },
+      {
         "command": "aiSkills.filterTree",
-        "title": "Filter Skills",
+        "title": "Show Installed Skills Only",
         "category": "AI Skills",
         "icon": "$(filter)"
       }
@@ -92,7 +112,8 @@
         {
           "id": "aiSkillsTree",
           "name": "Skills",
-          "type": "tree"
+          "type": "tree",
+          "icon": "media/sidebar-icon.svg"
         }
       ]
     },
@@ -100,16 +121,26 @@
       "view/title": [
         {
           "command": "aiSkills.filterTree",
+          "when": "view == aiSkillsTree && !aiSkills.installedFilterActive",
+          "group": "navigation@0"
+        },
+        {
+          "command": "aiSkills.filterTree",
+          "when": "view == aiSkillsTree && aiSkills.installedFilterActive",
+          "group": "navigation@0"
+        },
+        {
+          "command": "aiSkills.bulkCopy",
           "when": "view == aiSkillsTree",
           "group": "navigation@1"
         },
         {
-          "command": "aiSkills.browse",
+          "command": "aiSkills.refreshTree",
           "when": "view == aiSkillsTree",
           "group": "navigation@2"
         },
         {
-          "command": "aiSkills.refreshTree",
+          "command": "aiSkills.installAll",
           "when": "view == aiSkillsTree",
           "group": "navigation@3"
         }
@@ -117,23 +148,53 @@
       "view/item/context": [
         {
           "command": "aiSkills.preview",
-          "when": "view == aiSkillsTree && viewItem == skill",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill(\\.favorited)?$/",
           "group": "inline@1"
         },
         {
           "command": "aiSkills.copyId",
-          "when": "view == aiSkillsTree && viewItem == skill",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill(\\.favorited)?$/",
           "group": "inline@2"
         },
         {
           "command": "aiSkills.installFromTree",
-          "when": "view == aiSkillsTree && viewItem == skill",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill(\\.favorited)?$/",
           "group": "inline@3"
         },
         {
           "command": "aiSkills.uninstall",
-          "when": "view == aiSkillsTree && viewItem == skill",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill(\\.favorited)?$/",
           "group": "inline@4"
+        },
+        {
+          "command": "aiSkills.preview",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed(\\.favorited)?$/",
+          "group": "inline@1"
+        },
+        {
+          "command": "aiSkills.copyId",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed(\\.favorited)?$/",
+          "group": "inline@2"
+        },
+        {
+          "command": "aiSkills.installFromTree",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed(\\.favorited)?$/",
+          "group": "inline@3"
+        },
+        {
+          "command": "aiSkills.uninstall",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed(\\.favorited)?$/",
+          "group": "inline@4"
+        },
+        {
+          "command": "aiSkills.installCategory",
+          "when": "view == aiSkillsTree && viewItem == category",
+          "group": "inline@1"
+        },
+        {
+          "command": "aiSkills.installAll",
+          "when": "view == aiSkillsTree && viewItem == summary",
+          "group": "inline@1"
         }
       ]
     },
@@ -200,31 +261,35 @@
     }
   },
   "scripts": {
-    "prebuild": "node scripts/prebuild.js",
-    "compile": "node esbuild.config.js",
-    "compile:watch": "node esbuild.config.js --watch",
+    "prebuild": "bun run scripts/prebuild.js",
+    "compile": "bun run esbuild.config.js",
+    "compile:watch": "bun run esbuild.config.js --watch",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
-    "pretest": "node scripts/prebuild.js && node esbuild.config.js && tsc -p tsconfig.test.json",
-    "test": "node ./test-out/test/runTests.js",
-    "vscode:prepublish": "node scripts/prebuild.js && node esbuild.config.js --production",
-    "package": "npm run vscode:prepublish && vsce package --no-dependencies",
+    "type-check": "tsc --noEmit",
+    "pretest": "bun run scripts/prebuild.js && bun run esbuild.config.js && bun run type-check -p tsconfig.test.json",
+    "test": "bun run ./test-out/test/runTests.js",
+    "vscode:prepublish": "bun run scripts/prebuild.js && bun run esbuild.config.js --production",
+    "package": "bun run vscode:prepublish && vsce package --no-dependencies",
     "publish": "vsce publish --no-dependencies",
     "clean": "rimraf dist assets test-out"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.0",
     "@types/mocha": "^10.0.6",
     "@types/node": "^25.3.3",
     "@types/vscode": "^1.85.0",
-    "@typescript-eslint/eslint-plugin": "^7.0.0",
-    "@typescript-eslint/parser": "^7.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
     "@vscode/test-electron": "^2.3.9",
     "@vscode/vsce": "^3.7.1",
     "esbuild": "^0.27.3",
     "eslint": "^10.0.1",
     "glob": "^13.0.5",
-    "mocha": "^11.7.4",
     "rimraf": "^5.0.5",
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "fuse.js": "^7.1.0"
   }
 }

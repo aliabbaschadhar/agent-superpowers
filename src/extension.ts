@@ -1,14 +1,18 @@
 import * as vscode from 'vscode';
-import { SkillsManager } from './skillsManager';
-import { SkillsTreeProvider } from './skillsTreeProvider';
+import { createSkillsManager } from './skills/SkillsManager';
+import { SkillsTreeProvider } from './tree/SkillsTreeProvider';
 import { registerBrowseCommand } from './commands/browseSkills';
 import { registerInstallCommand, registerInstallFromTreeCommand } from './commands/installSkill';
 import { registerPreviewCommand } from './commands/previewSkill';
 import { registerCopyIdCommand } from './commands/copySkillId';
 import { registerUninstallCommand } from './commands/uninstallSkill';
-import { ERR_BUNDLE_INCOMPLETE } from './constants';
+import { registerBulkCopySkillsCommand } from './commands/bulkCopySkills';
+import { registerInstallCategoryCommand, registerInstallAllCommand } from './commands/installBulk';
+import { ERR_BUNDLE_INCOMPLETE, CMD_FILTER_TREE } from './constants';
+import { WorkspaceScanner } from './skills/WorkspaceScanner';
 import { initLogger, log } from './logger';
 import { RecentSkills } from './recentSkills';
+import { FavoriteSkills } from './favoriteSkills';
 
 export async function activate(
   context: vscode.ExtensionContext
@@ -16,7 +20,7 @@ export async function activate(
   initLogger(context);
   log('Extension activating…');
 
-  const manager = new SkillsManager(context);
+  const manager = createSkillsManager(context);
   const healthy = await manager.init();
 
   if (!healthy) {
@@ -26,12 +30,29 @@ export async function activate(
   }
 
   const recentSkills = new RecentSkills(context);
+  const favoriteSkills = new FavoriteSkills(context);
 
-  const treeProvider = new SkillsTreeProvider(manager);
+  const treeProvider = new SkillsTreeProvider(manager, favoriteSkills);
   const treeView = vscode.window.createTreeView('aiSkillsTree', {
     treeDataProvider: treeProvider,
     showCollapseAll: true,
   });
+
+  // Project-aware recommendations
+  const scanner = new WorkspaceScanner();
+  const runRecommendations = async (): Promise<void> => {
+    const techs = await scanner.scan();
+    if (techs.length > 0) {
+      const recommended = manager.getRecommended(techs);
+      treeProvider.setRecommendations(recommended, techs);
+    }
+  };
+  runRecommendations().catch(() => { /* silent — non-critical feature */ });
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeWorkspaceFolders(() => {
+      runRecommendations().catch(() => { /* ignore */ });
+    })
+  );
 
   // Background remote sync — refresh tree only when new skills are found
   manager.syncRemote().then(added => {
@@ -40,12 +61,15 @@ export async function activate(
 
   context.subscriptions.push(
     treeView,
-    registerBrowseCommand(manager, recentSkills),
+    registerBrowseCommand(manager, recentSkills, favoriteSkills),
     registerInstallCommand(manager, recentSkills),
     registerInstallFromTreeCommand(manager),
     registerPreviewCommand(manager),
     registerCopyIdCommand(),
     registerUninstallCommand(manager),
+    registerBulkCopySkillsCommand(manager),
+    registerInstallCategoryCommand(manager),
+    registerInstallAllCommand(manager, treeProvider),
     vscode.commands.registerCommand('aiSkills.refreshTree', async () => {
       await vscode.window.withProgress(
         {
@@ -61,16 +85,8 @@ export async function activate(
         }
       );
     }),
-    vscode.commands.registerCommand('aiSkills.filterTree', async () => {
-      const text = await vscode.window.showInputBox({
-        placeHolder: 'Filter skills by name or description… (leave empty to clear)',
-        prompt: 'Filter the skills tree',
-      });
-      if (text === undefined) { return; } // user pressed Escape
-      treeProvider.setFilter(text);
-      if (text.trim()) {
-        vscode.window.showInformationMessage(`AI Skills: Showing results for "${text}"`);
-      }
+    vscode.commands.registerCommand(CMD_FILTER_TREE, () => {
+      treeProvider.toggleInstalledFilter();
     }),
     vscode.workspace.onDidChangeConfiguration(e => {
       if (e.affectsConfiguration('aiSkills.localSkillsPath')) {
