@@ -1,9 +1,9 @@
-import * as vscode from 'vscode';
 import * as fs from 'fs';
-import * as os from 'os';
 import * as path from 'path';
+import * as vscode from 'vscode';
 import { SkillEntry } from './types';
 import { REMOTE_BASE_URL } from '../constants';
+import { detectInstalledIds } from './InstallationDetector';
 
 /**
  * Handles all local and remote file I/O for skill content.
@@ -15,16 +15,15 @@ export class SkillsRepository {
     private readonly storagePath: string
   ) { }
 
-  /** Counts how many skills from the list are installed in the Claude skills dir. */
+  /** Returns the Set of skill IDs installed across all known agent targets. */
+  getInstalledIds(skills: SkillEntry[]): Set<string> {
+    return detectInstalledIds(skills);
+  }
+
+  /** Counts how many skills from the list are installed across all known agent targets. */
   countInstalled(skills: SkillEntry[]): number {
-    const config = vscode.workspace.getConfiguration('aiSkills');
-    const override = config.get<string>('claudeSkillsPath', '').trim();
-    const baseDir = override || path.join(os.homedir(), '.claude', 'skills');
-    if (!fs.existsSync(baseDir)) { return 0; }
     try {
-      return skills.filter(s =>
-        fs.existsSync(path.join(baseDir, s.id, 'SKILL.md'))
-      ).length;
+      return detectInstalledIds(skills).size;
     } catch {
       return 0;
     }

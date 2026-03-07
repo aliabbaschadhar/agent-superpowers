@@ -4,6 +4,7 @@ import * as path from 'path';
 import { SkillEntry } from './types';
 import { SkillsRepository } from './SkillsRepository';
 import { RemoteSync } from './RemoteSync';
+import { TECH_SKILL_MAP } from './techSkillMap';
 
 export { SkillEntry } from './types';
 
@@ -13,6 +14,7 @@ export { SkillEntry } from './types';
  */
 export class SkillsManager {
   private skills: SkillEntry[] = [];
+  private _installedCache: Set<string> | null = null;
   private readonly repository: SkillsRepository;
   private readonly remoteSync: RemoteSync;
 
@@ -71,6 +73,44 @@ export class SkillsManager {
     return this.skills.filter(s => s.category === category);
   }
 
+  /**
+   * Returns up to `limit` recommended skills based on the detected tech tokens.
+   * Uses the curated TECH_SKILL_MAP first, then fuzzy-matches on id/description.
+   */
+  getRecommended(techs: string[], limit = 12): SkillEntry[] {
+    const seen = new Set<string>();
+    const result: SkillEntry[] = [];
+
+    const add = (skill: SkillEntry | undefined): void => {
+      if (skill && !seen.has(skill.id)) {
+        seen.add(skill.id);
+        result.push(skill);
+      }
+    };
+
+    // Phase 1: curated map
+    for (const tech of techs) {
+      for (const id of (TECH_SKILL_MAP[tech] ?? [])) {
+        add(this.findById(id));
+        if (result.length >= limit) { return result; }
+      }
+    }
+
+    // Phase 2: fuzzy fallback — match tech token against skill.id / description
+    if (result.length < limit) {
+      for (const tech of techs) {
+        for (const s of this.skills) {
+          if (s.id.includes(tech) || s.description.toLowerCase().includes(tech)) {
+            add(s);
+            if (result.length >= limit) { return result; }
+          }
+        }
+      }
+    }
+
+    return result;
+  }
+
   /** Returns sorted unique categories; 'personal' second-to-last, 'uncategorized' always last. */
   getCategories(): string[] {
     const cats = [...new Set(this.skills.map(s => s.category))].sort();
@@ -82,6 +122,24 @@ export class SkillsManager {
   }
 
   countInstalled(): number { return this.repository.countInstalled(this.skills); }
+
+  /** Returns the Set of installed skill IDs (cached until invalidated). */
+  getInstalledIds(): Set<string> {
+    if (!this._installedCache) {
+      this._installedCache = this.repository.getInstalledIds(this.skills);
+    }
+    return this._installedCache;
+  }
+
+  /** Returns true when the given skill ID is installed in any agent target. */
+  isInstalled(id: string): boolean {
+    return this.getInstalledIds().has(id);
+  }
+
+  /** Clears the install-status cache so the next call re-scans the filesystem. */
+  invalidateInstallCache(): void {
+    this._installedCache = null;
+  }
 
   // ── Content access (delegated) ─────────────────────────────────────────────
 

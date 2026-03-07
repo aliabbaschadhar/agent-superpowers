@@ -26,7 +26,9 @@
     "gemini-cli"
   ],
   "categories": ["AI", "Other", "Snippets"],
-  "engines": { "vscode": "^1.85.0" },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
   "main": "./dist/extension.js",
   "activationEvents": ["onStartupFinished"],
   "contributes": {
@@ -76,6 +78,24 @@
         "title": "Bulk Copy Skill IDs to Clipboard",
         "category": "AI Skills",
         "icon": "$(copy)"
+      },
+      {
+        "command": "aiSkills.installCategory",
+        "title": "Install All in Category",
+        "category": "AI Skills",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "aiSkills.installAll",
+        "title": "Install All Skills",
+        "category": "AI Skills",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "aiSkills.filterTree",
+        "title": "Show Installed Skills Only",
+        "category": "AI Skills",
+        "icon": "$(filter)"
       }
     ],
     "viewsContainers": {
@@ -92,12 +112,23 @@
         {
           "id": "aiSkillsTree",
           "name": "Skills",
-          "type": "tree"
+          "type": "tree",
+          "icon": "media/sidebar-icon.svg"
         }
       ]
     },
     "menus": {
       "view/title": [
+        {
+          "command": "aiSkills.filterTree",
+          "when": "view == aiSkillsTree && !aiSkills.installedFilterActive",
+          "group": "navigation@0"
+        },
+        {
+          "command": "aiSkills.filterTree",
+          "when": "view == aiSkillsTree && aiSkills.installedFilterActive",
+          "group": "navigation@0"
+        },
         {
           "command": "aiSkills.bulkCopy",
           "when": "view == aiSkillsTree",
@@ -107,28 +138,63 @@
           "command": "aiSkills.refreshTree",
           "when": "view == aiSkillsTree",
           "group": "navigation@2"
+        },
+        {
+          "command": "aiSkills.installAll",
+          "when": "view == aiSkillsTree",
+          "group": "navigation@3"
         }
       ],
       "view/item/context": [
         {
           "command": "aiSkills.preview",
-          "when": "view == aiSkillsTree && viewItem == skill",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill(\\.favorited)?$/",
           "group": "inline@1"
         },
         {
           "command": "aiSkills.copyId",
-          "when": "view == aiSkillsTree && viewItem == skill",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill(\\.favorited)?$/",
           "group": "inline@2"
         },
         {
           "command": "aiSkills.installFromTree",
-          "when": "view == aiSkillsTree && viewItem == skill",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill(\\.favorited)?$/",
           "group": "inline@3"
         },
         {
           "command": "aiSkills.uninstall",
-          "when": "view == aiSkillsTree && viewItem == skill",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill(\\.favorited)?$/",
           "group": "inline@4"
+        },
+        {
+          "command": "aiSkills.preview",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed(\\.favorited)?$/",
+          "group": "inline@1"
+        },
+        {
+          "command": "aiSkills.copyId",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed(\\.favorited)?$/",
+          "group": "inline@2"
+        },
+        {
+          "command": "aiSkills.installFromTree",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed(\\.favorited)?$/",
+          "group": "inline@3"
+        },
+        {
+          "command": "aiSkills.uninstall",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed(\\.favorited)?$/",
+          "group": "inline@4"
+        },
+        {
+          "command": "aiSkills.installCategory",
+          "when": "view == aiSkillsTree && viewItem == category",
+          "group": "inline@1"
+        },
+        {
+          "command": "aiSkills.installAll",
+          "when": "view == aiSkillsTree && viewItem == summary",
+          "group": "inline@1"
         }
       ]
     },
@@ -222,5 +288,8 @@
     "glob": "^13.0.5",
     "rimraf": "^5.0.5",
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "fuse.js": "^7.1.0"
   }
 }

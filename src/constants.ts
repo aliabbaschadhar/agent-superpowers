@@ -23,6 +23,13 @@ export const CMD_COPY_ID = 'aiSkills.copyId';
 export const CMD_REFRESH_TREE = 'aiSkills.refreshTree';
 export const CMD_FILTER_TREE = 'aiSkills.filterTree';
 export const CMD_UNINSTALL = 'aiSkills.uninstall';
+export const CMD_TOGGLE_FAVORITE = 'aiSkills.toggleFavorite';
+
+/** globalState key for persisted favorite skill IDs */
+export const FAVORITE_STATE_KEY = 'aiSkills.favoriteIds';
+
+/** VS Code context keys */
+export const CTX_INSTALLED_FILTER = 'aiSkills.installedFilterActive';
 
 /** User-facing error messages */
 export const ERR_BUNDLE_INCOMPLETE =
