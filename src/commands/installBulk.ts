@@ -100,7 +100,7 @@ async function bulkInstall(
   if (agentChoice.id === 'copilot' && skills.length > 20) {
     const proceed = await vscode.window.showWarningMessage(
       `Installing ${skills.length} skills to GitHub Copilot will append all content ` +
-      `into a single file (.github/copilot-instructions.md), which may become very large. Continue?`,
+      'into a single file (.github/copilot-instructions.md), which may become very large. Continue?',
       { modal: true },
       'Continue',
       'Cancel'
@@ -144,7 +144,7 @@ async function bulkInstall(
       if (conflicting.length > 0) {
         const choice = await vscode.window.showWarningMessage(
           `${conflicting.length} of ${skills.length} skills are already installed. ` +
-          `What would you like to do?`,
+          'What would you like to do?',
           { modal: true },
           'Skip Existing',
           'Overwrite All',
@@ -237,7 +237,7 @@ async function bulkInstall(
   const parts = [`${installed} installed`];
   if (skipped > 0) { parts.push(`${skipped} skipped`); }
   if (failed > 0) { parts.push(`${failed} failed`); }
-  if (cancelled) { parts.push(`cancelled`); }
+  if (cancelled) { parts.push('cancelled'); }
 
   vscode.window.showInformationMessage(
     `AI Skills bulk install complete: ${parts.join(' · ')}.`
