@@ -5,6 +5,7 @@ test/
 .github/
 .vscode/
 .eslintrc.json
+eslint.config.mjs
 tsconfig.json
 tsconfig.test.json
 esbuild.config.js
@@ -14,6 +15,7 @@ esbuild.config.js
 node_modules/
 npm-debug.log
 package-lock.json
+bun.lock
 
 # Generated artifacts that should not double-ship
 out/
@@ -23,9 +25,14 @@ test-out/
 .gitignore
 *.map
 
+# Skill content is fetched on-demand and cached in globalStorage.
+# Only the index (skills_index.json) and manifest need to ship.
+assets/skills/
+
 # Keep in vsix:
 # dist/extension.js
-# assets/
+# assets/skills_index.json
+# assets/manifest.json
 # media/
 # package.json
 # README.md
