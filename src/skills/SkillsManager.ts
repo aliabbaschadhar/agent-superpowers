@@ -5,6 +5,7 @@ import { SkillEntry } from './types';
 import { SkillsRepository } from './SkillsRepository';
 import { RemoteSync } from './RemoteSync';
 import { TECH_SKILL_MAP } from './techSkillMap';
+import { SkillUpdateTracker } from './SkillUpdateTracker';
 
 export { SkillEntry } from './types';
 
@@ -153,6 +154,26 @@ export class SkillsManager {
 
   contentPath(skill: SkillEntry): string {
     return this.repository.contentPath(skill);
+  }
+
+  /**
+   * Returns any installed skill whose latest bundled content hash differs from
+   * the hash recorded at install time. An empty array = everything is current.
+   */
+  async getSkillsWithUpdates(tracker: SkillUpdateTracker): Promise<SkillEntry[]> {
+    const installedIds = this.getInstalledIds();
+    const outdated: SkillEntry[] = [];
+    for (const skill of this.skills) {
+      if (!installedIds.has(skill.id)) { continue; }
+      const storedHash = tracker.getHash(skill.id);
+      if (!storedHash) { continue; } // installed outside this extension — skip
+      const content = await this.readContent(skill);
+      if (!content) { continue; }
+      if (tracker.hasUpdate(skill.id, content)) {
+        outdated.push(skill);
+      }
+    }
+    return outdated;
   }
 
   // ── Private ────────────────────────────────────────────────────────────────

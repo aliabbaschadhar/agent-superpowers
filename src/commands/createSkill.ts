@@ -165,7 +165,7 @@ export function registerCreateSkillCommand(
 
         vscode.window.showInformationMessage(
           `AI Skills: Created "${skillId}" at .agent/skills/${skillId}/SKILL.md. ` +
-          `Edit the template, then it will be active for your AI agent.`
+          'Edit the template, then it will be active for your AI agent.'
         );
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);

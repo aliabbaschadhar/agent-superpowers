@@ -3,6 +3,7 @@ import { SkillEntry } from '../skills/types';
 import { DESCRIPTION_TRUNCATE_LENGTH } from '../constants';
 import { TECH_DISPLAY_NAMES } from '../skills/techSkillMap';
 import { SkillCollection } from '../skills/collections';
+import { UserCollection } from '../skills/UserCollections';
 
 /** Human-readable display names for category slugs shown in the sidebar. */
 export const CATEGORY_DISPLAY_NAMES: Record<string, string> = {
@@ -165,7 +166,8 @@ export class SkillItem extends vscode.TreeItem {
     public readonly skill: SkillEntry,
     installed = false,
     isFavorite = false,
-    isRecommended = false
+    isRecommended = false,
+    isOutdated = false
   ) {
     super(skill.id, vscode.TreeItemCollapsibleState.None);
 
@@ -179,6 +181,10 @@ export class SkillItem extends vscode.TreeItem {
       } else {
         this.contextValue = 'skill-recommended';
       }
+    } else if (installed && isFavorite && isOutdated) {
+      this.contextValue = 'skill-installed.favorited.outdated';
+    } else if (installed && isOutdated) {
+      this.contextValue = 'skill-installed.outdated';
     } else if (installed && isFavorite) {
       this.contextValue = 'skill-installed.favorited';
     } else if (installed) {
@@ -197,11 +203,12 @@ export class SkillItem extends vscode.TreeItem {
 
     this.tooltip = new vscode.MarkdownString(
       `**${skill.id}**\n\n${desc}\n\n*Category: ${CATEGORY_DISPLAY_NAMES[skill.category] ?? skill.category} | Source: ${skill.source}*` +
-      (installed ? '\n\n✅ **Installed**' : '') +
-      (isFavorite ? '\n\n⭐ **Favorited**' : '')
+      (installed ? '\n\n✅ **Installed**' : '') + (isOutdated ? '\n\n\uD83D\uDD04 **Update available**' : '') + (isFavorite ? '\n\n⭐ **Favorited**' : '')
     );
 
-    if (installed) {
+    if (installed && isOutdated) {
+      this.iconPath = new vscode.ThemeIcon('arrow-up', new vscode.ThemeColor('charts.yellow'));
+    } else if (installed) {
       this.iconPath = new vscode.ThemeIcon('pass-filled', new vscode.ThemeColor('testing.iconPassed'));
     } else if (isFavorite) {
       this.iconPath = new vscode.ThemeIcon('star-full', new vscode.ThemeColor('charts.yellow'));
@@ -226,7 +233,7 @@ export class InstalledSectionItem extends vscode.TreeItem {
     super('Installed Skills', vscode.TreeItemCollapsibleState.Expanded);
     this.description = `${skills.length}`;
     this.tooltip = new vscode.MarkdownString(
-      `**Installed in this project**\n\n` +
+      '**Installed in this project**\n\n' +
       skills.map(s => `- \`${s.id}\``).join('\n')
     );
     this.iconPath = new vscode.ThemeIcon(
@@ -301,9 +308,12 @@ export class GettingStartedTipItem extends vscode.TreeItem {
 export class CollectionsSectionItem extends vscode.TreeItem {
   readonly contextValue = 'collectionsSection';
 
-  constructor(public readonly collections: SkillCollection[]) {
+  constructor(public readonly collections: SkillCollection[], userCount = 0) {
     super('Skill Collections', vscode.TreeItemCollapsibleState.Collapsed);
-    this.description = `${collections.length} packs`;
+    const total = collections.length + userCount;
+    this.description = userCount > 0
+      ? `${collections.length} packs \u00B7 ${userCount} custom`
+      : `${total} packs`;
     this.tooltip = new vscode.MarkdownString(
       '**Curated Skill Collections**\n\n' +
       'Pre-assembled skill packs for common roles and workflows.\n\n' +
@@ -331,6 +341,40 @@ export class CollectionItem extends vscode.TreeItem {
   }
 }
 
+export class UserCollectionItem extends vscode.TreeItem {
+  readonly contextValue = 'user-collection';
+
+  constructor(
+    public readonly collection: UserCollection,
+    public readonly installedCount: number
+  ) {
+    super(collection.name, vscode.TreeItemCollapsibleState.None);
+    this.id = `user-collection-${collection.id}`;
+    this.description = `${collection.skillIds.length} skills${installedCount > 0 ? ` · ${installedCount} installed` : ''}`;
+    this.tooltip = new vscode.MarkdownString(
+      `**${collection.name}** *(custom)*\n\n` +
+      `${collection.skillIds.length} skill(s)${installedCount > 0 ? ` · ${installedCount} installed` : ''}`
+    );
+    this.iconPath = new vscode.ThemeIcon(collection.icon ?? 'list-unordered');
+    this.command = {
+      command: 'aiSkills.browseCollections',
+      title: 'Browse Collection',
+    };
+  }
+}
+
+export class AllCategoriesItem extends vscode.TreeItem {
+  readonly contextValue = 'allCategories';
+
+  constructor(public readonly categoryCount: number) {
+    super('All Categories', vscode.TreeItemCollapsibleState.Collapsed);
+    this.id = 'allCategories';
+    this.description = `${categoryCount}`;
+    this.tooltip = `Browse all ${categoryCount} skill categories`;
+    this.iconPath = new vscode.ThemeIcon('folder-library');
+  }
+}
+
 export type SkillTreeNode =
   | SummaryItem
   | CategoryItem
@@ -341,4 +385,6 @@ export type SkillTreeNode =
   | GettingStartedItem
   | GettingStartedTipItem
   | CollectionsSectionItem
-  | CollectionItem;
+  | CollectionItem
+  | UserCollectionItem
+  | AllCategoriesItem;

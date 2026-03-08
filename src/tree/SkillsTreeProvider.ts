@@ -2,14 +2,16 @@ import * as vscode from 'vscode';
 import { SkillsManager } from '../skills/SkillsManager';
 import { SkillEntry } from '../skills/types';
 import {
+  AllCategoriesItem,
   CategoryItem, CollectionItem, CollectionsSectionItem,
   FavoritesCategoryItem, GettingStartedItem, GettingStartedTipItem,
   InstalledSectionItem, RecommendedSectionItem,
-  SkillItem, SummaryItem, SkillTreeNode
+  SkillItem, SummaryItem, SkillTreeNode, UserCollectionItem
 } from './nodes';
 import { CTX_INSTALLED_FILTER } from '../constants';
 import { FavoriteSkills } from '../favoriteSkills';
 import { SKILL_COLLECTIONS } from '../skills/collections';
+import { UserCollections } from '../skills/UserCollections';
 
 export class SkillsTreeProvider implements vscode.TreeDataProvider<SkillTreeNode> {
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<void>();
@@ -19,10 +21,12 @@ export class SkillsTreeProvider implements vscode.TreeDataProvider<SkillTreeNode
   private showInstalledOnly = false;
   private recommendedSkills: SkillEntry[] = [];
   private detectedTechs: string[] = [];
+  private outdatedIds: Set<string> = new Set();
 
   constructor(
     private readonly manager: SkillsManager,
     private readonly favoriteSkills: FavoriteSkills,
+    private readonly userCollections: UserCollections,
     private readonly showOnboarding: boolean = false
   ) { }
 
@@ -30,6 +34,12 @@ export class SkillsTreeProvider implements vscode.TreeDataProvider<SkillTreeNode
   setRecommendations(skills: SkillEntry[], techs: string[]): void {
     this.recommendedSkills = skills;
     this.detectedTechs = techs;
+    this._onDidChangeTreeData.fire();
+  }
+
+  /** Update the set of skill IDs that have updates available. Triggers refresh. */
+  setOutdatedIds(ids: Set<string>): void {
+    this.outdatedIds = ids;
     this._onDidChangeTreeData.fire();
   }
 
@@ -105,18 +115,34 @@ export class SkillsTreeProvider implements vscode.TreeDataProvider<SkillTreeNode
     }
 
     if (el instanceof CollectionsSectionItem) {
-      return el.collections.map(col => {
+      const builtIn = el.collections.map(col => {
         const installedCount = col.skillIds.filter(id => this.manager.isInstalled(id)).length;
         return new CollectionItem(col, installedCount);
       });
+      const userCols = this.userCollections.getAll().map(col => {
+        const installedCount = col.skillIds.filter(id => this.manager.isInstalled(id)).length;
+        return new UserCollectionItem(col, installedCount);
+      });
+      return [...builtIn, ...userCols];
     }
 
     if (el instanceof RecommendedSectionItem) {
       return el.skills.map(s => new SkillItem(s, this.manager.isInstalled(s.id), this.favoriteSkills.has(s.id), true));
     }
 
+    if (el instanceof AllCategoriesItem) {
+      const categories = this.manager.getCategories();
+      return categories.map(cat => new CategoryItem(cat, this.manager.getByCategory(cat).length));
+    }
+
     if (el instanceof InstalledSectionItem) {
-      return el.skills.map(s => new SkillItem(s, true, this.favoriteSkills.has(s.id)));
+      return el.skills.map(s => new SkillItem(
+        s,
+        true,
+        this.favoriteSkills.has(s.id),
+        false,
+        this.outdatedIds.has(s.id)
+      ));
     }
 
     if (el instanceof FavoritesCategoryItem) {
@@ -124,7 +150,7 @@ export class SkillsTreeProvider implements vscode.TreeDataProvider<SkillTreeNode
       return favIds
         .map(id => this.manager.findById(id))
         .filter((s): s is SkillEntry => s !== undefined)
-        .map(s => new SkillItem(s, this.manager.isInstalled(s.id), true));
+        .map(s => new SkillItem(s, this.manager.isInstalled(s.id), true, false, this.outdatedIds.has(s.id)));
     }
 
     if (el instanceof CategoryItem) {
@@ -133,7 +159,13 @@ export class SkillsTreeProvider implements vscode.TreeDataProvider<SkillTreeNode
       if (this.showInstalledOnly) {
         filtered = filtered.filter(s => this.manager.isInstalled(s.id));
       }
-      return filtered.map(s => new SkillItem(s, this.manager.isInstalled(s.id), this.favoriteSkills.has(s.id)));
+      return filtered.map(s => new SkillItem(
+        s,
+        this.manager.isInstalled(s.id),
+        this.favoriteSkills.has(s.id),
+        false,
+        this.outdatedIds.has(s.id)
+      ));
     }
 
     return [];
@@ -169,7 +201,7 @@ export class SkillsTreeProvider implements vscode.TreeDataProvider<SkillTreeNode
 
       // Collections section
       const collections: SkillTreeNode[] = [
-        new CollectionsSectionItem(SKILL_COLLECTIONS),
+        new CollectionsSectionItem(SKILL_COLLECTIONS, this.userCollections.getAll().length),
       ];
 
       return [
@@ -179,9 +211,7 @@ export class SkillsTreeProvider implements vscode.TreeDataProvider<SkillTreeNode
         ...recommendations,
         ...installedSection,
         ...collections,
-        ...categories.map(
-          cat => new CategoryItem(cat, this.manager.getByCategory(cat).length)
-        ),
+        new AllCategoriesItem(categories.length),
       ];
     }
 

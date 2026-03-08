@@ -6,6 +6,28 @@ Running log of decisions, discoveries, and session context for the **AI Agent Su
 
 ## Session Log
 
+### 2026-03-09
+
+**Status:** Active development — full sidebar feature overhaul complete, ready for testing.
+
+**What was implemented (sidebar overhaul):**
+- **Favorites CRUD:** `toggleFavorite` command with inline star button on all skill types; `clearFavorites` command with confirmation on the Favorites section header.
+- **Custom User Collections:** `UserCollections` class (globalState), full CRUD commands — `createCollection`, `editCollection`, `deleteCollection`, `addToCollection`, `removeFromCollection`. Collections displayed as `UserCollectionItem` nodes under a new Collections section header.
+- **All Categories wrapper:** `AllCategoriesItem` tree node collapses all category nodes under a single `$(folder-library)` header, reducing sidebar clutter.
+- **Skill update detection:** `SkillUpdateTracker` class records SHA-256 hashes of installed skill content. `SkillsManager.getSkillsWithUpdates(tracker)` returns outdated skills. After remote sync, outdated skills are highlighted with `$(arrow-up)` icon and `aiSkills.updatesAvailable` context key.
+- **Batch update command:** `updateAllSkills` shows notification with count and Update All/Review options, calls `bulkInstall()`, re-hashes.
+- **Auto-install on workspace open:** WorkspaceScanner recommendations trigger a notification ("Install X recommended skills?") with Install/Pick/Dismiss options; dismissed state stored in workspaceState.
+- **RemoteSync retry logic:** 3 retries with 1s/2s/4s back-off, immediate null return on 4xx errors.
+- **Fixed recommended install `when`-clause:** regex `/^skill-recommended(?!.*\.installed)/` correctly shows install button only on non-installed recommended skills.
+
+**Known issues / tech debt:**
+- `InstallationDetector` does a full disk scan on every tree refresh — should be memoized or event-driven.
+- No real test coverage for installer classes.
+- `WorkspaceScanner` only reads the root `package.json`; monorepos with nested packages are not scanned.
+- Webview preview is plain text; no syntax highlighting for Markdown.
+
+---
+
 ### 2026-03-08
 
 **Status:** Active development — v1.1.0 released, v1.2.0 planning in progress.

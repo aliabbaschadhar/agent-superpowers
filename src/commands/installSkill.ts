@@ -4,10 +4,12 @@ import { ProjectLocalInstaller } from '../installers/projectLocalInstaller';
 import { InstallOptions, InstallResult } from '../installers/types';
 import { ERR_SKILL_NOT_FOUND, ERR_CONTENT_MISSING } from '../constants';
 import { RecentSkills } from '../recentSkills';
+import { SkillUpdateTracker } from '../skills/SkillUpdateTracker';
 
 export function registerInstallCommand(
   manager: SkillsManager,
-  recentSkills: RecentSkills
+  recentSkills: RecentSkills,
+  tracker?: SkillUpdateTracker
 ): vscode.Disposable {
   return vscode.commands.registerCommand(
     'aiSkills.install',
@@ -45,6 +47,7 @@ export function registerInstallCommand(
         skillContent: content,
         skillFiles: skillFiles.size > 1 ? skillFiles : undefined,
         workspaceRoot,
+        tracker,
       };
 
       let result: InstallResult | undefined;

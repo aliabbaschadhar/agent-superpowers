@@ -49,6 +49,11 @@ export abstract class BaseInstaller {
         }
       }
 
+      // Record content hash so future syncs can detect updates
+      if (opts.tracker) {
+        opts.tracker.setHash(opts.skillId, opts.skillContent);
+      }
+
       return { success: true, destPath, message: `Installed to ${destPath}` };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);

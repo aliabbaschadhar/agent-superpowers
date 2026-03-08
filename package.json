@@ -131,6 +131,54 @@
         "title": "Import Skill Set from File",
         "category": "AI Skills",
         "icon": "$(import)"
+      },
+      {
+        "command": "aiSkills.toggleFavorite",
+        "title": "Toggle Favorite",
+        "category": "AI Skills",
+        "icon": "$(star)"
+      },
+      {
+        "command": "aiSkills.clearFavorites",
+        "title": "Clear All Favorites",
+        "category": "AI Skills",
+        "icon": "$(star-delete)"
+      },
+      {
+        "command": "aiSkills.createCollection",
+        "title": "New Custom Collection",
+        "category": "AI Skills",
+        "icon": "$(add)"
+      },
+      {
+        "command": "aiSkills.editCollection",
+        "title": "Edit Collection",
+        "category": "AI Skills",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "aiSkills.deleteCollection",
+        "title": "Delete Collection",
+        "category": "AI Skills",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "aiSkills.addToCollection",
+        "title": "Add to Collection",
+        "category": "AI Skills",
+        "icon": "$(list-ordered)"
+      },
+      {
+        "command": "aiSkills.removeFromCollection",
+        "title": "Remove from Collection",
+        "category": "AI Skills",
+        "icon": "$(remove)"
+      },
+      {
+        "command": "aiSkills.updateAll",
+        "title": "Update All Installed Skills",
+        "category": "AI Skills",
+        "icon": "$(sync)"
       }
     ],
     "viewsContainers": {
@@ -190,6 +238,11 @@
           "group": "2_collections@2"
         },
         {
+          "command": "aiSkills.createCollection",
+          "when": "view == aiSkillsTree",
+          "group": "2_collections@3"
+        },
+        {
           "command": "aiSkills.exportSkillSet",
           "when": "view == aiSkillsTree",
           "group": "3_importexport@1"
@@ -198,6 +251,11 @@
           "command": "aiSkills.importSkillSet",
           "when": "view == aiSkillsTree",
           "group": "3_importexport@2"
+        },
+        {
+          "command": "aiSkills.updateAll",
+          "when": "view == aiSkillsTree && aiSkills.updatesAvailable",
+          "group": "navigation@4"
         }
       ],
       "view/item/context": [
@@ -217,33 +275,48 @@
           "group": "inline@3"
         },
         {
-          "command": "aiSkills.uninstall",
+          "command": "aiSkills.toggleFavorite",
           "when": "view == aiSkillsTree && viewItem =~ /^skill(\\.favorited)?$/",
           "group": "inline@4"
         },
         {
+          "command": "aiSkills.addToCollection",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill/",
+          "group": "context@1"
+        },
+        {
           "command": "aiSkills.preview",
-          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed(\\.favorited)?$/",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed/",
           "group": "inline@1"
         },
         {
           "command": "aiSkills.copyId",
-          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed(\\.favorited)?$/",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed/",
           "group": "inline@2"
         },
         {
           "command": "aiSkills.installFromTree",
-          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed(\\.favorited)?$/",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed/",
           "group": "inline@3"
         },
         {
-          "command": "aiSkills.uninstall",
-          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed(\\.favorited)?$/",
+          "command": "aiSkills.toggleFavorite",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed/",
           "group": "inline@4"
+        },
+        {
+          "command": "aiSkills.uninstall",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed/",
+          "group": "inline@5"
         },
         {
           "command": "aiSkills.installCategory",
           "when": "view == aiSkillsTree && viewItem == category",
+          "group": "inline@1"
+        },
+        {
+          "command": "aiSkills.installCategory",
+          "when": "view == aiSkillsTree && viewItem == allCategories",
           "group": "inline@1"
         },
         {
@@ -257,6 +330,11 @@
           "group": "inline@1"
         },
         {
+          "command": "aiSkills.clearFavorites",
+          "when": "view == aiSkillsTree && viewItem == favoritesCategory",
+          "group": "inline@1"
+        },
+        {
           "command": "aiSkills.preview",
           "when": "view == aiSkillsTree && viewItem =~ /^skill-recommended/",
           "group": "inline@1"
@@ -268,12 +346,32 @@
         },
         {
           "command": "aiSkills.installFromTree",
-          "when": "view == aiSkillsTree && viewItem =~ /^skill-recommended$|skill-recommended\\.favorited/",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-recommended(?!.*\\.installed)/",
           "group": "inline@3"
         },
         {
           "command": "aiSkills.uninstall",
-          "when": "view == aiSkillsTree && viewItem =~ /^skill-recommended\\.installed/",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-recommended.*\\.installed/",
+          "group": "inline@3"
+        },
+        {
+          "command": "aiSkills.toggleFavorite",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-recommended/",
+          "group": "inline@4"
+        },
+        {
+          "command": "aiSkills.editCollection",
+          "when": "view == aiSkillsTree && viewItem == user-collection",
+          "group": "inline@1"
+        },
+        {
+          "command": "aiSkills.deleteCollection",
+          "when": "view == aiSkillsTree && viewItem == user-collection",
+          "group": "inline@2"
+        },
+        {
+          "command": "aiSkills.installCategory",
+          "when": "view == aiSkillsTree && viewItem == user-collection",
           "group": "inline@3"
         }
       ]

@@ -7,6 +7,7 @@ import { SkillEntry } from '../skills/types';
 import { SkillsTreeProvider } from '../tree/SkillsTreeProvider';
 import { CategoryItem } from '../tree/nodes';
 import { InstallOptions, InstallResult } from '../installers/types';
+import { SkillUpdateTracker } from '../skills/SkillUpdateTracker';
 
 // ─── Path helper ──────────────────────────────────────────────────────────────
 
@@ -42,10 +43,11 @@ function writeDirectly(destPath: string, opts: InstallOptions): InstallResult {
 
 // ─── Core bulk install logic ───────────────────────────────────────────────────
 
-async function bulkInstall(
+export async function bulkInstall(
   skills: SkillEntry[],
   label: string,
-  manager: SkillsManager
+  manager: SkillsManager,
+  tracker?: SkillUpdateTracker
 ): Promise<void> {
   if (skills.length === 0) {
     vscode.window.showInformationMessage('AI Skills: No skills to install.');
@@ -141,7 +143,12 @@ async function bulkInstall(
           };
 
           const result = writeDirectly(destPath, opts);
-          result.success ? installed++ : failed++;
+          if (result.success) {
+            installed++;
+            if (tracker) { tracker.setHash(skill.id, content); }
+          } else {
+            failed++;
+          }
         } catch {
           failed++;
         }
