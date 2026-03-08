@@ -1,14 +1,9 @@
 import * as vscode from 'vscode';
 import { SkillsManager } from '../skills/SkillsManager';
-import { ClaudeInstaller } from '../installers/claudeInstaller';
-import { GeminiInstaller } from '../installers/geminiInstaller';
-import { CursorInstaller } from '../installers/cursorInstaller';
-import { CopilotInstaller } from '../installers/copilotInstaller';
-import { GenericInstaller } from '../installers/genericInstaller';
+import { ProjectLocalInstaller } from '../installers/projectLocalInstaller';
 import { InstallOptions, InstallResult } from '../installers/types';
 import { ERR_SKILL_NOT_FOUND, ERR_CONTENT_MISSING } from '../constants';
 import { RecentSkills } from '../recentSkills';
-import { AgentOption, buildAgentOptions } from './agentPicker';
 
 export function registerInstallCommand(
   manager: SkillsManager,
@@ -44,18 +39,7 @@ export function registerInstallCommand(
         return;
       }
 
-      const agentOptions: AgentOption[] = buildAgentOptions();
-
-      const agentChoice = await vscode.window.showQuickPick(agentOptions, {
-        placeHolder: `Install '${resolvedId}' to which agent?`,
-      }) as AgentOption | undefined;
-
-      if (!agentChoice) {
-        return;
-      }
-
-      const workspaceRoot =
-        vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+      const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
       const opts: InstallOptions = {
         skillId: resolvedId,
         skillContent: content,
@@ -71,26 +55,7 @@ export function registerInstallCommand(
           cancellable: false,
         },
         async () => {
-          switch (agentChoice.id) {
-            case 'claude':
-              result = await new ClaudeInstaller().install(opts);
-              break;
-            case 'gemini':
-              result = await new GeminiInstaller().install(opts);
-              break;
-            case 'cursor-project':
-              result = await new CursorInstaller(false).install(opts);
-              break;
-            case 'cursor-global':
-              result = await new CursorInstaller(true).install(opts);
-              break;
-            case 'copilot':
-              result = await new CopilotInstaller().install(opts);
-              break;
-            case 'generic':
-              result = await new GenericInstaller().install(opts);
-              break;
-          }
+          result = await new ProjectLocalInstaller().install(opts);
         }
       );
 

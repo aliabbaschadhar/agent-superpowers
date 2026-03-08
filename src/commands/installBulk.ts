@@ -1,5 +1,4 @@
 import * as fs from 'fs';
-import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
@@ -8,47 +7,11 @@ import { SkillEntry } from '../skills/types';
 import { SkillsTreeProvider } from '../tree/SkillsTreeProvider';
 import { CategoryItem } from '../tree/nodes';
 import { InstallOptions, InstallResult } from '../installers/types';
-import { CopilotInstaller } from '../installers/copilotInstaller';
-import { pickAgent, AgentOption } from './agentPicker';
 
-// ─── Path helpers ──────────────────────────────────────────────────────────────
+// ─── Path helper ──────────────────────────────────────────────────────────────
 
-/**
- * Compute the expected on-disk target path for a skill, given an agent.
- * Returns null for Copilot (single-file append, different detection logic)
- * and when required context (workspaceRoot / genericBase) is missing.
- */
-function computeTargetPath(
-  agentId: string,
-  skillId: string,
-  workspaceRoot?: string,
-  genericBase?: string
-): string | null {
-  const cfg = vscode.workspace.getConfiguration('aiSkills');
-  const home = os.homedir();
-
-  switch (agentId) {
-    case 'claude': {
-      const override = cfg.get<string>('claudeSkillsPath', '').trim();
-      const base = override || path.join(home, '.claude', 'skills');
-      return path.join(base, skillId, 'SKILL.md');
-    }
-    case 'gemini': {
-      const override = cfg.get<string>('geminiSkillsPath', '').trim();
-      const base = override || path.join(home, '.gemini', 'skills');
-      return path.join(base, skillId, 'SKILL.md');
-    }
-    case 'cursor-global':
-      return path.join(home, '.cursor', 'rules', skillId + '.mdc');
-    case 'cursor-project':
-      return workspaceRoot
-        ? path.join(workspaceRoot, '.cursor', 'rules', skillId + '.mdc')
-        : null;
-    case 'generic':
-      return genericBase ? path.join(genericBase, skillId, 'SKILL.md') : null;
-    default:
-      return null;
-  }
+function computeTargetPath(skillId: string, workspaceRoot: string): string {
+  return path.join(workspaceRoot, '.agent', 'skills', skillId, 'SKILL.md');
 }
 
 /**
@@ -89,41 +52,17 @@ async function bulkInstall(
     return;
   }
 
-  const agentChoice: AgentOption | undefined = await pickAgent(
-    `Install ${skills.length} skill${skills.length > 1 ? 's' : ''} to which agent?`
-  );
-  if (!agentChoice) { return; }
-
   const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-
-  // ── Copilot large-batch warning ────────────────────────────────────────────
-  if (agentChoice.id === 'copilot' && skills.length > 20) {
-    const proceed = await vscode.window.showWarningMessage(
-      `Installing ${skills.length} skills to GitHub Copilot will append all content ` +
-      'into a single file (.github/copilot-instructions.md), which may become very large. Continue?',
-      { modal: true },
-      'Continue',
-      'Cancel'
+  if (!workspaceRoot) {
+    vscode.window.showErrorMessage(
+      'AI Skills: No workspace folder is open. Open a project folder first, then install skills.'
     );
-    if (proceed !== 'Continue') { return; }
+    return;
   }
 
-  // ── Generic: prompt for base directory once ────────────────────────────────
-  let genericBase: string | undefined;
-  if (agentChoice.id === 'generic') {
-    const entered = await vscode.window.showInputBox({
-      prompt: `Enter the base directory for all ${skills.length} skills`,
-      placeHolder: '/path/to/my-agent/skills/',
-      validateInput: v => (v && v.trim().length > 0 ? null : 'Path cannot be empty'),
-    });
-    if (!entered) { return; }
-    genericBase = entered.trim();
-  }
-
-  // ── Conflict detection for non-Copilot agents ──────────────────────────────
+  // ── Conflict detection ─────────────────────────────────────────────────────
   //
-  // Instead of showing a modal for every existing skill, we resolve the
-  // skip-vs-overwrite decision once for the whole batch.
+  // Resolve skip-vs-overwrite once for the whole batch instead of per-skill.
   //
   // overwriteExisting:
   //   true  → overwrite all (silently)
@@ -131,32 +70,28 @@ async function bulkInstall(
   //   null  → no conflicts found, proceed normally
   let overwriteExisting: boolean | null = null;
 
-  if (agentChoice.id !== 'copilot') {
-    const cfg = vscode.workspace.getConfiguration('aiSkills');
-    const confirmOverwrite = cfg.get<boolean>('confirmOverwrite', true);
+  const cfg = vscode.workspace.getConfiguration('aiSkills');
+  const confirmOverwrite = cfg.get<boolean>('confirmOverwrite', true);
 
-    if (confirmOverwrite) {
-      const conflicting = skills.filter(s => {
-        const p = computeTargetPath(agentChoice.id, s.id, workspaceRoot, genericBase);
-        return p ? fs.existsSync(p) : false;
-      });
+  if (confirmOverwrite) {
+    const conflicting = skills.filter(s =>
+      fs.existsSync(computeTargetPath(s.id, workspaceRoot))
+    );
 
-      if (conflicting.length > 0) {
-        const choice = await vscode.window.showWarningMessage(
-          `${conflicting.length} of ${skills.length} skills are already installed. ` +
-          'What would you like to do?',
-          { modal: true },
-          'Skip Existing',
-          'Overwrite All',
-          'Cancel'
-        );
-        if (!choice || choice === 'Cancel') { return; }
-        overwriteExisting = choice === 'Overwrite All';
-      }
-    } else {
-      // confirmOverwrite is false → overwrite everything silently
-      overwriteExisting = true;
+    if (conflicting.length > 0) {
+      const choice = await vscode.window.showWarningMessage(
+        `${conflicting.length} of ${skills.length} skills are already installed. ` +
+        'What would you like to do?',
+        { modal: true },
+        'Skip Existing',
+        'Overwrite All',
+        'Cancel'
+      );
+      if (!choice || choice === 'Cancel') { return; }
+      overwriteExisting = choice === 'Overwrite All';
     }
+  } else {
+    overwriteExisting = true;
   }
 
   // ── Install loop ───────────────────────────────────────────────────────────
@@ -187,28 +122,8 @@ async function bulkInstall(
         });
 
         try {
-          // Copilot: delegate entirely to CopilotInstaller (append + sentinel logic)
-          if (agentChoice.id === 'copilot') {
-            const skillFiles = await manager.readSkillDirectory(skill);
-            const content = skillFiles.get('SKILL.md') ?? await manager.readContent(skill);
-            if (!content) { failed++; continue; }
+          const destPath = computeTargetPath(skill.id, workspaceRoot);
 
-            const opts: InstallOptions = {
-              skillId: skill.id,
-              skillContent: content,
-              skillFiles: skillFiles.size > 1 ? skillFiles : undefined,
-              workspaceRoot,
-            };
-            const result = await new CopilotInstaller().install(opts);
-            result.success ? installed++ : failed++;
-            continue;
-          }
-
-          // All other agents: compute path and write directly
-          const destPath = computeTargetPath(agentChoice.id, skill.id, workspaceRoot, genericBase);
-          if (!destPath) { failed++; continue; }
-
-          // Skip if already installed and user chose "Skip Existing"
           if (overwriteExisting === false && fs.existsSync(destPath)) {
             skipped++;
             continue;

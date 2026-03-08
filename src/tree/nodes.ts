@@ -2,8 +2,57 @@ import * as vscode from 'vscode';
 import { SkillEntry } from '../skills/types';
 import { DESCRIPTION_TRUNCATE_LENGTH } from '../constants';
 import { TECH_DISPLAY_NAMES } from '../skills/techSkillMap';
+import { SkillCollection } from '../skills/collections';
 
-/** Maps category name (lowercase) to a VS Code theme icon id. */
+/** Human-readable display names for category slugs shown in the sidebar. */
+export const CATEGORY_DISPLAY_NAMES: Record<string, string> = {
+  'ai-ml': 'AI & Machine Learning',
+  'api': 'API',
+  'app-builder': 'App Builder',
+  'architecture': 'Architecture',
+  'auth': 'Auth & Identity',
+  'automation': 'Automation',
+  'backend': 'Backend',
+  'blockchain-web3': 'Blockchain & Web3',
+  'cloud-devops': 'Cloud & DevOps',
+  'code-quality': 'Code Quality',
+  'consulting': 'Consulting',
+  'content-documentation': 'Content & Docs',
+  'creative': 'Creative',
+  'data-engineering': 'Data Engineering',
+  'database': 'Database',
+  'design': 'Design',
+  'developer-tools': 'Developer Tools',
+  'dotnet': '.NET',
+  'ecommerce': 'E-commerce',
+  'embedded-systems': 'Embedded Systems',
+  'fintech': 'Fintech',
+  'frontend': 'Frontend',
+  'game-development': 'Game Development',
+  'golang': 'Go',
+  'hr-team': 'HR & Team',
+  'javascript-typescript': 'JavaScript / TypeScript',
+  'marketing-growth': 'Marketing & Growth',
+  'media': 'Media',
+  'meta-skills': 'Meta Skills',
+  'mobile': 'Mobile',
+  'networking': 'Networking',
+  'office-productivity': 'Office Productivity',
+  'operations': 'Operations',
+  'performance': 'Performance',
+  'product-management': 'Product Management',
+  'programming-languages': 'Programming Languages',
+  'python': 'Python',
+  'research': 'Research',
+  'rust': 'Rust',
+  'security': 'Security',
+  'startup-business': 'Startup & Business',
+  'testing': 'Testing',
+  'workflow-planning': 'Workflow & Planning',
+  'writing': 'Writing',
+};
+
+/** Maps category slug to a VS Code theme icon id. */
 const CATEGORY_ICONS: Record<string, string> = {
   'ai': 'hubot',
   'ai-ml': 'hubot',
@@ -84,9 +133,10 @@ export class CategoryItem extends vscode.TreeItem {
     public readonly skillCount: number,
     isFiltered = false
   ) {
-    super(category, vscode.TreeItemCollapsibleState.Collapsed);
+    const displayName = CATEGORY_DISPLAY_NAMES[category.toLowerCase()] ?? category;
+    super(displayName, vscode.TreeItemCollapsibleState.Collapsed);
     this.description = `${skillCount}`;
-    this.tooltip = `${category} (${skillCount} skills)`;
+    this.tooltip = `${displayName} (${skillCount} skills)`;
     const iconName = isFiltered
       ? 'filter'
       : (CATEGORY_ICONS[category.toLowerCase()] ?? 'folder');
@@ -114,11 +164,22 @@ export class SkillItem extends vscode.TreeItem {
   constructor(
     public readonly skill: SkillEntry,
     installed = false,
-    isFavorite = false
+    isFavorite = false,
+    isRecommended = false
   ) {
     super(skill.id, vscode.TreeItemCollapsibleState.None);
 
-    if (installed && isFavorite) {
+    if (isRecommended) {
+      if (installed && isFavorite) {
+        this.contextValue = 'skill-recommended.installed.favorited';
+      } else if (installed) {
+        this.contextValue = 'skill-recommended.installed';
+      } else if (isFavorite) {
+        this.contextValue = 'skill-recommended.favorited';
+      } else {
+        this.contextValue = 'skill-recommended';
+      }
+    } else if (installed && isFavorite) {
       this.contextValue = 'skill-installed.favorited';
     } else if (installed) {
       this.contextValue = 'skill-installed';
@@ -135,7 +196,7 @@ export class SkillItem extends vscode.TreeItem {
         : desc;
 
     this.tooltip = new vscode.MarkdownString(
-      `**${skill.id}**\n\n${desc}\n\n*Risk: ${skill.risk} | Source: ${skill.source}*` +
+      `**${skill.id}**\n\n${desc}\n\n*Category: ${CATEGORY_DISPLAY_NAMES[skill.category] ?? skill.category} | Source: ${skill.source}*` +
       (installed ? '\n\n✅ **Installed**' : '') +
       (isFavorite ? '\n\n⭐ **Favorited**' : '')
     );
@@ -145,10 +206,7 @@ export class SkillItem extends vscode.TreeItem {
     } else if (isFavorite) {
       this.iconPath = new vscode.ThemeIcon('star-full', new vscode.ThemeColor('charts.yellow'));
     } else {
-      this.iconPath =
-        skill.risk === 'safe'
-          ? new vscode.ThemeIcon('verified', new vscode.ThemeColor('testing.iconPassed'))
-          : new vscode.ThemeIcon('circle-outline');
+      this.iconPath = new vscode.ThemeIcon('circle-outline');
     }
 
     this.command = {
@@ -160,6 +218,23 @@ export class SkillItem extends vscode.TreeItem {
 }
 
 const MAX_TECH_DISPLAY = 4;
+
+export class InstalledSectionItem extends vscode.TreeItem {
+  readonly contextValue = 'installedSection';
+
+  constructor(public readonly skills: SkillEntry[]) {
+    super('Installed Skills', vscode.TreeItemCollapsibleState.Expanded);
+    this.description = `${skills.length}`;
+    this.tooltip = new vscode.MarkdownString(
+      `**Installed in this project**\n\n` +
+      skills.map(s => `- \`${s.id}\``).join('\n')
+    );
+    this.iconPath = new vscode.ThemeIcon(
+      'pass-filled',
+      new vscode.ThemeColor('testing.iconPassed')
+    );
+  }
+}
 
 export class RecommendedSectionItem extends vscode.TreeItem {
   readonly contextValue = 'recommended';
@@ -189,4 +264,81 @@ export class RecommendedSectionItem extends vscode.TreeItem {
   }
 }
 
-export type SkillTreeNode = SummaryItem | CategoryItem | FavoritesCategoryItem | SkillItem | RecommendedSectionItem;
+export class GettingStartedItem extends vscode.TreeItem {
+  readonly contextValue = 'gettingStarted';
+
+  constructor() {
+    super('Getting Started', vscode.TreeItemCollapsibleState.Collapsed);
+    this.description = 'New? Start here';
+    this.tooltip = new vscode.MarkdownString(
+      '**Welcome to AI Agent Superpowers!**\n\n' +
+      'Browse 940+ AI skills and install them into your project.\n\n' +
+      '- **Ctrl+Shift+/** — Quick-search skills\n' +
+      '- **Click** any skill to preview its content\n' +
+      '- **Download icon** — Install a skill to `.agent/skills/`\n' +
+      '- **Star icon** — Add to favorites'
+    );
+    this.iconPath = new vscode.ThemeIcon(
+      'mortar-board',
+      new vscode.ThemeColor('editorInfo.foreground')
+    );
+  }
+}
+
+export class GettingStartedTipItem extends vscode.TreeItem {
+  readonly contextValue = 'gettingStartedTip';
+
+  constructor(label: string, tip: string, icon: string, command?: vscode.Command) {
+    super(label, vscode.TreeItemCollapsibleState.None);
+    this.tooltip = tip;
+    this.iconPath = new vscode.ThemeIcon(icon);
+    if (command) {
+      this.command = command;
+    }
+  }
+}
+
+export class CollectionsSectionItem extends vscode.TreeItem {
+  readonly contextValue = 'collectionsSection';
+
+  constructor(public readonly collections: SkillCollection[]) {
+    super('Skill Collections', vscode.TreeItemCollapsibleState.Collapsed);
+    this.description = `${collections.length} packs`;
+    this.tooltip = new vscode.MarkdownString(
+      '**Curated Skill Collections**\n\n' +
+      'Pre-assembled skill packs for common roles and workflows.\n\n' +
+      collections.map(c => `- **${c.name}** — ${c.skillIds.length} skills`).join('\n')
+    );
+    this.iconPath = new vscode.ThemeIcon('package');
+  }
+}
+
+export class CollectionItem extends vscode.TreeItem {
+  readonly contextValue = 'collection';
+
+  constructor(public readonly collection: SkillCollection, installedCount: number) {
+    super(collection.name, vscode.TreeItemCollapsibleState.None);
+    this.description = `${collection.skillIds.length} skills${installedCount > 0 ? ` · ${installedCount} installed` : ''}`;
+    this.tooltip = new vscode.MarkdownString(
+      `**${collection.name}**\n\n${collection.description}\n\n` +
+      `Skills: ${collection.skillIds.map(id => `\`${id}\``).join(', ')}`
+    );
+    this.iconPath = new vscode.ThemeIcon(collection.icon);
+    this.command = {
+      command: 'aiSkills.browseCollections',
+      title: 'Browse Collection',
+    };
+  }
+}
+
+export type SkillTreeNode =
+  | SummaryItem
+  | CategoryItem
+  | FavoritesCategoryItem
+  | InstalledSectionItem
+  | SkillItem
+  | RecommendedSectionItem
+  | GettingStartedItem
+  | GettingStartedTipItem
+  | CollectionsSectionItem
+  | CollectionItem;

@@ -5,9 +5,13 @@ import { registerBrowseCommand } from './commands/browseSkills';
 import { registerInstallCommand, registerInstallFromTreeCommand } from './commands/installSkill';
 import { registerPreviewCommand } from './commands/previewSkill';
 import { registerCopyIdCommand } from './commands/copySkillId';
-import { registerUninstallCommand } from './commands/uninstallSkill';
+import { registerUninstallCommand, registerUninstallAllCommand } from './commands/uninstallSkill';
 import { registerBulkCopySkillsCommand } from './commands/bulkCopySkills';
 import { registerInstallCategoryCommand, registerInstallAllCommand } from './commands/installBulk';
+import { registerBrowseCollectionsCommand } from './commands/browseCollections';
+import { registerCreateSkillCommand } from './commands/createSkill';
+import { registerExportSkillSetCommand, registerImportSkillSetCommand } from './commands/exportImportSkillSet';
+import { registerToggleFavoriteCommand } from './commands/toggleFavorite';
 import { ERR_BUNDLE_INCOMPLETE, CMD_FILTER_TREE } from './constants';
 import { WorkspaceScanner } from './skills/WorkspaceScanner';
 import { initLogger, log } from './logger';
@@ -31,8 +35,9 @@ export async function activate(
 
   const recentSkills = new RecentSkills(context);
   const favoriteSkills = new FavoriteSkills(context);
+  const welcomed = context.globalState.get<boolean>('aiSkills.welcomed', false);
 
-  const treeProvider = new SkillsTreeProvider(manager, favoriteSkills);
+  const treeProvider = new SkillsTreeProvider(manager, favoriteSkills, !welcomed);
   const treeView = vscode.window.createTreeView('aiSkillsTree', {
     treeDataProvider: treeProvider,
     showCollapseAll: true,
@@ -67,9 +72,15 @@ export async function activate(
     registerPreviewCommand(manager),
     registerCopyIdCommand(),
     registerUninstallCommand(manager),
+    registerUninstallAllCommand(manager, treeProvider),
     registerBulkCopySkillsCommand(manager),
     registerInstallCategoryCommand(manager),
     registerInstallAllCommand(manager, treeProvider),
+    registerToggleFavoriteCommand(favoriteSkills, treeProvider),
+    registerBrowseCollectionsCommand(manager),
+    registerCreateSkillCommand(manager),
+    registerExportSkillSetCommand(manager),
+    registerImportSkillSetCommand(manager),
     vscode.commands.registerCommand('aiSkills.refreshTree', async () => {
       await vscode.window.withProgress(
         {
@@ -97,8 +108,7 @@ export async function activate(
   );
 
   // First-run welcome notification
-  const welcomed = context.globalState.get<boolean>('aiSkills.welcomed', false);
-  if (!welcomed && healthy) {
+  const showWelcome = async (): Promise<void> => {
     context.globalState.update('aiSkills.welcomed', true);
     const action = await vscode.window.showInformationMessage(
       `AI Agent Skills: ${manager.getAll().length} skills ready. Press Ctrl+Shift+/ to browse, or open the sidebar.`,
@@ -108,7 +118,18 @@ export async function activate(
     if (action === 'Browse Skills') {
       vscode.commands.executeCommand('aiSkills.browse');
     }
+  };
+
+  if (!welcomed && healthy) {
+    showWelcome().catch(() => { /* ignore */ });
   }
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('aiSkills.showWelcome', () => {
+      context.globalState.update('aiSkills.welcomed', false);
+      showWelcome().catch(() => { /* ignore */ });
+    })
+  );
 }
 
 export function deactivate(): void { }

@@ -1,9 +1,15 @@
 import * as vscode from 'vscode';
 import { SkillsManager } from '../skills/SkillsManager';
 import { SkillEntry } from '../skills/types';
-import { CategoryItem, FavoritesCategoryItem, RecommendedSectionItem, SkillItem, SummaryItem, SkillTreeNode } from './nodes';
+import {
+  CategoryItem, CollectionItem, CollectionsSectionItem,
+  FavoritesCategoryItem, GettingStartedItem, GettingStartedTipItem,
+  InstalledSectionItem, RecommendedSectionItem,
+  SkillItem, SummaryItem, SkillTreeNode
+} from './nodes';
 import { CTX_INSTALLED_FILTER } from '../constants';
 import { FavoriteSkills } from '../favoriteSkills';
+import { SKILL_COLLECTIONS } from '../skills/collections';
 
 export class SkillsTreeProvider implements vscode.TreeDataProvider<SkillTreeNode> {
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<void>();
@@ -16,7 +22,8 @@ export class SkillsTreeProvider implements vscode.TreeDataProvider<SkillTreeNode
 
   constructor(
     private readonly manager: SkillsManager,
-    private readonly favoriteSkills: FavoriteSkills
+    private readonly favoriteSkills: FavoriteSkills,
+    private readonly showOnboarding: boolean = false
   ) { }
 
   /** Update recommended skills from workspace scan. Always triggers a tree refresh. */
@@ -64,8 +71,52 @@ export class SkillsTreeProvider implements vscode.TreeDataProvider<SkillTreeNode
       return this.buildRootChildren(filter);
     }
 
+    if (el instanceof GettingStartedItem) {
+      return [
+        new GettingStartedTipItem(
+          'Browse skills (Ctrl+Shift+/)',
+          'Open the quick search to find skills by name, description, or #tag.',
+          'search',
+          { command: 'aiSkills.browse', title: 'Browse' }
+        ),
+        new GettingStartedTipItem(
+          'Click a skill to preview',
+          'Select any skill in the tree to read its full SKILL.md content.',
+          'eye'
+        ),
+        new GettingStartedTipItem(
+          'Install with the download icon',
+          'Click the cloud-download icon to install a skill into .agent/skills/.',
+          'cloud-download'
+        ),
+        new GettingStartedTipItem(
+          'Try a Collection pack',
+          'Browse curated skill packs for roles like "Full-Stack Engineer" or "AI Specialist".',
+          'package',
+          { command: 'aiSkills.browseCollections', title: 'Collections' }
+        ),
+        new GettingStartedTipItem(
+          'Create your own skill',
+          'Scaffold a new SKILL.md with a guided wizard.',
+          'add',
+          { command: 'aiSkills.createSkill', title: 'Create Skill' }
+        ),
+      ];
+    }
+
+    if (el instanceof CollectionsSectionItem) {
+      return el.collections.map(col => {
+        const installedCount = col.skillIds.filter(id => this.manager.isInstalled(id)).length;
+        return new CollectionItem(col, installedCount);
+      });
+    }
+
     if (el instanceof RecommendedSectionItem) {
-      return el.skills.map(s => new SkillItem(s, this.manager.isInstalled(s.id), this.favoriteSkills.has(s.id)));
+      return el.skills.map(s => new SkillItem(s, this.manager.isInstalled(s.id), this.favoriteSkills.has(s.id), true));
+    }
+
+    if (el instanceof InstalledSectionItem) {
+      return el.skills.map(s => new SkillItem(s, true, this.favoriteSkills.has(s.id)));
     }
 
     if (el instanceof FavoritesCategoryItem) {
@@ -106,10 +157,28 @@ export class SkillsTreeProvider implements vscode.TreeDataProvider<SkillTreeNode
         ? [new FavoritesCategoryItem(favIds.length)]
         : [];
 
+      const installedSkills = this.manager.getAll().filter(s => this.manager.isInstalled(s.id));
+      const installedSection: SkillTreeNode[] = installedSkills.length > 0
+        ? [new InstalledSectionItem(installedSkills)]
+        : [];
+
+      // Onboarding section for first-time users (shown when no skills installed yet)
+      const onboarding: SkillTreeNode[] = this.showOnboarding && installedCount === 0
+        ? [new GettingStartedItem()]
+        : [];
+
+      // Collections section
+      const collections: SkillTreeNode[] = [
+        new CollectionsSectionItem(SKILL_COLLECTIONS),
+      ];
+
       return [
         new SummaryItem(total, installedCount),
+        ...onboarding,
         ...favSection,
         ...recommendations,
+        ...installedSection,
+        ...collections,
         ...categories.map(
           cat => new CategoryItem(cat, this.manager.getByCategory(cat).length)
         ),

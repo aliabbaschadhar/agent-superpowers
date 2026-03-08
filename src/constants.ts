@@ -23,7 +23,12 @@ export const CMD_COPY_ID = 'aiSkills.copyId';
 export const CMD_REFRESH_TREE = 'aiSkills.refreshTree';
 export const CMD_FILTER_TREE = 'aiSkills.filterTree';
 export const CMD_UNINSTALL = 'aiSkills.uninstall';
+export const CMD_UNINSTALL_ALL = 'aiSkills.uninstallAll';
 export const CMD_TOGGLE_FAVORITE = 'aiSkills.toggleFavorite';
+export const CMD_BROWSE_COLLECTIONS = 'aiSkills.browseCollections';
+export const CMD_CREATE_SKILL = 'aiSkills.createSkill';
+export const CMD_EXPORT_SKILL_SET = 'aiSkills.exportSkillSet';
+export const CMD_IMPORT_SKILL_SET = 'aiSkills.importSkillSet';
 
 /** globalState key for persisted favorite skill IDs */
 export const FAVORITE_STATE_KEY = 'aiSkills.favoriteIds';
