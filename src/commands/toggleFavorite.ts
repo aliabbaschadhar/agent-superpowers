@@ -35,13 +35,9 @@ export function registerToggleFavoriteCommand(
       treeProvider.refresh();
 
       if (isNowFavorited) {
-        vscode.window.showInformationMessage(
-          `$(star-full) "${skillId}" added to Favorites.`
-        );
+        vscode.window.showInformationMessage(`$(star-full) "${skillId}" added to Favorites.`);
       } else {
-        vscode.window.showInformationMessage(
-          `$(star-empty) "${skillId}" removed from Favorites.`
-        );
+        vscode.window.showInformationMessage(`$(star-empty) "${skillId}" removed from Favorites.`);
       }
     }
   );

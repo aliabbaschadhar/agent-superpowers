@@ -24,12 +24,14 @@ export function registerUpdateAllSkillsCommand(
       'Review'
     );
 
-    if (!choicePick) { return; }
+    if (!choicePick) {
+      return;
+    }
 
     let toUpdate = outdated;
 
     if (choicePick === 'Review') {
-      const items = outdated.map(s => ({
+      const items = outdated.map((s) => ({
         label: `$(arrow-up) /${s.id}`,
         description: s.category,
         detail: s.description,
@@ -40,8 +42,10 @@ export function registerUpdateAllSkillsCommand(
         placeHolder: 'Select skills to update…',
         canPickMany: true,
       });
-      if (!selected || selected.length === 0) { return; }
-      toUpdate = selected.map(i => manager.findById(i.skillId)!).filter(Boolean);
+      if (!selected || selected.length === 0) {
+        return;
+      }
+      toUpdate = selected.map((i) => manager.findById(i.skillId)!).filter(Boolean);
     }
 
     await bulkInstall(toUpdate, `${toUpdate.length} outdated skill(s)`, manager);

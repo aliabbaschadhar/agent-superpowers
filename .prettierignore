@@ -1,0 +1,9 @@
+dist/
+node_modules/
+.vscode-test/
+test-out/
+assets/skills/
+assets/skills_index.json
+assets/manifest.json
+*.vsix
+bun.lockb

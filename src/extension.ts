@@ -7,15 +7,28 @@ import { registerPreviewCommand } from './commands/previewSkill';
 import { registerCopyIdCommand } from './commands/copySkillId';
 import { registerUninstallCommand, registerUninstallAllCommand } from './commands/uninstallSkill';
 import { registerBulkCopySkillsCommand } from './commands/bulkCopySkills';
-import { registerInstallCategoryCommand, registerInstallAllCommand, registerInstallCollectionCommand } from './commands/installBulk';
+import {
+  registerInstallCategoryCommand,
+  registerInstallAllCommand,
+  registerInstallCollectionCommand,
+} from './commands/installBulk';
 import { registerBrowseCollectionsCommand } from './commands/browseCollections';
 import { registerCreateSkillCommand } from './commands/createSkill';
-import { registerExportSkillSetCommand, registerImportSkillSetCommand } from './commands/exportImportSkillSet';
+import {
+  registerExportSkillSetCommand,
+  registerImportSkillSetCommand,
+} from './commands/exportImportSkillSet';
 import { registerToggleFavoriteCommand } from './commands/toggleFavorite';
 import { registerClearFavoritesCommand } from './commands/clearFavorites';
-import { registerCreateCollectionCommand, registerEditCollectionCommand } from './commands/createCollection';
+import {
+  registerCreateCollectionCommand,
+  registerEditCollectionCommand,
+} from './commands/createCollection';
 import { registerDeleteCollectionCommand } from './commands/deleteCollection';
-import { registerAddToCollectionCommand, registerRemoveFromCollectionCommand } from './commands/addToCollection';
+import {
+  registerAddToCollectionCommand,
+  registerRemoveFromCollectionCommand,
+} from './commands/addToCollection';
 import { registerUpdateAllSkillsCommand } from './commands/updateAllSkills';
 import { ERR_BUNDLE_INCOMPLETE, CMD_FILTER_TREE, CTX_UPDATES_AVAILABLE } from './constants';
 import { WorkspaceScanner } from './skills/WorkspaceScanner';
@@ -25,9 +38,7 @@ import { FavoriteSkills } from './favoriteSkills';
 import { UserCollections } from './skills/UserCollections';
 import { SkillUpdateTracker } from './skills/SkillUpdateTracker';
 
-export async function activate(
-  context: vscode.ExtensionContext
-): Promise<void> {
+export async function activate(context: vscode.ExtensionContext): Promise<void> {
   initLogger(context);
   log('Extension activating…');
 
@@ -64,7 +75,8 @@ export async function activate(
       const dismissKey = `aiSkills.autoInstallDismissed.${vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? 'default'}`;
       const dismissed = context.workspaceState.get<boolean>(dismissKey, false);
       if (!dismissed && manager.countInstalled() === 0 && recommended.length > 0) {
-        const techLabel = techs.slice(0, 3).join(', ') + (techs.length > 3 ? ` +${techs.length - 3} more` : '');
+        const techLabel =
+          techs.slice(0, 3).join(', ') + (techs.length > 3 ? ` +${techs.length - 3} more` : '');
         const choice = await vscode.window.showInformationMessage(
           `AI Skills: Detected ${techLabel} in this project. Install ${recommended.length} recommended skill(s)?`,
           'Install Now',
@@ -73,7 +85,12 @@ export async function activate(
         );
         if (choice === 'Install Now') {
           const { bulkInstall } = await import('./commands/installBulk');
-          await bulkInstall(recommended, `${recommended.length} recommended skills`, manager, tracker);
+          await bulkInstall(
+            recommended,
+            `${recommended.length} recommended skills`,
+            manager,
+            tracker
+          );
           treeProvider.refreshAfterInstall();
         } else if (choice === 'Pick Skills') {
           vscode.commands.executeCommand('aiSkills.browse');
@@ -83,10 +100,14 @@ export async function activate(
       }
     }
   };
-  runRecommendations().catch(() => { /* silent — non-critical feature */ });
+  runRecommendations().catch(() => {
+    /* silent — non-critical feature */
+  });
   context.subscriptions.push(
     vscode.workspace.onDidChangeWorkspaceFolders(() => {
-      runRecommendations().catch(() => { /* ignore */ });
+      runRecommendations().catch(() => {
+        /* ignore */
+      });
     })
   );
 
@@ -94,9 +115,11 @@ export async function activate(
   (async () => {
     try {
       const added = await manager.syncRemote();
-      if (added > 0) { treeProvider.refresh(); }
+      if (added > 0) {
+        treeProvider.refresh();
+      }
       const outdated = await manager.getSkillsWithUpdates(tracker);
-      const outdatedIds = new Set(outdated.map(s => s.id));
+      const outdatedIds = new Set(outdated.map((s) => s.id));
       treeProvider.setOutdatedIds(outdatedIds);
       vscode.commands.executeCommand('setContext', CTX_UPDATES_AVAILABLE, outdated.length > 0);
       if (outdated.length > 0) {
@@ -109,7 +132,9 @@ export async function activate(
           vscode.commands.executeCommand('aiSkills.updateAll');
         }
       }
-    } catch { /* ignore network errors / non-critical */ }
+    } catch {
+      /* ignore network errors / non-critical */
+    }
   })();
 
   context.subscriptions.push(
@@ -155,7 +180,7 @@ export async function activate(
     vscode.commands.registerCommand(CMD_FILTER_TREE, () => {
       treeProvider.toggleInstalledFilter();
     }),
-    vscode.workspace.onDidChangeConfiguration(e => {
+    vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('aiSkills.localSkillsPath')) {
         manager.loadLocalSources();
         treeProvider.refresh();
@@ -177,15 +202,27 @@ export async function activate(
   };
 
   if (!welcomed && healthy) {
-    (async () => { try { await showWelcome(); } catch { /* ignore */ } })();
+    (async () => {
+      try {
+        await showWelcome();
+      } catch {
+        /* ignore */
+      }
+    })();
   }
 
   context.subscriptions.push(
     vscode.commands.registerCommand('aiSkills.showWelcome', () => {
       context.globalState.update('aiSkills.welcomed', false);
-      (async () => { try { await showWelcome(); } catch { /* ignore */ } })();
+      (async () => {
+        try {
+          await showWelcome();
+        } catch {
+          /* ignore */
+        }
+      })();
     })
   );
 }
 
-export function deactivate(): void { }
+export function deactivate(): void {}

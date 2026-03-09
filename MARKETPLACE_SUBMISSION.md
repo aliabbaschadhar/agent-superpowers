@@ -96,6 +96,7 @@ vsce create-publisher aliabbaschadhar
 ```
 
 You'll be prompted for:
+
 - Publisher name: `aliabbaschadhar`
 - Email: Your email
 - Personal Access Token: Paste from step 2
@@ -143,6 +144,7 @@ vsce publish
 ```
 
 VSCE will:
+
 1. Validate the extension
 2. Package into `.vsix`
 3. Upload to VS Code Marketplace
@@ -172,13 +174,16 @@ After publishing, update `CHANGELOG.md`:
 ## [1.2.0] - 2026-03-20
 
 ### Added
+
 - Feature 1
 - Feature 2
 
 ### Fixed
+
 - Bug fix 1
 
 ### Changed
+
 - Change 1
 ```
 
@@ -217,6 +222,7 @@ Then move `[Unreleased]` section to the top.
    - Add new [Unreleased] section at top
 
 2. **Bump version in package.json**
+
    ```bash
    # Let VSCE bump automatically or do it manually
    # Semantic versioning: bug fix = patch, feature = minor, breaking = major
@@ -224,6 +230,7 @@ Then move `[Unreleased]` section to the top.
    ```
 
 3. **Compile and test**
+
    ```bash
    bun run type-check
    bun run lint
@@ -232,6 +239,7 @@ Then move `[Unreleased]` section to the top.
    ```
 
 4. **Commit and tag**
+
    ```bash
    git add .
    git commit -m "chore: release v1.1.0"
@@ -240,6 +248,7 @@ Then move `[Unreleased]` section to the top.
    ```
 
 5. **Publish**
+
    ```bash
    vsce publish
    ```
@@ -324,6 +333,7 @@ Then move `[Unreleased]` section to the top.
 **Screenshots/GIFs:** (Coming soon)
 
 To add screenshots:
+
 1. Take PNG screenshots of key features
 2. Save to `media/screenshots/`
 3. Link in README with alt text
@@ -336,14 +346,14 @@ To add screenshots:
 
 ## Common Issues & Solutions 🔧
 
-| Issue | Solution |
-|-------|----------|
-| `vsce publish` fails with "not logged in" | Run `vsce login aliabbaschadhar` and paste Azure token |
-| Marketplace shows old version | Wait 5-10 minutes for cache invalidation, then refresh |
-| Icon doesn't display | Check `media/icon.png` exists, is >= 128x128, is valid PNG |
-| README doesn't format correctly | Check Markdown syntax; test locally with `vsce package` |
-| "Publisher name doesn't match" | Make sure `package.json` publisher matches your account |
-| Extension won't install from `.vsix` | Try `code --install-extension ./agent-superpowers-1.1.0.vsix --force` |
+| Issue                                     | Solution                                                              |
+| ----------------------------------------- | --------------------------------------------------------------------- |
+| `vsce publish` fails with "not logged in" | Run `vsce login aliabbaschadhar` and paste Azure token                |
+| Marketplace shows old version             | Wait 5-10 minutes for cache invalidation, then refresh                |
+| Icon doesn't display                      | Check `media/icon.png` exists, is >= 128x128, is valid PNG            |
+| README doesn't format correctly           | Check Markdown syntax; test locally with `vsce package`               |
+| "Publisher name doesn't match"            | Make sure `package.json` publisher matches your account               |
+| Extension won't install from `.vsix`      | Try `code --install-extension ./agent-superpowers-1.1.0.vsix --force` |
 
 ---
 
@@ -388,15 +398,19 @@ Before publishing, ensure your extension complies:
 ## Support & Help 📞
 
 ### VSCE Documentation
+
 - https://code.visualstudio.com/api/working-with-extensions/publishing-extension
 
 ### VS Code API
+
 - https://code.visualstudio.com/api
 
 ### Marketplace
+
 - https://marketplace.visualstudio.com
 
 ### Community
+
 - GitHub Discussions: https://github.com/aliabbaschadhar/agent-superpowers/discussions
 - Stack Overflow: Tag `vscode` or `vscode-extension`
 
@@ -426,13 +440,13 @@ Before publishing, verify:
 
 Track these after launch:
 
-| Metric | Target | Check |
-|--------|--------|-------|
-| Installs in first month | 100+ | Marketplace dashboard |
-| Average rating | 4.0+ | Marketplace page |
-| Open issues (critical) | <5 | GitHub issues |
-| Response time to issues | <48h | GitHub issues |
-| Time to fix critical bugs | <24h | Release dates |
+| Metric                    | Target | Check                 |
+| ------------------------- | ------ | --------------------- |
+| Installs in first month   | 100+   | Marketplace dashboard |
+| Average rating            | 4.0+   | Marketplace page      |
+| Open issues (critical)    | <5     | GitHub issues         |
+| Response time to issues   | <48h   | GitHub issues         |
+| Time to fix critical bugs | <24h   | Release dates         |
 
 ---
 

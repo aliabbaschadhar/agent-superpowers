@@ -32,8 +32,10 @@ export class FuzzySearch {
    */
   search(query: string): SkillEntry[] {
     const q = query.trim();
-    if (q.length < 2) { return this.skills; }
-    return this.fuse.search(q).map(r => r.item);
+    if (q.length < 2) {
+      return this.skills;
+    }
+    return this.fuse.search(q).map((r) => r.item);
   }
 
   /**
@@ -43,12 +45,11 @@ export class FuzzySearch {
    */
   searchByTag(tag: string): SkillEntry[] {
     const t = tag.replace(/^#/, '').toLowerCase().trim();
-    if (!t) { return this.skills; }
+    if (!t) {
+      return this.skills;
+    }
     return this.skills
-      .filter(s =>
-        s.category.toLowerCase().includes(t) ||
-        s.id.toLowerCase().includes(t)
-      )
+      .filter((s) => s.category.toLowerCase().includes(t) || s.id.toLowerCase().includes(t))
       .sort((a, b) => a.id.localeCompare(b.id));
   }
 

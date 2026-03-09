@@ -32,6 +32,7 @@ We are committed to providing a welcoming and inclusive environment for all memb
 ## Scope
 
 This Code of Conduct applies to:
+
 - All community spaces (GitHub issues, discussions, pull requests, email)
 - Official project spaces (repository, documentation)
 - Public spaces where someone represents the project
@@ -43,11 +44,13 @@ This Code of Conduct applies to:
 ### Reporting Violations
 
 If you witness or experience unacceptable behavior, please report it to:
+
 - **GitHub Issue**: File a private security report if available
 - **Email**: Contact the project maintainer
 - **GitHub Discussions**: Flag for moderator review
 
 Please include:
+
 - Description of the incident
 - Links to relevant messages (if applicable)
 - What impact it had

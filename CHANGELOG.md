@@ -5,6 +5,7 @@ All notable changes to the **AI Agent Superpowers** extension are documented her
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
 **Navigation:**
+
 - [Unreleased](#unreleased) — In-progress, next release
 - [1.1.0](#110---2026-03-06) — Current release
 - [1.0.0](#100---2026-03-05) — Initial release
@@ -97,6 +98,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ### ✨ Major Features
 
 #### Sidebar Skills Browser
+
 - Activity Bar panel organization of 946+ AI skills
 - Hierarchical category structure (AI, Backend, Frontend, DevOps, Security, Data, Mobile, Creative)
 - Instant skill previews in side panel
@@ -105,6 +107,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - Recommended skills based on project tech stack detection
 
 #### Browse & Paste Command (Ctrl+Shift+/)
+
 - Searchable QuickPick over all skills
 - Fuzzy search on skill names and descriptions
 - One-keystroke copy of `/<skill-id>` to clipboard
@@ -112,6 +115,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - Configurable auto-paste delay for slower systems
 
 #### Multi-Agent Installation
+
 - **Claude Code**: `~/.claude/skills/{id}/SKILL.md`
 - **Gemini CLI**: `~/.gemini/skills/{id}/SKILL.md` (added in v1.1.0)
 - **Cursor**: Both project-scoped (`.cursor/rules/{id}.mdc`) and global (`~/.cursor/rules/{id}.mdc`)
@@ -119,6 +123,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - **Generic Path**: Custom user-specified directory for other tools
 
 #### Installation Features
+
 - **Auto-Detection**: Detects running editor (Cursor vs VS Code) and pre-suggests appropriate agent
 - **Overwrite Confirmation**: Ask before replacing existing skill files (configurable)
 - **Preview Before Install**: View full SKILL.md content before committing any changes
@@ -129,31 +134,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - **Uninstall Management**: Remove skills with single click, proper cleanup of directories
 
 #### Workspace Technology Detection
+
 - Automatic `package.json` scanning
 - File extension-based tech detection
 - Curated skill recommendations: React → `react-patterns`, FastAPI → `fastapi-builder`, etc.
 - "Recommended" tree section with relevant skills highlighted
 
 #### Data & Persistence
+
 - **Favorites**: Persistent via VS Code GlobalState
 - **Recent Skills**: LRU list in GlobalState, quick access to last 10 used skills
 - **Installation State**: Tracks which skills are installed for tree status display
 
 #### Offline-First Architecture
+
 - **All 946 skills bundled** inside `.vsix` — zero network dependency
 - Works completely offline (no CDN, no central server)
 - Optional background remote sync keeps library fresh when online
 - Non-blocking sync — full functionality while refresh happens in background
 
 #### Configuration Options
-| Setting | Purpose |
-|---------|---------|
-| `aiSkills.defaultAgent` | Pre-select install target (auto/claude/cursor/copilot/generic) |
-| `aiSkills.claudeSkillsPath` | Override Claude Code skills directory |
-| `aiSkills.cursorScope` | Project vs global Cursor rules scope |
-| `aiSkills.confirmOverwrite` | Prompt before overwriting skill files |
-| `aiSkills.showRiskBadge` | Show/hide risk level badge in QuickPick |
-| `aiSkills.autoPasteDelayMs` | Auto-paste timing (tunable for slow hardware) |
+
+| Setting                     | Purpose                                                        |
+| --------------------------- | -------------------------------------------------------------- |
+| `aiSkills.defaultAgent`     | Pre-select install target (auto/claude/cursor/copilot/generic) |
+| `aiSkills.claudeSkillsPath` | Override Claude Code skills directory                          |
+| `aiSkills.cursorScope`      | Project vs global Cursor rules scope                           |
+| `aiSkills.confirmOverwrite` | Prompt before overwriting skill files                          |
+| `aiSkills.showRiskBadge`    | Show/hide risk level badge in QuickPick                        |
+| `aiSkills.autoPasteDelayMs` | Auto-paste timing (tunable for slow hardware)                  |
 
 ### 🎯 Skill Content
 

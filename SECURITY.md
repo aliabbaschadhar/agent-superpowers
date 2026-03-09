@@ -37,15 +37,16 @@
 
 Skills are installed to agent-specific directories:
 
-| Agent | Location | Access Level |
-|-------|----------|--------------|
-| Claude Code | `~/.claude/skills/{id}/SKILL.md` | Read-only instruction file |
-| Gemini CLI | `~/.gemini/skills/{id}/SKILL.md` | Read-only instruction file |
-| Cursor | `.cursor/rules/{id}.mdc` or `~/.cursor/rules/{id}.mdc` | Read-only instruction file |
-| GitHub Copilot | `.github/copilot-instructions.md` | Appended (idempotent) |
-| Generic | User-specified path | Read-only instruction file |
+| Agent          | Location                                               | Access Level               |
+| -------------- | ------------------------------------------------------ | -------------------------- |
+| Claude Code    | `~/.claude/skills/{id}/SKILL.md`                       | Read-only instruction file |
+| Gemini CLI     | `~/.gemini/skills/{id}/SKILL.md`                       | Read-only instruction file |
+| Cursor         | `.cursor/rules/{id}.mdc` or `~/.cursor/rules/{id}.mdc` | Read-only instruction file |
+| GitHub Copilot | `.github/copilot-instructions.md`                      | Appended (idempotent)      |
+| Generic        | User-specified path                                    | Read-only instruction file |
 
 **What's NOT written:**
+
 - ✅ No executable code
 - ✅ No shell scripts
 - ✅ No configuration binaries
@@ -55,6 +56,7 @@ Skills are installed to agent-specific directories:
 ### Overwrite Protection
 
 When installing a skill that would overwrite an existing file, the extension:
+
 1. Shows a confirmation dialog (by default)
 2. Backs up the existing file (in future versions)
 3. Only proceeds with explicit user confirmation
@@ -67,11 +69,11 @@ When installing a skill that would overwrite an existing file, the extension:
 
 Skills are categorized by risk level:
 
-| Risk Level | Definition | Examples |
-|-----------|-----------|----------|
-| **Safe** 🟢 | Read-only knowledge; no system access | `react-patterns`, `api-design-principles` |
-| **Unknown** 🟡 | May request system access (judgment call) | Security audits, DevOps automation |
-| **None** ⚪ | Not yet rated | New or niche skills |
+| Risk Level     | Definition                                | Examples                                  |
+| -------------- | ----------------------------------------- | ----------------------------------------- |
+| **Safe** 🟢    | Read-only knowledge; no system access     | `react-patterns`, `api-design-principles` |
+| **Unknown** 🟡 | May request system access (judgment call) | Security audits, DevOps automation        |
+| **None** ⚪    | Not yet rated                             | New or niche skills                       |
 
 **Important:** Risk level is an indicator, not a guarantee. Always preview a skill before installing to judge its appropriateness for your use case.
 
@@ -113,6 +115,7 @@ Please **do not** file a public GitHub issue. Instead:
 ### Scope
 
 We take security seriously for:
+
 - Extension code (TypeScript in `src/`)
 - Installer implementations (file operations)
 - Agent detection logic
@@ -186,11 +189,11 @@ bun audit
 
 ## Security Contacts
 
-| Issue Type | Contact | Response Time |
-|-----------|---------|---------------|
-| Security vulnerability | Check GitHub owner profile | < 48 hours |
-| Safety concern | Open GitHub issue | / < 72 hours |
-| Privacy question | GitHub discussion or issue | < 1 week |
+| Issue Type             | Contact                    | Response Time |
+| ---------------------- | -------------------------- | ------------- |
+| Security vulnerability | Check GitHub owner profile | < 48 hours    |
+| Safety concern         | Open GitHub issue          | / < 72 hours  |
+| Privacy question       | GitHub discussion or issue | < 1 week      |
 
 ---
 
@@ -215,6 +218,7 @@ bun audit
 ## Future Security Improvements
 
 We're planning:
+
 - [ ] Skill content signature verification (v1.3.0)
 - [ ] Automated security scanning for skill submissions
 - [ ] Two-factor authentication for contributor accounts

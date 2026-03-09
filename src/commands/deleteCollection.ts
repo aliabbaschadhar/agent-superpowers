@@ -19,10 +19,12 @@ export function registerDeleteCollectionCommand(
           return;
         }
         const pick = await vscode.window.showQuickPick(
-          all.map(c => ({ label: c.name, description: `${c.skillIds.length} skills`, id: c.id })),
+          all.map((c) => ({ label: c.name, description: `${c.skillIds.length} skills`, id: c.id })),
           { placeHolder: 'Select collection to delete…' }
         );
-        if (!pick) { return; }
+        if (!pick) {
+          return;
+        }
         collectionId = pick.id;
         collectionName = pick.label;
       }
@@ -32,7 +34,9 @@ export function registerDeleteCollectionCommand(
         { modal: true },
         'Delete'
       );
-      if (answer !== 'Delete') { return; }
+      if (answer !== 'Delete') {
+        return;
+      }
 
       userCollections.delete(collectionId);
       treeProvider.refresh();

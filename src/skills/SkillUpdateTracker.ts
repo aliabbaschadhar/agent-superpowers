@@ -8,7 +8,7 @@ const STATE_KEY = 'aiSkills.installHashes';
  * detect when an installed skill's bundled/remote content has changed.
  */
 export class SkillUpdateTracker {
-  constructor(private readonly context: vscode.ExtensionContext) { }
+  constructor(private readonly context: vscode.ExtensionContext) {}
 
   /** Stores the SHA-256 hash for a skill after successful install. */
   setHash(skillId: string, content: string): void {
@@ -28,7 +28,9 @@ export class SkillUpdateTracker {
    */
   hasUpdate(skillId: string, latestContent: string): boolean {
     const stored = this.getHash(skillId);
-    if (!stored) { return false; }
+    if (!stored) {
+      return false;
+    }
     return stored !== this.hash(latestContent);
   }
 

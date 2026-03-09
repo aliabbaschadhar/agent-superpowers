@@ -1,9 +1,11 @@
 /** Remote Syncing */
-export const REMOTE_INDEX_URL = 'https://raw.githubusercontent.com/sickn33/antigravity-awesome-skills/main/skills_index.json';
+export const REMOTE_INDEX_URL =
+  'https://raw.githubusercontent.com/sickn33/antigravity-awesome-skills/main/skills_index.json';
 
 // Trailing slash so `${REMOTE_BASE_URL}${skill.path}/SKILL.md` concatenates correctly.
 // skill.path from the antigravity index is relative, e.g. "skills/bug-hunter"
-export const REMOTE_BASE_URL = 'https://raw.githubusercontent.com/sickn33/antigravity-awesome-skills/main/';
+export const REMOTE_BASE_URL =
+  'https://raw.githubusercontent.com/sickn33/antigravity-awesome-skills/main/';
 
 /** UI / display */
 export const DESCRIPTION_TRUNCATE_LENGTH = 60;
@@ -42,8 +44,7 @@ export const CTX_UPDATES_AVAILABLE = 'aiSkills.updatesAvailable';
 export const ERR_BUNDLE_INCOMPLETE =
   'AI Agent Skills: Asset bundle is incomplete or missing. Try reinstalling the extension.';
 
-export const ERR_NO_SKILLS =
-  `${EXT_PREFIX}: No skills loaded. The extension bundle may be corrupted.`;
+export const ERR_NO_SKILLS = `${EXT_PREFIX}: No skills loaded. The extension bundle may be corrupted.`;
 
 export const ERR_SKILL_NOT_FOUND = (id: string): string =>
   `${EXT_PREFIX}: Skill '${id}' not found in index.`;

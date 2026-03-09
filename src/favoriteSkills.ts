@@ -7,7 +7,7 @@ const STATE_KEY = 'aiSkills.favoriteIds';
  * using globalState (shared across all workspaces).
  */
 export class FavoriteSkills {
-  constructor(private readonly context: vscode.ExtensionContext) { }
+  constructor(private readonly context: vscode.ExtensionContext) {}
 
   /** Returns all favorited skill IDs in insertion order. */
   get(): string[] {
@@ -29,7 +29,10 @@ export class FavoriteSkills {
 
   /** Removes a skill from favorites (no-op if not present). */
   remove(id: string): void {
-    this.context.globalState.update(STATE_KEY, this.get().filter(i => i !== id));
+    this.context.globalState.update(
+      STATE_KEY,
+      this.get().filter((i) => i !== id)
+    );
   }
 
   /**

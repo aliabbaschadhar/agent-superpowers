@@ -45,7 +45,7 @@ assets/skills/my-skill-id/
 
 #### Anatomy of a SKILL.md
 
-```markdown
+````markdown
 # My Awesome Skill
 
 > One-line description of what this skill teaches.
@@ -63,10 +63,12 @@ Explain the purpose and scope of this skill. When do you use it? What problems d
 ## Best Practices
 
 ### Do
+
 - ✅ Recommendation 1
 - ✅ Recommendation 2
 
 ### Don't
+
 - ❌ Anti-pattern 1
 - ❌ Anti-pattern 2
 
@@ -77,6 +79,7 @@ Explain the purpose and scope of this skill. When do you use it? What problems d
 ```typescript
 // Code example
 ```
+````
 
 ### Example 2: Advanced Pattern
 
@@ -93,7 +96,8 @@ More examples...
 
 - Category: Backend (or AI, Frontend, Security, etc.)
 - Risk: safe (or unknown, none)
-```
+
+````
 
 #### Skill Metadata
 
@@ -110,21 +114,23 @@ Every skill has implicit metadata extracted from its folder name:
 1. **Create the folder** under `assets/skills/`:
    ```bash
    mkdir -p assets/skills/my-skill-id
-   ```
+````
 
 2. **Write your SKILL.md** with Markdown instructions:
+
    ```bash
    cat > assets/skills/my-skill-id/SKILL.md << 'EOF'
    # My Skill
-   
+
    > Description here
-   
+
    ## Content
    ...
    EOF
    ```
 
 3. **Validate your skill** (coming in v1.2.0):
+
    ```bash
    bun run validate-skills
    ```

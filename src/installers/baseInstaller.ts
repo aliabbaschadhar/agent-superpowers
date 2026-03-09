@@ -42,7 +42,9 @@ export abstract class BaseInstaller {
       // Write companion files (e.g. rest.md, scripts/api_validator.py) when present
       if (opts.skillFiles) {
         for (const [relPath, content] of opts.skillFiles) {
-          if (relPath === 'SKILL.md') { continue; }   // already written above
+          if (relPath === 'SKILL.md') {
+            continue;
+          } // already written above
           const companionDest = path.join(skillDir, relPath);
           fs.mkdirSync(path.dirname(companionDest), { recursive: true });
           fs.writeFileSync(companionDest, content, 'utf-8');

@@ -262,17 +262,17 @@ vsce publish
 
 ## 📊 Extension Stats
 
-| Metric | Value |
-|--------|-------|
-| **Version** | 1.1.0 |
-| **Bundled Skills** | 940+ |
-| **Bundle Size** | ~2.5 MB (`.vsix` with compression) |
-| **Runtime Deps** | 1 (Fuse.js) |
-| **VS Code Min Version** | 1.85.0 |
-| **TypeScript** | 5.x |
-| **Supported Editors** | VS Code, Cursor, VSCodium |
-| **License** | MIT |
-| **Code** | Open source |
+| Metric                  | Value                              |
+| ----------------------- | ---------------------------------- |
+| **Version**             | 1.1.0                              |
+| **Bundled Skills**      | 940+                               |
+| **Bundle Size**         | ~2.5 MB (`.vsix` with compression) |
+| **Runtime Deps**        | 1 (Fuse.js)                        |
+| **VS Code Min Version** | 1.85.0                             |
+| **TypeScript**          | 5.x                                |
+| **Supported Editors**   | VS Code, Cursor, VSCodium          |
+| **License**             | MIT                                |
+| **Code**                | Open source                        |
 
 ---
 
@@ -280,13 +280,13 @@ vsce publish
 
 After publication, track:
 
-| Metric | Target | Timeline |
-|--------|--------|----------|
-| Installs | 100+ | 30 days |
-| Average rating | 4.0+ | 90 days |
-| Critical issues | <5 | Ongoing |
-| Issue response time | <48h | Ongoing |
-| Bug fix time | <24h (critical) | Ongoing |
+| Metric              | Target          | Timeline |
+| ------------------- | --------------- | -------- |
+| Installs            | 100+            | 30 days  |
+| Average rating      | 4.0+            | 90 days  |
+| Critical issues     | <5              | Ongoing  |
+| Issue response time | <48h            | Ongoing  |
+| Bug fix time        | <24h (critical) | Ongoing  |
 
 ---
 
@@ -327,9 +327,10 @@ Full README.md rendered
 **Latest Release:**  
 View in GitHub releases
 
-**Links:**  
+**Links:**
+
 - Repository
-- Homepage  
+- Homepage
 - Bug reports
 - License (MIT)
 
@@ -366,6 +367,7 @@ Before clicking "Publish":
 All documentation is complete, code quality verified, and features tested. Ready to publish to VS Code Marketplace.
 
 **Next Steps:**
+
 1. Run final compile: `bun run compile`
 2. Create .vsix: `vsce package`
 3. Publish: `vsce publish`
@@ -377,6 +379,6 @@ All documentation is complete, code quality verified, and features tested. Ready
 
 **Published by:** aliabbaschadhar  
 **Date:** March 9, 2026  
-**License:** MIT  
+**License:** MIT
 
 🚀 **Let's ship it!**

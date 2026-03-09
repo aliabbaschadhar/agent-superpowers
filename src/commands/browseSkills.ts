@@ -51,22 +51,18 @@ function applyFilters(
 ): SkillEntry[] {
   let result = skills;
   if (filters.category) {
-    result = result.filter(s => s.category.toLowerCase().includes(filters.category!));
+    result = result.filter((s) => s.category.toLowerCase().includes(filters.category!));
   }
   if (filters.installedOnly) {
-    result = result.filter(s => manager.isInstalled(s.id));
+    result = result.filter((s) => manager.isInstalled(s.id));
   }
   return result;
 }
 
-function toQuickPickItem(
-  skill: SkillEntry,
-  isFavorite = false
-): vscode.QuickPickItem {
+function toQuickPickItem(skill: SkillEntry, isFavorite = false): vscode.QuickPickItem {
   return {
     label: isFavorite ? `$(star-full) /${skill.id}` : `$(symbol-event) /${skill.id}`,
-    description:
-      skill.category !== 'uncategorized' ? skill.category : undefined,
+    description: skill.category !== 'uncategorized' ? skill.category : undefined,
     detail: skill.description,
   };
 }
@@ -85,7 +81,7 @@ async function handleSkillSelection(
   }
 
   const skillFiles = await manager.readSkillDirectory(skill);
-  const content = skillFiles.get('SKILL.md') ?? await manager.readContent(skill);
+  const content = skillFiles.get('SKILL.md') ?? (await manager.readContent(skill));
   const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
 
   if (!workspaceRoot) {
@@ -108,7 +104,9 @@ async function installSkillLocally(
   workspaceRoot: string
 ): Promise<void> {
   const skillInstallDir = path.join(workspaceRoot, '.agent', 'skills', skillId);
-  if (fs.existsSync(path.join(skillInstallDir, 'SKILL.md'))) { return; }
+  if (fs.existsSync(path.join(skillInstallDir, 'SKILL.md'))) {
+    return;
+  }
   const opts: InstallOptions = {
     skillId,
     skillContent: content,
@@ -163,33 +161,33 @@ export function registerBrowseCommand(
       if (!textQuery && !hasFilters) {
         const favIds = favoriteSkills.get();
         const favEntries = favIds
-          .map(id => manager.findById(id))
+          .map((id) => manager.findById(id))
           .filter((s): s is SkillEntry => s !== undefined);
 
         const recentIds = recentSkills.get();
         const recentEntries = recentIds
-          .map(id => manager.findById(id))
+          .map((id) => manager.findById(id))
           .filter((s): s is SkillEntry => s !== undefined);
 
         return [
           ...(favEntries.length > 0
             ? [
-              { label: '⭐ Favorites', kind: vscode.QuickPickItemKind.Separator },
-              ...favEntries.map(s => toQuickPickItem(s, true)),
-            ]
+                { label: '⭐ Favorites', kind: vscode.QuickPickItemKind.Separator },
+                ...favEntries.map((s) => toQuickPickItem(s, true)),
+              ]
             : []),
           ...(recentEntries.length > 0
             ? [
-              { label: 'Recently Used', kind: vscode.QuickPickItemKind.Separator },
-              ...recentEntries.map(s => toQuickPickItem(s, favoriteSkills.has(s.id))),
-            ]
+                { label: 'Recently Used', kind: vscode.QuickPickItemKind.Separator },
+                ...recentEntries.map((s) => toQuickPickItem(s, favoriteSkills.has(s.id))),
+              ]
             : []),
           {
             label: 'Filter tips: /installed  #tag',
             kind: vscode.QuickPickItemKind.Separator,
           },
           { label: 'All Skills', kind: vscode.QuickPickItemKind.Separator },
-          ...skills.map(s => toQuickPickItem(s, favoriteSkills.has(s.id))),
+          ...skills.map((s) => toQuickPickItem(s, favoriteSkills.has(s.id))),
         ];
       }
 
@@ -198,14 +196,13 @@ export function registerBrowseCommand(
 
       if (textQuery && FuzzySearch.isTagQuery(textQuery)) {
         const tag = textQuery.slice(1);
-        const results = fuzzy.searchByTag(textQuery)
-          .filter(s => filtered.includes(s));
+        const results = fuzzy.searchByTag(textQuery).filter((s) => filtered.includes(s));
         return [
           {
             label: `$(tag) #${tag} — ${results.length} skill(s)`,
             kind: vscode.QuickPickItemKind.Separator,
           },
-          ...results.map(s => toQuickPickItem(s, favoriteSkills.has(s.id))),
+          ...results.map((s) => toQuickPickItem(s, favoriteSkills.has(s.id))),
         ];
       }
 
@@ -216,16 +213,20 @@ export function registerBrowseCommand(
         const filterLabel = [
           filters.category ? `cat:${filters.category}` : '',
           filters.installedOnly ? 'installed' : '',
-        ].filter(Boolean).join(' + ');
+        ]
+          .filter(Boolean)
+          .join(' + ');
 
         return [
           ...(filterLabel
-            ? [{
-              label: `$(filter) ${filterLabel} — ${results.length} result(s)`,
-              kind: vscode.QuickPickItemKind.Separator,
-            }]
+            ? [
+                {
+                  label: `$(filter) ${filterLabel} — ${results.length} result(s)`,
+                  kind: vscode.QuickPickItemKind.Separator,
+                },
+              ]
             : []),
-          ...results.map(s => toQuickPickItem(s, favoriteSkills.has(s.id))),
+          ...results.map((s) => toQuickPickItem(s, favoriteSkills.has(s.id))),
         ];
       }
 
@@ -233,14 +234,16 @@ export function registerBrowseCommand(
       const filterLabel = [
         filters.category ? `cat:${filters.category}` : '',
         filters.installedOnly ? 'installed' : '',
-      ].filter(Boolean).join(' + ');
+      ]
+        .filter(Boolean)
+        .join(' + ');
 
       return [
         {
           label: `$(filter) ${filterLabel} — ${filtered.length} skill(s)`,
           kind: vscode.QuickPickItemKind.Separator,
         },
-        ...filtered.map(s => toQuickPickItem(s, favoriteSkills.has(s.id))),
+        ...filtered.map((s) => toQuickPickItem(s, favoriteSkills.has(s.id))),
       ];
     }
 
@@ -256,21 +259,29 @@ export function registerBrowseCommand(
     let persistedFilters: { category?: string; installedOnly?: boolean } = {};
     let suppressChange = false;
 
-    qp.onDidChangeValue(value => {
-      if (suppressChange) { return; }
+    qp.onDidChangeValue((value) => {
+      if (suppressChange) {
+        return;
+      }
 
       const parsed = parseFilters(value);
 
       // Absorb any newly typed filter tokens into persisted state
-      if (parsed.category !== undefined) { persistedFilters.category = parsed.category; }
-      if (parsed.installedOnly) { persistedFilters.installedOnly = true; }
+      if (parsed.category !== undefined) {
+        persistedFilters.category = parsed.category;
+      }
+      if (parsed.installedOnly) {
+        persistedFilters.installedOnly = true;
+      }
 
       // Reconstruct full filter expression so buildItems sees everything
       const fullExpression = [
         persistedFilters.category ? `/cat:${persistedFilters.category}` : '',
         persistedFilters.installedOnly ? '/installed' : '',
         parsed.query,
-      ].filter(Boolean).join(' ');
+      ]
+        .filter(Boolean)
+        .join(' ');
 
       qp.items = buildItems(fullExpression);
 
@@ -286,7 +297,7 @@ export function registerBrowseCommand(
 
     qp.show();
 
-    await new Promise<void>(resolve => {
+    await new Promise<void>((resolve) => {
       qp.onDidAccept(async () => {
         const picked = qp.selectedItems[0];
         qp.hide();

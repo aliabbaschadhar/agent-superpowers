@@ -22,10 +22,16 @@ export function registerAddToCollectionCommand(
       if (!skillId) {
         const skills = manager.getAll();
         const picked = await vscode.window.showQuickPick(
-          skills.map(s => ({ label: `/${s.id}`, description: s.category, detail: s.description })),
+          skills.map((s) => ({
+            label: `/${s.id}`,
+            description: s.category,
+            detail: s.description,
+          })),
           { placeHolder: 'Select skill to add to a collection…', matchOnDetail: true }
         );
-        if (!picked) { return; }
+        if (!picked) {
+          return;
+        }
         skillId = picked.label.slice(1); // strip leading /
       }
 
@@ -42,7 +48,7 @@ export function registerAddToCollectionCommand(
       }
 
       const collectionPick = await vscode.window.showQuickPick(
-        all.map(c => ({
+        all.map((c) => ({
           label: `$(${c.icon}) ${c.name}`,
           description: `${c.skillIds.length} skills`,
           id: c.id,
@@ -50,7 +56,9 @@ export function registerAddToCollectionCommand(
         })),
         { placeHolder: `Add "/${skillId}" to which collection?` }
       );
-      if (!collectionPick) { return; }
+      if (!collectionPick) {
+        return;
+      }
 
       if (collectionPick.hasSkill) {
         vscode.window.showInformationMessage(
@@ -61,9 +69,7 @@ export function registerAddToCollectionCommand(
 
       userCollections.addSkill(collectionPick.id, skillId);
       treeProvider.refresh();
-      vscode.window.showInformationMessage(
-        `AI Skills: Added "/${skillId}" to collection.`
-      );
+      vscode.window.showInformationMessage(`AI Skills: Added "/${skillId}" to collection.`);
     }
   );
 }
@@ -82,7 +88,9 @@ export function registerRemoveFromCollectionCommand(
 
       userCollections.removeSkill(item.collectionId, item.skill.id);
       treeProvider.refresh();
-      vscode.window.showInformationMessage(`AI Skills: Removed "/${item.skill.id}" from collection.`);
+      vscode.window.showInformationMessage(
+        `AI Skills: Removed "/${item.skill.id}" from collection.`
+      );
     }
   );
 }

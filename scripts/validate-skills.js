@@ -89,7 +89,9 @@ for (const entry of index) {
   }
 
   if (entry.risk && !VALID_RISKS.has(entry.risk)) {
-    error(`Skill "${entry.id}": invalid risk level "${entry.risk}". Must be: safe, unknown, or none.`);
+    error(
+      `Skill "${entry.id}": invalid risk level "${entry.risk}". Must be: safe, unknown, or none.`
+    );
   }
 
   if (entry.id && !/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(entry.id) && entry.id.length > 1) {
@@ -103,12 +105,13 @@ for (const entry of index) {
 
 // ── 4. Cross-check folders vs index ─────────────────────────────────────────
 
-const indexIds = new Set(index.map(e => e.id));
+const indexIds = new Set(index.map((e) => e.id));
 
 if (fs.existsSync(SKILLS_DIR)) {
-  const folders = fs.readdirSync(SKILLS_DIR, { withFileTypes: true })
-    .filter(d => d.isDirectory())
-    .map(d => d.name);
+  const folders = fs
+    .readdirSync(SKILLS_DIR, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name);
 
   info(`Skills directory contains ${folders.length} folders.`);
 
@@ -140,7 +143,9 @@ if (fs.existsSync(SKILLS_DIR)) {
       // Extract folder name from path: "skills/my-skill" → "my-skill"
       const folderName = entry.path?.split('/').pop();
       if (folderName && !folderSet.has(folderName)) {
-        warn(`Index entry "${entry.id}": path "${entry.path}" has no matching folder in assets/skills/.`);
+        warn(
+          `Index entry "${entry.id}": path "${entry.path}" has no matching folder in assets/skills/.`
+        );
       }
     }
   }
@@ -161,4 +166,3 @@ if (errors > 0) {
   console.log(`\n✅ All ${index.length} skills validated successfully.\n`);
   process.exit(0);
 }
-

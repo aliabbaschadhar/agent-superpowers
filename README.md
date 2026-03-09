@@ -20,6 +20,7 @@
 AI coding assistants are powerful, but they need **well-crafted instructions** to truly excel. Writing instructions from scratch for every domain is tedious, error-prone, and duplicates work others have already done.
 
 **AI Agent Superpowers** solves this by giving you instant access to a curated library of 940+ ready-to-use skills covering:
+
 - 🛠 **Backend & API Design** — REST, GraphQL, microservices, data modeling
 - ⚛️ **Frontend Frameworks** — React, Angular, Vue, Svelte, Next.js
 - 🔐 **Security & DevOps** — AWS, Kubernetes, security audits, attack patterns
@@ -37,7 +38,7 @@ AI coding assistants are powerful, but they need **well-crafted instructions** t
 A dedicated Activity Bar panel puts all 940+ skills at your fingertips. Browse by category, see rich metadata, and preview any skill before installing.
 
 - **Organized by Category**: AI, Backend, Frontend, DevOps, Mobile, Security, Data, and more
-- **Favorites & Recent**: Quick access to your most-used skills  
+- **Favorites & Recent**: Quick access to your most-used skills
 - **Recommended Skills**: Auto-detects your project tech stack (React, FastAPI, Django, etc.) and suggests relevant skills
 - **Search**: Type to filter by skill name or description
 - **At a Glance**: Risk badge, source indicator, installation status
@@ -57,13 +58,13 @@ Perfect for quick skill lookups mid-conversation without leaving your chat.
 
 Install skills directly to your AI agent's config — they become persistent rules that are always active:
 
-| Agent | Install Location |
-|-------|------------------|
-| **Claude Code** | `~/.claude/skills/{id}/SKILL.md` |
-| **Gemini CLI** | `~/.gemini/skills/{id}/SKILL.md` |
-| **Cursor** | `.cursor/rules/{id}.mdc` (project or global) |
+| Agent              | Install Location                                      |
+| ------------------ | ----------------------------------------------------- |
+| **Claude Code**    | `~/.claude/skills/{id}/SKILL.md`                      |
+| **Gemini CLI**     | `~/.gemini/skills/{id}/SKILL.md`                      |
+| **Cursor**         | `.cursor/rules/{id}.mdc` (project or global)          |
 | **GitHub Copilot** | `.github/copilot-instructions.md` (idempotent append) |
-| **Generic** | Any custom directory you specify |
+| **Generic**        | Any custom directory you specify                      |
 
 The extension **auto-detects your editor** (Cursor vs VS Code) and suggests the best installation target.
 
@@ -163,6 +164,7 @@ A **skill** is a reusable instruction file (`SKILL.md`) that teaches your AI ass
 ### How to Use a Skill
 
 **In Claude Code Chat:**
+
 ```
 /react-patterns
 Show me a React hook that manages async state with error handling.
@@ -176,6 +178,7 @@ If you use a skill constantly, install it to your agent's config directory. It b
 ### Skill Metadata
 
 Each skill includes:
+
 - **ID** — Unique kebab-case identifier (e.g., `react-patterns`)
 - **Category** — AI, Backend, Frontend, Security, etc.
 - **Description** — One-line summary of expertise
@@ -186,15 +189,16 @@ Each skill includes:
 
 ## Supported Editors & Agents
 
-| Target | Supported | Works With |
-|--------|-----------|-----------|
-| **Claude Code** | ✅ Yes | VS Code, VSCodium |
-| **Gemini CLI** | ✅ Yes | macOS, Linux, Windows (via WSL) |
-| **Cursor** | ✅ Yes | Cursor 0.30+ |
-| **GitHub Copilot** | ✅ Yes | VS Code 1.85+ |
-| **Generic** | ✅ Yes | Any agent/directory |
+| Target             | Supported | Works With                      |
+| ------------------ | --------- | ------------------------------- |
+| **Claude Code**    | ✅ Yes    | VS Code, VSCodium               |
+| **Gemini CLI**     | ✅ Yes    | macOS, Linux, Windows (via WSL) |
+| **Cursor**         | ✅ Yes    | Cursor 0.30+                    |
+| **GitHub Copilot** | ✅ Yes    | VS Code 1.85+                   |
+| **Generic**        | ✅ Yes    | Any agent/directory             |
 
 **Works in:**
+
 - [x] VS Code (1.85+)
 - [x] Cursor
 - [x] VSCodium
@@ -206,17 +210,17 @@ Each skill includes:
 
 Browse 940+ skills across these domains:
 
-| Category | Example Skills |
-|----------|-----------------|
-| **AI & LLM** | `ai-engineer`, `ai-agents-architect`, `autonomous-agents`, `rag-retrieval` |
-| **Backend** | `api-design-principles`, `api-patterns`, `django-expert`, `fastapi-builder` |
-| **Frontend** | `react-patterns`, `angular-state-management`, `vue-composition-api` |
-| **DevOps & Cloud** | `aws-serverless`, `kubernetes-patterns`, `terraform-expert`, `docker-optimization` |
-| **Security** | `api-security-best-practices`, `pentesting-approach`, `zero-trust-architecture` |
-| **Data & Databases** | `sql-query-optimizer`, `postgres-tuning`, `mongodb-patterns`, `data-modeling` |
-| **Mobile** | `android-jetpack-compose-expert`, `ios-swift-patterns`, `react-native-expert` |
-| **3D & Creative** | `3d-web-experience`, `algorithmic-art`, `webgl-patterns` |
-| **..and 900+ more** | Browse the sidebar for the complete catalog |
+| Category             | Example Skills                                                                     |
+| -------------------- | ---------------------------------------------------------------------------------- |
+| **AI & LLM**         | `ai-engineer`, `ai-agents-architect`, `autonomous-agents`, `rag-retrieval`         |
+| **Backend**          | `api-design-principles`, `api-patterns`, `django-expert`, `fastapi-builder`        |
+| **Frontend**         | `react-patterns`, `angular-state-management`, `vue-composition-api`                |
+| **DevOps & Cloud**   | `aws-serverless`, `kubernetes-patterns`, `terraform-expert`, `docker-optimization` |
+| **Security**         | `api-security-best-practices`, `pentesting-approach`, `zero-trust-architecture`    |
+| **Data & Databases** | `sql-query-optimizer`, `postgres-tuning`, `mongodb-patterns`, `data-modeling`      |
+| **Mobile**           | `android-jetpack-compose-expert`, `ios-swift-patterns`, `react-native-expert`      |
+| **3D & Creative**    | `3d-web-experience`, `algorithmic-art`, `webgl-patterns`                           |
+| **..and 900+ more**  | Browse the sidebar for the complete catalog                                        |
 
 ---
 
@@ -224,16 +228,17 @@ Browse 940+ skills across these domains:
 
 Customize behavior via VS Code Settings (`Ctrl+,`). Search for `aiSkills.`:
 
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `aiSkills.defaultAgent` | enum | `auto` | Auto-select install target: `auto`, `claude`, `cursor`, `copilot`, `generic` |
-| `aiSkills.confirmOverwrite` | boolean | `true` | Ask before overwriting an existing skill file |
-| `aiSkills.showRiskBadge` | boolean | `true` | Show risk level badge in Browse QuickPick |
-| `aiSkills.autoPasteDelayMs` | number | `80` | Delay (ms) before auto-pasting into agent terminal |
-| `aiSkills.localSkillsPath` | string | `` | Path to custom local skills folder (auto-discovered) |
-| `aiSkills.remoteIndexUrl` | string | `` | Override remote skills index URL (advanced) |
+| Setting                     | Type    | Default | Description                                                                  |
+| --------------------------- | ------- | ------- | ---------------------------------------------------------------------------- |
+| `aiSkills.defaultAgent`     | enum    | `auto`  | Auto-select install target: `auto`, `claude`, `cursor`, `copilot`, `generic` |
+| `aiSkills.confirmOverwrite` | boolean | `true`  | Ask before overwriting an existing skill file                                |
+| `aiSkills.showRiskBadge`    | boolean | `true`  | Show risk level badge in Browse QuickPick                                    |
+| `aiSkills.autoPasteDelayMs` | number  | `80`    | Delay (ms) before auto-pasting into agent terminal                           |
+| `aiSkills.localSkillsPath`  | string  | ``      | Path to custom local skills folder (auto-discovered)                         |
+| `aiSkills.remoteIndexUrl`   | string  | ``      | Override remote skills index URL (advanced)                                  |
 
 **Recommended Settings:**
+
 ```json
 {
   "aiSkills.defaultAgent": "claude",
@@ -269,6 +274,7 @@ Customize behavior via VS Code Settings (`Ctrl+,`). Search for `aiSkills.`:
 ### Q: What's the "Risk" badge?
 
 **A:** Skills are rated by safety level:
+
 - **Safe** 🟢 — Passive knowledge (read-only, no system access)
 - **Unknown** 🟡 — Requires agent judgment (may access files, run commands)
 - **None** ⚪ — Not yet rated
@@ -278,6 +284,7 @@ Always preview a skill before installing to confirm it matches your trust level.
 ### Q: My AI agent doesn't seem to be using the installed skill.
 
 **A:** Make sure:
+
 1. ✅ Skill is installed to the correct location (check vs the agent's documentation)
 2. ✅ Restart your AI agent (e.g., close Claude Code and reopen)
 3. ✅ For agent-specific paths, verify the agent looks for instructions in that folder
@@ -318,6 +325,7 @@ Always preview a skill before installing to confirm it matches your trust level.
 ### Still Stuck?
 
 Open an [issue on GitHub](https://github.com/aliabbaschadhar/agent-superpowers/issues) with:
+
 - VS Code / Cursor version
 - Extension version
 - Error message (from Output panel → "AI Agent Skills")
@@ -328,21 +336,26 @@ Open an [issue on GitHub](https://github.com/aliabbaschadhar/agent-superpowers/i
 ## Performance & Technical Details
 
 ### Performance
+
 - **Startup time**: <200ms (extension pre-activates only on first sidebar open)
 - **Search**: Instant fuzzy search across all 940+ skills (Fuse.js)
 - **Bundle size**: ~2.5 MB `.vsix` (all 940+ skills are pure Markdown, highly compressible)
 
 ### Runtime Dependencies
+
 **Zero external dependencies** for runtime. Uses only:
+
 - **Fuse.js** — Fast fuzzy search library (only dependency, lightweight)
 
 ### Privacy
+
 - ✅ No telemetry or tracking
 - ✅ No skills sent to external servers
 - ✅ No home directory scanning (unless you enable `localSkillsPath`)
 - ✅ 100% local operation
 
 ### System Requirements
+
 - **OS**: Windows, macOS, Linux
 - **VS Code**: 1.85+ (tested up to latest)
 - **Memory**: <50 MB
@@ -378,16 +391,16 @@ Bootstrap a full-stack AI assistant setup instantly. Install `full-stack-enginee
 
 We have comprehensive documentation for every use case:
 
-| Document | For | Contains |
-|----------|-----|----------|
-| **[QUICK_START.md](QUICK_START.md)** | New users | 60-second setup & first use |
-| **[README.md](README.md)** (this file) | Everyone | Features, usage, FAQ, troubleshooting |
-| **[CHANGELOG.md](CHANGELOG.md)** | Release tracking | What's new, what's planned |
-| **[CONTRIBUTING.md](CONTRIBUTING.md)** | Contributors | Bug reports, feature requests, skill creation |
-| **[MARKETPLACE_SUBMISSION.md](MARKETPLACE_SUBMISSION.md)** | Publishers | Publishing & release workflow |
-| **[SECURITY.md](SECURITY.md)** | Security-conscious | Privacy, safety, vulnerability reporting |
-| **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** | Community members | Community standards & reporting |
-| **[DOCS_INDEX.md](DOCS_INDEX.md)** | Navigation | Map of all documentation |
+| Document                                                   | For                | Contains                                      |
+| ---------------------------------------------------------- | ------------------ | --------------------------------------------- |
+| **[QUICK_START.md](QUICK_START.md)**                       | New users          | 60-second setup & first use                   |
+| **[README.md](README.md)** (this file)                     | Everyone           | Features, usage, FAQ, troubleshooting         |
+| **[CHANGELOG.md](CHANGELOG.md)**                           | Release tracking   | What's new, what's planned                    |
+| **[CONTRIBUTING.md](CONTRIBUTING.md)**                     | Contributors       | Bug reports, feature requests, skill creation |
+| **[MARKETPLACE_SUBMISSION.md](MARKETPLACE_SUBMISSION.md)** | Publishers         | Publishing & release workflow                 |
+| **[SECURITY.md](SECURITY.md)**                             | Security-conscious | Privacy, safety, vulnerability reporting      |
+| **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)**               | Community members  | Community standards & reporting               |
+| **[DOCS_INDEX.md](DOCS_INDEX.md)**                         | Navigation         | Map of all documentation                      |
 
 **Start here:** [QUICK_START.md](QUICK_START.md) for immediate onboarding
 

@@ -78,6 +78,7 @@ Planning to publish or update this extension?
 ### Quick Checklist
 
 Before publishing:
+
 - [ ] `bun run type-check` passes
 - [ ] `bun run lint` passes
 - [ ] CHANGELOG.md updated
@@ -86,6 +87,7 @@ Before publishing:
 - [ ] Icon `media/icon.png` exists
 
 Then:
+
 ```bash
 bun run compile
 vsce publish
@@ -129,7 +131,7 @@ src/                            ← TypeScript source code
   skills/                       ← Core data layer
   installers/                   ← Agent installers
   tree/                         ← Sidebar tree UI
-  
+
 assets/
   skills/
     react-patterns/            ← Example skill
@@ -137,10 +139,10 @@ assets/
     api-design-principles/
       SKILL.md
     ... 940+ more skills ...
-  
+
 media/
   icon.png                      ← Extension icon
-  
+
 .agent/                         ← Development guidelines (internal)
   SYSTEM_PROMPT.md
   AGENT_RULES.md
@@ -154,16 +156,16 @@ media/
 
 ## FAQ — Which Document Should I Read?
 
-| You are... | Read this | Time |
-|-----------|-----------|------|
-| **A user discovering the extension** | [README.md](README.md) | 5 min |
-| **A user with a problem** | [README.md FAQ & Troubleshooting](README.md#faq) | 2 min |
-| **A user who wants to install skills** | [README.md Usage Guide](README.md#usage-guide) | 3 min |
-| **A developer wanting to contribute** | [CONTRIBUTING.md](CONTRIBUTING.md) | 10 min |
-| **A developer creating a new skill** | [CONTRIBUTING.md § Create Skills](CONTRIBUTING.md#3-create-or-improve-skills-) | 15 min |
-| **A developer improving code** | [CONTRIBUTING.md § Improve Code](CONTRIBUTING.md#4-improve-code-) | 10 min |
-| **A publisher releasing to marketplace** | [MARKETPLACE_SUBMISSION.md](MARKETPLACE_SUBMISSION.md) | 15 min |
-| **An architect reviewing the project** | [.agent/architecture.md](../../.agent/architecture.md) | 20 min |
+| You are...                               | Read this                                                                      | Time   |
+| ---------------------------------------- | ------------------------------------------------------------------------------ | ------ |
+| **A user discovering the extension**     | [README.md](README.md)                                                         | 5 min  |
+| **A user with a problem**                | [README.md FAQ & Troubleshooting](README.md#faq)                               | 2 min  |
+| **A user who wants to install skills**   | [README.md Usage Guide](README.md#usage-guide)                                 | 3 min  |
+| **A developer wanting to contribute**    | [CONTRIBUTING.md](CONTRIBUTING.md)                                             | 10 min |
+| **A developer creating a new skill**     | [CONTRIBUTING.md § Create Skills](CONTRIBUTING.md#3-create-or-improve-skills-) | 15 min |
+| **A developer improving code**           | [CONTRIBUTING.md § Improve Code](CONTRIBUTING.md#4-improve-code-)              | 10 min |
+| **A publisher releasing to marketplace** | [MARKETPLACE_SUBMISSION.md](MARKETPLACE_SUBMISSION.md)                         | 15 min |
+| **An architect reviewing the project**   | [.agent/architecture.md](../../.agent/architecture.md)                         | 20 min |
 
 ---
 
@@ -194,36 +196,42 @@ media/
 ## Document Purposes At a Glance
 
 ### README.md
+
 **Purpose:** User-facing documentation  
 **Audience:** Everyone (users, developers, marketplace browsers)  
 **Content:** Features, usage, configuration, FAQ, troubleshooting  
 **Tone:** Friendly, practical, encouraging
 
 ### CHANGELOG.md
+
 **Purpose:** Release history and roadmap  
 **Audience:** Users, developers, release managers  
 **Content:** What's new in each version, what's coming  
 **Tone:** Professional, detailed, organized
 
 ### CONTRIBUTING.md
+
 **Purpose:** Contribution guidelines  
 **Audience:** Developers, skill creators, community contributors  
 **Content:** How to report bugs, suggest features, create skills, write code, open PRs  
 **Tone:** Welcoming, clear, step-by-step
 
 ### MARKETPLACE_SUBMISSION.md
+
 **Purpose:** Publishing and release management  
 **Audience:** Maintainers, release managers  
 **Content:** Pre-submission checklists, publishing steps, versioning strategy  
 **Tone:** Technical, procedural, thorough
 
 ### DOCS_INDEX.md (This File)
+
 **Purpose:** Navigation and orientation  
 **Audience:** All users  
 **Content:** Overview of all docs, quick navigation, FAQ  
 **Tone:** Concise, helpful, summarizing
 
-### .agent/*.md (Internal)
+### .agent/\*.md (Internal)
+
 **Purpose:** Development guidelines and architectural documentation  
 **Audience:** AI agents working on the codebase  
 **Content:** Code style, architecture, current context, plans  
@@ -233,11 +241,11 @@ media/
 
 ## Version History of This Index
 
-| Date | Change |
-|------|--------|
+| Date       | Change                                                   |
+| ---------- | -------------------------------------------------------- |
 | 2026-03-09 | Created this index file, added MARKETPLACE_SUBMISSION.md |
-| 2026-03-08 | Added CONTRIBUTING.md |
-| 2026-03-06 | Initial README and CHANGELOG |
+| 2026-03-08 | Added CONTRIBUTING.md                                    |
+| 2026-03-06 | Initial README and CHANGELOG                             |
 
 ---
 

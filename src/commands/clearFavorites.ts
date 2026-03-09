@@ -18,7 +18,9 @@ export function registerClearFavoritesCommand(
       { modal: true },
       'Clear All'
     );
-    if (answer !== 'Clear All') { return; }
+    if (answer !== 'Clear All') {
+      return;
+    }
 
     favorites.clear();
     treeProvider.refresh();

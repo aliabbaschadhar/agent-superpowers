@@ -7,11 +7,11 @@ import { REMOTE_INDEX_URL } from '../constants';
 const RETRY_DELAYS_MS = [1000, 2000, 4000];
 
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export class RemoteSync {
-  constructor(private readonly storagePath: string) { }
+  constructor(private readonly storagePath: string) {}
 
   /**
    * Fetches the latest skills index from the remote (or user-configured URL),
@@ -32,7 +32,9 @@ export class RemoteSync {
 
         if (!res.ok) {
           // 4xx — client error, do not retry
-          if (res.status >= 400 && res.status < 500) { return null; }
+          if (res.status >= 400 && res.status < 500) {
+            return null;
+          }
           // 5xx — server error, retry after delay
           if (attempt < RETRY_DELAYS_MS.length) {
             await sleep(RETRY_DELAYS_MS[attempt]);

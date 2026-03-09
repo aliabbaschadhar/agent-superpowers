@@ -66,6 +66,7 @@ Claude now has deep context about React best practices for that conversation.
 ### Installing for Permanent Use
 
 If you use a skill constantly, **install it**:
+
 1. Sidebar → Find the skill
 2. Click the download icon
 3. Skill is now installed to your agent config
@@ -78,12 +79,12 @@ If you use a skill constantly, **install it**:
 
 VS Code Settings (`Ctrl+,`). Search for `aiSkills.`:
 
-| Setting | What It Does |
-|---------|-------------|
-| `aiSkills.defaultAgent` | Pre-select install target (auto/claude/cursor/copilot) |
-| `aiSkills.confirmOverwrite` | Ask before overwriting skill files (default: on) |
-| `aiSkills.showRiskBadge` | Show risk level badge (default: on) |
-| `aiSkills.autoPasteDelayMs` | Auto-paste timing (default: 80ms) |
+| Setting                     | What It Does                                           |
+| --------------------------- | ------------------------------------------------------ |
+| `aiSkills.defaultAgent`     | Pre-select install target (auto/claude/cursor/copilot) |
+| `aiSkills.confirmOverwrite` | Ask before overwriting skill files (default: on)       |
+| `aiSkills.showRiskBadge`    | Show risk level badge (default: on)                    |
+| `aiSkills.autoPasteDelayMs` | Auto-paste timing (default: 80ms)                      |
 
 **Default settings work great** — no configuration required.
 
@@ -118,13 +119,13 @@ A: Not yet from the UI (coming soon). For now, see [CONTRIBUTING.md](CONTRIBUTIN
 
 ## ✨ What's Different for Each Agent
 
-| Agent | How It Works |
-|-------|------------|
-| **Claude Code** | Installed skills appear in sidebar as `~/.claude/skills/` |
-| **Gemini CLI** | Installed skills in `~/.gemini/skills/` (check Gemini docs) |
-| **Cursor** | Installed to `.cursor/rules/` (project or global) |
-| **GitHub Copilot** | Appended to `.github/copilot-instructions.md` |
-| **Claude Web** | Just copy-paste the `/skill-id` into your chat |
+| Agent              | How It Works                                                |
+| ------------------ | ----------------------------------------------------------- |
+| **Claude Code**    | Installed skills appear in sidebar as `~/.claude/skills/`   |
+| **Gemini CLI**     | Installed skills in `~/.gemini/skills/` (check Gemini docs) |
+| **Cursor**         | Installed to `.cursor/rules/` (project or global)           |
+| **GitHub Copilot** | Appended to `.github/copilot-instructions.md`               |
+| **Claude Web**     | Just copy-paste the `/skill-id` into your chat              |
 
 ---
 

@@ -30,7 +30,9 @@ export class SkillsManager {
   /** Load bundled index, merge cached remote index, and load local sources. */
   async init(): Promise<boolean> {
     const indexPath = path.join(this.assetsPath, 'skills_index.json');
-    if (!fs.existsSync(indexPath)) { return false; }
+    if (!fs.existsSync(indexPath)) {
+      return false;
+    }
 
     try {
       this.skills = JSON.parse(fs.readFileSync(indexPath, 'utf-8')) as SkillEntry[];
@@ -51,7 +53,9 @@ export class SkillsManager {
   /** Fetch latest index from remote and merge new skills. Returns count added. */
   async syncRemote(): Promise<number> {
     const remoteSkills = await this.remoteSync.fetchIndex();
-    if (!remoteSkills) { return 0; }
+    if (!remoteSkills) {
+      return 0;
+    }
     const oldLen = this.skills.length;
     this.mergeSkills(remoteSkills);
     return this.skills.length - oldLen;
@@ -64,14 +68,16 @@ export class SkillsManager {
 
   // ── Queries ────────────────────────────────────────────────────────────────
 
-  getAll(): SkillEntry[] { return this.skills; }
+  getAll(): SkillEntry[] {
+    return this.skills;
+  }
 
   findById(id: string): SkillEntry | undefined {
-    return this.skills.find(s => s.id === id);
+    return this.skills.find((s) => s.id === id);
   }
 
   getByCategory(category: string): SkillEntry[] {
-    return this.skills.filter(s => s.category === category);
+    return this.skills.filter((s) => s.category === category);
   }
 
   /**
@@ -91,9 +97,11 @@ export class SkillsManager {
 
     // Phase 1: curated map
     for (const tech of techs) {
-      for (const id of (TECH_SKILL_MAP[tech] ?? [])) {
+      for (const id of TECH_SKILL_MAP[tech] ?? []) {
         add(this.findById(id));
-        if (result.length >= limit) { return result; }
+        if (result.length >= limit) {
+          return result;
+        }
       }
     }
 
@@ -103,7 +111,9 @@ export class SkillsManager {
         for (const s of this.skills) {
           if (s.id.includes(tech) || s.description.toLowerCase().includes(tech)) {
             add(s);
-            if (result.length >= limit) { return result; }
+            if (result.length >= limit) {
+              return result;
+            }
           }
         }
       }
@@ -114,15 +124,19 @@ export class SkillsManager {
 
   /** Returns sorted unique categories; 'personal' second-to-last, 'uncategorized' always last. */
   getCategories(): string[] {
-    const cats = [...new Set(this.skills.map(s => s.category))].sort();
+    const cats = [...new Set(this.skills.map((s) => s.category))].sort();
     for (const last of ['personal', 'uncategorized']) {
       const idx = cats.indexOf(last);
-      if (idx > -1) { cats.push(cats.splice(idx, 1)[0]); }
+      if (idx > -1) {
+        cats.push(cats.splice(idx, 1)[0]);
+      }
     }
     return cats;
   }
 
-  countInstalled(): number { return this.repository.countInstalled(this.skills); }
+  countInstalled(): number {
+    return this.repository.countInstalled(this.skills);
+  }
 
   /** Returns the Set of installed skill IDs (cached until invalidated). */
   getInstalledIds(): Set<string> {
@@ -164,11 +178,17 @@ export class SkillsManager {
     const installedIds = this.getInstalledIds();
     const outdated: SkillEntry[] = [];
     for (const skill of this.skills) {
-      if (!installedIds.has(skill.id)) { continue; }
+      if (!installedIds.has(skill.id)) {
+        continue;
+      }
       const storedHash = tracker.getHash(skill.id);
-      if (!storedHash) { continue; } // installed outside this extension — skip
+      if (!storedHash) {
+        continue;
+      } // installed outside this extension — skip
       const content = await this.readContent(skill);
-      if (!content) { continue; }
+      if (!content) {
+        continue;
+      }
       if (tracker.hasUpdate(skill.id, content)) {
         outdated.push(skill);
       }
@@ -179,7 +199,7 @@ export class SkillsManager {
   // ── Private ────────────────────────────────────────────────────────────────
 
   private mergeSkills(incoming: SkillEntry[]): void {
-    const existingIds = new Set(this.skills.map(s => s.id));
+    const existingIds = new Set(this.skills.map((s) => s.id));
     for (const s of incoming) {
       if (!existingIds.has(s.id)) {
         this.skills.push(s);

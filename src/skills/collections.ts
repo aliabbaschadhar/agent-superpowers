@@ -10,7 +10,7 @@ export interface SkillCollection {
   id: string;
   name: string;
   description: string;
-  icon: string;           // VS Code ThemeIcon id
+  icon: string; // VS Code ThemeIcon id
   skillIds: string[];
 }
 
@@ -330,4 +330,3 @@ export const SKILL_COLLECTIONS: SkillCollection[] = [
     ],
   },
 ];
-

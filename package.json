@@ -25,12 +25,18 @@
     "ai-agent",
     "gemini-cli"
   ],
-  "categories": ["AI", "Other", "Snippets"],
+  "categories": [
+    "AI",
+    "Other",
+    "Snippets"
+  ],
   "engines": {
     "vscode": "^1.85.0"
   },
   "main": "./dist/extension.js",
-  "activationEvents": ["onStartupFinished"],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "contributes": {
     "commands": [
       {
@@ -426,6 +432,8 @@
     "compile:watch": "bun run esbuild.config.js --watch",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.js\" \"*.{json,md}\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"scripts/**/*.js\" \"*.{json,md}\"",
     "type-check": "tsc --noEmit",
     "validate-skills": "bun run scripts/validate-skills.js",
     "pretest": "bun run scripts/prebuild.js && bun run esbuild.config.js && bun run type-check -p tsconfig.test.json",
@@ -433,7 +441,8 @@
     "vscode:prepublish": "bun run scripts/prebuild.js && bun run esbuild.config.js --production",
     "package": "bun run vscode:prepublish && vsce package --no-dependencies",
     "publish": "vsce publish --no-dependencies",
-    "clean": "rimraf dist assets test-out"
+    "clean": "rimraf dist assets test-out",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",
@@ -446,11 +455,27 @@
     "@vscode/vsce": "^3.7.1",
     "esbuild": "^0.27.3",
     "eslint": "^10.0.1",
+    "eslint-config-prettier": "^10.1.8",
     "glob": "^13.0.5",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.3.2",
+    "prettier": "^3.8.1",
     "rimraf": "^5.0.5",
     "typescript": "^5.3.3"
   },
   "dependencies": {
     "fuse.js": "^7.1.0"
+  },
+  "lint-staged": {
+    "src/**/*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "scripts/**/*.js": [
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
   }
 }

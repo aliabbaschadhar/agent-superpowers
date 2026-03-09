@@ -5,7 +5,12 @@ import * as vscode from 'vscode';
 import { SkillsManager } from '../skills/SkillsManager';
 import { SkillEntry } from '../skills/types';
 import { SkillsTreeProvider } from '../tree/SkillsTreeProvider';
-import { CategoryItem, CollectionItem, UserCollectionItem, RecommendedSectionItem } from '../tree/nodes';
+import {
+  CategoryItem,
+  CollectionItem,
+  UserCollectionItem,
+  RecommendedSectionItem,
+} from '../tree/nodes';
 import { InstallOptions, InstallResult } from '../installers/types';
 import { ProjectLocalInstaller } from '../installers/projectLocalInstaller';
 import { SkillUpdateTracker } from '../skills/SkillUpdateTracker';
@@ -28,7 +33,9 @@ function writeDirectly(destPath: string, opts: InstallOptions): InstallResult {
 
     if (opts.skillFiles) {
       for (const [relPath, content] of opts.skillFiles) {
-        if (relPath === 'SKILL.md') { continue; }
+        if (relPath === 'SKILL.md') {
+          continue;
+        }
         const companionDest = path.join(skillDir, relPath);
         fs.mkdirSync(path.dirname(companionDest), { recursive: true });
         fs.writeFileSync(companionDest, content, 'utf-8');
@@ -44,7 +51,12 @@ function writeDirectly(destPath: string, opts: InstallOptions): InstallResult {
 
 // ─── Core bulk install logic ───────────────────────────────────────────────────
 
-interface InstallCounts { installed: number; skipped: number; failed: number; cancelled: boolean }
+interface InstallCounts {
+  installed: number;
+  skipped: number;
+  failed: number;
+  cancelled: boolean;
+}
 
 async function installSingleSkill(
   skill: SkillEntry,
@@ -54,11 +66,15 @@ async function installSingleSkill(
   tracker: SkillUpdateTracker | undefined
 ): Promise<'installed' | 'skipped' | 'failed'> {
   const destPath = computeTargetPath(skill.id, workspaceRoot);
-  if (overwriteExisting === false && fs.existsSync(destPath)) { return 'skipped'; }
+  if (overwriteExisting === false && fs.existsSync(destPath)) {
+    return 'skipped';
+  }
   try {
     const skillFiles = await manager.readSkillDirectory(skill);
-    const content = skillFiles.get('SKILL.md') ?? await manager.readContent(skill);
-    if (!content) { return 'failed'; }
+    const content = skillFiles.get('SKILL.md') ?? (await manager.readContent(skill));
+    if (!content) {
+      return 'failed';
+    }
     const opts: InstallOptions = {
       skillId: skill.id,
       skillContent: content,
@@ -67,7 +83,9 @@ async function installSingleSkill(
     };
     const result = writeDirectly(destPath, opts);
     if (result.success) {
-      if (tracker) { tracker.setHash(skill.id, content); }
+      if (tracker) {
+        tracker.setHash(skill.id, content);
+      }
       return 'installed';
     }
     return 'failed';
@@ -78,9 +96,15 @@ async function installSingleSkill(
 
 function reportResults(counts: InstallCounts): void {
   const parts = [`${counts.installed} installed`];
-  if (counts.skipped > 0) { parts.push(`${counts.skipped} skipped`); }
-  if (counts.failed > 0) { parts.push(`${counts.failed} failed`); }
-  if (counts.cancelled) { parts.push('cancelled'); }
+  if (counts.skipped > 0) {
+    parts.push(`${counts.skipped} skipped`);
+  }
+  if (counts.failed > 0) {
+    parts.push(`${counts.failed} failed`);
+  }
+  if (counts.cancelled) {
+    parts.push('cancelled');
+  }
   vscode.window.showInformationMessage(`AI Skills bulk install complete: ${parts.join(' · ')}.`);
 }
 
@@ -108,13 +132,18 @@ export async function bulkInstall(
   const confirmOverwrite = cfg.get<boolean>('confirmOverwrite', true);
 
   if (confirmOverwrite) {
-    const conflicting = skills.filter(s => fs.existsSync(computeTargetPath(s.id, workspaceRoot)));
+    const conflicting = skills.filter((s) => fs.existsSync(computeTargetPath(s.id, workspaceRoot)));
     if (conflicting.length > 0) {
       const choice = await vscode.window.showWarningMessage(
         `${conflicting.length} of ${skills.length} skills are already installed. What would you like to do?`,
-        { modal: true }, 'Skip Existing', 'Overwrite All', 'Cancel'
+        { modal: true },
+        'Skip Existing',
+        'Overwrite All',
+        'Cancel'
       );
-      if (!choice || choice === 'Cancel') { return; }
+      if (!choice || choice === 'Cancel') {
+        return;
+      }
       overwriteExisting = choice === 'Overwrite All';
     }
   } else {
@@ -124,12 +153,28 @@ export async function bulkInstall(
   const counts: InstallCounts = { installed: 0, skipped: 0, failed: 0, cancelled: false };
 
   await vscode.window.withProgress(
-    { location: vscode.ProgressLocation.Notification, title: `Installing ${label}…`, cancellable: true },
+    {
+      location: vscode.ProgressLocation.Notification,
+      title: `Installing ${label}…`,
+      cancellable: true,
+    },
     async (progress, token) => {
       for (let i = 0; i < skills.length; i++) {
-        if (token.isCancellationRequested) { counts.cancelled = true; break; }
-        progress.report({ message: `(${i + 1}/${skills.length}) ${skills[i].id}`, increment: (1 / skills.length) * 100 });
-        const outcome = await installSingleSkill(skills[i], workspaceRoot, overwriteExisting, manager, tracker);
+        if (token.isCancellationRequested) {
+          counts.cancelled = true;
+          break;
+        }
+        progress.report({
+          message: `(${i + 1}/${skills.length}) ${skills[i].id}`,
+          increment: (1 / skills.length) * 100,
+        });
+        const outcome = await installSingleSkill(
+          skills[i],
+          workspaceRoot,
+          overwriteExisting,
+          manager,
+          tracker
+        );
         counts[outcome]++;
       }
     }
@@ -141,9 +186,7 @@ export async function bulkInstall(
 // ─── Command registrations ─────────────────────────────────────────────────────
 
 /** Right-click a category node → "Install All in Category" */
-export function registerInstallCategoryCommand(
-  manager: SkillsManager
-): vscode.Disposable {
+export function registerInstallCategoryCommand(manager: SkillsManager): vscode.Disposable {
   return vscode.commands.registerCommand(
     'aiSkills.installCategory',
     async (item?: CategoryItem) => {
@@ -152,11 +195,7 @@ export function registerInstallCategoryCommand(
         return;
       }
       const skills = manager.getByCategory(item.category);
-      await bulkInstall(
-        skills,
-        `"${item.category}" (${skills.length} skills)`,
-        manager
-      );
+      await bulkInstall(skills, `"${item.category}" (${skills.length} skills)`, manager);
     }
   );
 }
@@ -166,21 +205,16 @@ export function registerInstallAllCommand(
   manager: SkillsManager,
   treeProvider: SkillsTreeProvider
 ): vscode.Disposable {
-  return vscode.commands.registerCommand(
-    'aiSkills.installAll',
-    async () => {
-      const skills = treeProvider.getFilteredSkills();
-      const label = treeProvider.isFiltering()
-        ? `filtered results (${skills.length} skills)`
-        : `all skills (${skills.length})`;
-      await bulkInstall(skills, label, manager);
-    }
-  );
+  return vscode.commands.registerCommand('aiSkills.installAll', async () => {
+    const skills = treeProvider.getFilteredSkills();
+    const label = treeProvider.isFiltering()
+      ? `filtered results (${skills.length} skills)`
+      : `all skills (${skills.length})`;
+    await bulkInstall(skills, label, manager);
+  });
 }
 /** Right-click a collection node → "Install Collection" */
-export function registerInstallCollectionCommand(
-  manager: SkillsManager
-): vscode.Disposable {
+export function registerInstallCollectionCommand(manager: SkillsManager): vscode.Disposable {
   return vscode.commands.registerCommand(
     'aiSkills.installCollection',
     async (item?: CollectionItem | UserCollectionItem | RecommendedSectionItem) => {
@@ -207,7 +241,7 @@ export function registerInstallCollectionCommand(
       const collection = item.collection;
       const skillIds = collection.skillIds;
       const skills = skillIds
-        .map(id => manager.findById(id))
+        .map((id) => manager.findById(id))
         .filter((s): s is SkillEntry => s !== undefined);
 
       if (skills.length === 0) {

@@ -24,7 +24,7 @@ async function pickSkills(
   const all = manager.getAll();
   const selected = new Set(preSelected);
 
-  const items: (vscode.QuickPickItem & { skillId: string })[] = all.map(s => ({
+  const items: (vscode.QuickPickItem & { skillId: string })[] = all.map((s) => ({
     label: `$(symbol-event) /${s.id}`,
     description: s.category,
     detail: s.description,
@@ -38,8 +38,10 @@ async function pickSkills(
     matchOnDetail: true,
   });
 
-  if (!result) { return undefined; }
-  return result.map(i => i.skillId);
+  if (!result) {
+    return undefined;
+  }
+  return result.map((i) => i.skillId);
 }
 
 export function registerCreateCollectionCommand(
@@ -51,9 +53,11 @@ export function registerCreateCollectionCommand(
     const name = await vscode.window.showInputBox({
       prompt: 'Collection name',
       placeHolder: 'e.g. My Frontend Stack',
-      validateInput: v => (v.trim().length < 2 ? 'Name must be at least 2 characters.' : null),
+      validateInput: (v) => (v.trim().length < 2 ? 'Name must be at least 2 characters.' : null),
     });
-    if (!name) { return; }
+    if (!name) {
+      return;
+    }
 
     const iconPick = await vscode.window.showQuickPick(COLLECTION_ICONS, {
       placeHolder: 'Choose an icon (optional)',
@@ -61,7 +65,9 @@ export function registerCreateCollectionCommand(
     const icon = iconPick?.value ?? 'list-unordered';
 
     const skillIds = await pickSkills(manager);
-    if (!skillIds) { return; }
+    if (!skillIds) {
+      return;
+    }
 
     const collection = userCollections.create(name.trim(), skillIds, icon);
     treeProvider.refresh();
@@ -89,10 +95,12 @@ export function registerEditCollectionCommand(
           return;
         }
         const pick = await vscode.window.showQuickPick(
-          all.map(c => ({ label: c.name, description: `${c.skillIds.length} skills`, id: c.id })),
+          all.map((c) => ({ label: c.name, description: `${c.skillIds.length} skills`, id: c.id })),
           { placeHolder: 'Select collection to edit…' }
         );
-        if (!pick) { return; }
+        if (!pick) {
+          return;
+        }
         collectionId = pick.id;
       }
 
@@ -105,18 +113,22 @@ export function registerEditCollectionCommand(
       const name = await vscode.window.showInputBox({
         prompt: 'Collection name',
         value: existing.name,
-        validateInput: v => (v.trim().length < 2 ? 'Name must be at least 2 characters.' : null),
+        validateInput: (v) => (v.trim().length < 2 ? 'Name must be at least 2 characters.' : null),
       });
-      if (!name) { return; }
+      if (!name) {
+        return;
+      }
 
       const iconPick = await vscode.window.showQuickPick(
-        COLLECTION_ICONS.map(o => ({ ...o, picked: o.value === existing.icon })),
+        COLLECTION_ICONS.map((o) => ({ ...o, picked: o.value === existing.icon })),
         { placeHolder: 'Choose an icon' }
       );
       const icon = iconPick?.value ?? existing.icon;
 
       const skillIds = await pickSkills(manager, existing.skillIds);
-      if (!skillIds) { return; }
+      if (!skillIds) {
+        return;
+      }
 
       userCollections.update(collectionId, { name: name.trim(), icon, skillIds });
       treeProvider.refresh();

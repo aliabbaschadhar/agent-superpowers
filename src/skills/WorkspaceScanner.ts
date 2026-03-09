@@ -90,7 +90,9 @@ export class WorkspaceScanner {
       await this.scanFolder(folderPath, tokens, knownTokens);
     } else {
       const folders = vscode.workspace.workspaceFolders;
-      if (!folders || folders.length === 0) { return []; }
+      if (!folders || folders.length === 0) {
+        return [];
+      }
       for (const folder of folders) {
         await this.scanFolder(folder.uri.fsPath, tokens, knownTokens);
       }
@@ -110,13 +112,17 @@ export class WorkspaceScanner {
 
     // Remove tokens that have no skill mapping (keeps results clean)
     for (const tok of [...tokens]) {
-      if (!knownTokens.has(tok)) { tokens.delete(tok); }
+      if (!knownTokens.has(tok)) {
+        tokens.delete(tok);
+      }
     }
   }
 
   private parsePackageJsonDeps(root: string, tokens: Set<string>): void {
     const pkgPath = path.join(root, 'package.json');
-    if (!fs.existsSync(pkgPath)) { return; }
+    if (!fs.existsSync(pkgPath)) {
+      return;
+    }
     try {
       const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')) as Record<string, unknown>;
       const allDeps: Record<string, unknown> = {
@@ -125,24 +131,35 @@ export class WorkspaceScanner {
       };
       for (const dep of Object.keys(allDeps)) {
         const tok = PKG_DEP_MAP[dep];
-        if (tok) { tokens.add(tok); }
+        if (tok) {
+          tokens.add(tok);
+        }
       }
       if (fs.existsSync(path.join(root, 'tsconfig.json')) || allDeps['typescript']) {
         tokens.add('typescript');
       }
-    } catch { /* malformed JSON — skip */ }
+    } catch {
+      /* malformed JSON — skip */
+    }
   }
 
   private detectFilePresence(root: string, tokens: Set<string>): void {
-    if (fs.existsSync(path.join(root, 'go.mod'))) { tokens.add('go'); }
-    if (fs.existsSync(path.join(root, 'Cargo.toml'))) { tokens.add('rust'); }
+    if (fs.existsSync(path.join(root, 'go.mod'))) {
+      tokens.add('go');
+    }
+    if (fs.existsSync(path.join(root, 'Cargo.toml'))) {
+      tokens.add('rust');
+    }
 
     const hasPyFiles =
       fs.existsSync(path.join(root, 'requirements.txt')) ||
       fs.existsSync(path.join(root, 'pyproject.toml')) ||
       fs.existsSync(path.join(root, 'setup.py')) ||
       fs.existsSync(path.join(root, 'Pipfile'));
-    if (hasPyFiles) { tokens.add('python'); this.parsePythonDeps(root, tokens); }
+    if (hasPyFiles) {
+      tokens.add('python');
+      this.parsePythonDeps(root, tokens);
+    }
 
     if (
       fs.existsSync(path.join(root, 'pom.xml')) ||
@@ -153,7 +170,9 @@ export class WorkspaceScanner {
       if (
         fs.existsSync(path.join(root, 'build.gradle.kts')) ||
         fs.existsSync(path.join(root, 'src', 'main', 'kotlin'))
-      ) { tokens.add('kotlin'); }
+      ) {
+        tokens.add('kotlin');
+      }
       try {
         const pomPath = path.join(root, 'pom.xml');
         if (fs.existsSync(pomPath)) {
@@ -162,7 +181,9 @@ export class WorkspaceScanner {
             tokens.add('spring');
           }
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
 
     if (this.anyFileInRoot(root, '.csproj') || this.anyFileInRoot(root, '.sln')) {
@@ -174,15 +195,21 @@ export class WorkspaceScanner {
       fs.existsSync(path.join(root, 'Dockerfile')) ||
       fs.existsSync(path.join(root, 'docker-compose.yml')) ||
       fs.existsSync(path.join(root, 'docker-compose.yaml'))
-    ) { tokens.add('docker'); }
+    ) {
+      tokens.add('docker');
+    }
 
-    if (this.anyFileInRoot(root, '.tf')) { tokens.add('terraform'); }
+    if (this.anyFileInRoot(root, '.tf')) {
+      tokens.add('terraform');
+    }
 
     if (
       fs.existsSync(path.join(root, 'k8s')) ||
       fs.existsSync(path.join(root, 'kubernetes')) ||
       this.hasSubdir(root, 'helm')
-    ) { tokens.add('kubernetes'); }
+    ) {
+      tokens.add('kubernetes');
+    }
 
     if (this.anyFileInRoot(root, '.xcodeproj') || this.anyFileInRoot(root, '.swift')) {
       tokens.add('swift');
@@ -191,7 +218,9 @@ export class WorkspaceScanner {
     if (
       fs.existsSync(path.join(root, 'AndroidManifest.xml')) ||
       fs.existsSync(path.join(root, 'app', 'src', 'main', 'AndroidManifest.xml'))
-    ) { tokens.add('android'); }
+    ) {
+      tokens.add('android');
+    }
   }
 
   private parsePythonDeps(root: string, tokens: Set<string>): void {
@@ -201,11 +230,18 @@ export class WorkspaceScanner {
       try {
         const lines = fs.readFileSync(reqPath, 'utf-8').split('\n');
         for (const line of lines) {
-          const pkg = line.split(/[>=<!\[; ]/)[0].trim().toLowerCase();
+          const pkg = line
+            .split(/[>=<!\[; ]/)[0]
+            .trim()
+            .toLowerCase();
           const tok = PY_PACKAGE_MAP[pkg];
-          if (tok) { tokens.add(tok); }
+          if (tok) {
+            tokens.add(tok);
+          }
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
 
     // pyproject.toml — simple text scan for known packages
@@ -218,15 +254,19 @@ export class WorkspaceScanner {
             tokens.add(tok);
           }
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
   }
 
   /** True if any file in the immediate root directory ends with `ext`. */
   private anyFileInRoot(root: string, ext: string): boolean {
     try {
-      return fs.readdirSync(root).some(f => f.endsWith(ext));
-    } catch { return false; }
+      return fs.readdirSync(root).some((f) => f.endsWith(ext));
+    } catch {
+      return false;
+    }
   }
 
   /** True if a direct subdirectory named `name` exists under root. */
@@ -234,6 +274,8 @@ export class WorkspaceScanner {
     try {
       const full = path.join(root, name);
       return fs.existsSync(full) && fs.statSync(full).isDirectory();
-    } catch { return false; }
+    } catch {
+      return false;
+    }
   }
 }

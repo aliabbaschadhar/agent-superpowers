@@ -15,7 +15,7 @@ export interface UserCollection {
  * using globalState (shared across all workspaces).
  */
 export class UserCollections {
-  constructor(private readonly context: vscode.ExtensionContext) { }
+  constructor(private readonly context: vscode.ExtensionContext) {}
 
   /** Returns all user collections in creation order. */
   getAll(): UserCollection[] {
@@ -24,7 +24,7 @@ export class UserCollections {
 
   /** Returns a single collection by id, or undefined. */
   get(id: string): UserCollection | undefined {
-    return this.getAll().find(c => c.id === id);
+    return this.getAll().find((c) => c.id === id);
   }
 
   /** Creates a new collection and persists it. Returns the created collection. */
@@ -43,8 +43,10 @@ export class UserCollections {
 
   /** Updates an existing collection. Pass a partial patch (name and/or skillIds). */
   update(id: string, patch: Partial<Pick<UserCollection, 'name' | 'skillIds' | 'icon'>>): void {
-    const all = this.getAll().map(c => {
-      if (c.id !== id) { return c; }
+    const all = this.getAll().map((c) => {
+      if (c.id !== id) {
+        return c;
+      }
       return {
         ...c,
         ...(patch.name !== undefined ? { name: patch.name } : {}),
@@ -57,14 +59,21 @@ export class UserCollections {
 
   /** Deletes a collection by id. */
   delete(id: string): void {
-    this.context.globalState.update(STATE_KEY, this.getAll().filter(c => c.id !== id));
+    this.context.globalState.update(
+      STATE_KEY,
+      this.getAll().filter((c) => c.id !== id)
+    );
   }
 
   /** Adds a skill to a collection (no-op if already present). */
   addSkill(collectionId: string, skillId: string): void {
-    const all = this.getAll().map(c => {
-      if (c.id !== collectionId) { return c; }
-      if (c.skillIds.includes(skillId)) { return c; }
+    const all = this.getAll().map((c) => {
+      if (c.id !== collectionId) {
+        return c;
+      }
+      if (c.skillIds.includes(skillId)) {
+        return c;
+      }
       return { ...c, skillIds: [...c.skillIds, skillId] };
     });
     this.context.globalState.update(STATE_KEY, all);
@@ -72,9 +81,11 @@ export class UserCollections {
 
   /** Removes a skill from a collection (no-op if not present). */
   removeSkill(collectionId: string, skillId: string): void {
-    const all = this.getAll().map(c => {
-      if (c.id !== collectionId) { return c; }
-      return { ...c, skillIds: c.skillIds.filter(id => id !== skillId) };
+    const all = this.getAll().map((c) => {
+      if (c.id !== collectionId) {
+        return c;
+      }
+      return { ...c, skillIds: c.skillIds.filter((id) => id !== skillId) };
     });
     this.context.globalState.update(STATE_KEY, all);
   }
