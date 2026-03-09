@@ -1,6 +1,7 @@
 import * as path from 'path';
 import { BaseInstaller } from './baseInstaller';
 import { InstallOptions } from './types';
+import { isValidSkillId, isPathWithin } from '../security';
 
 /**
  * Installs a skill project-locally at `.agent/skills/{skillId}/SKILL.md`.
@@ -15,6 +16,17 @@ export class ProjectLocalInstaller extends BaseInstaller {
         'No workspace folder is open. Open a project folder first, then install skills.'
       );
     }
-    return path.join(opts.workspaceRoot, '.agent', 'skills', opts.skillId, 'SKILL.md');
+    // Guard: reject skill IDs that could traverse outside .agent/skills/
+    if (!isValidSkillId(opts.skillId)) {
+      throw new Error(
+        `Invalid skill ID '${opts.skillId}': must contain only letters, digits, hyphens, underscores, or dots.`
+      );
+    }
+    const dest = path.join(opts.workspaceRoot, '.agent', 'skills', opts.skillId, 'SKILL.md');
+    const skillsBase = path.join(opts.workspaceRoot, '.agent', 'skills');
+    if (!isPathWithin(skillsBase, dest)) {
+      throw new Error(`Skill ID '${opts.skillId}' would write outside the skills directory.`);
+    }
+    return dest;
   }
 }

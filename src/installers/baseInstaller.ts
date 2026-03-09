@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { InstallOptions, InstallResult } from './types';
 import { logError } from '../logger';
+import { isSafeRelativePath, isPathWithin } from '../security';
 
 export abstract class BaseInstaller {
   abstract label: string;
@@ -45,7 +46,22 @@ export abstract class BaseInstaller {
           if (relPath === 'SKILL.md') {
             continue;
           } // already written above
+          // Guard: reject companion paths that escape the skill directory
+          if (!isSafeRelativePath(relPath)) {
+            logError(
+              `Skipping companion file with unsafe path: '${relPath}'`,
+              new Error('path traversal attempt')
+            );
+            continue;
+          }
           const companionDest = path.join(skillDir, relPath);
+          if (!isPathWithin(skillDir, companionDest)) {
+            logError(
+              `Skipping companion file outside skill dir: '${relPath}'`,
+              new Error('path traversal attempt')
+            );
+            continue;
+          }
           fs.mkdirSync(path.dirname(companionDest), { recursive: true });
           fs.writeFileSync(companionDest, content, 'utf-8');
         }

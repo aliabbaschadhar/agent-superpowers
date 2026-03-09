@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import { SkillsManager } from '../skills/SkillsManager';
 import { SkillsTreeProvider } from '../tree/SkillsTreeProvider';
 import { logError } from '../logger';
+import { isValidSkillId, isPathWithin } from '../security';
 
 type UninstallArg = { skill: { id: string } } | string | undefined;
 
@@ -36,7 +37,17 @@ export function registerUninstallCommand(manager: SkillsManager): vscode.Disposa
       return;
     }
 
-    const skillDir = path.join(workspaceRoot, '.agent', 'skills', resolvedId);
+    // Guard: reject IDs that could traverse outside .agent/skills/
+    if (!isValidSkillId(resolvedId)) {
+      vscode.window.showErrorMessage(`AI Skills: Invalid skill ID '${resolvedId}'.`);
+      return;
+    }
+    const skillsBase = path.join(workspaceRoot, '.agent', 'skills');
+    const skillDir = path.join(skillsBase, resolvedId);
+    if (!isPathWithin(skillsBase, skillDir)) {
+      vscode.window.showErrorMessage(`AI Skills: Invalid skill ID '${resolvedId}'.`);
+      return;
+    }
     const skillFile = path.join(skillDir, 'SKILL.md');
 
     if (!fs.existsSync(skillFile)) {

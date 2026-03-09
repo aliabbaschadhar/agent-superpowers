@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import { SkillEntry } from './types';
 import { REMOTE_BASE_URL } from '../constants';
 import { detectInstalledIds } from './InstallationDetector';
+import { isSafeRelativePath, isPathWithin } from '../security';
 
 /**
  * Handles all local and remote file I/O for skill content.
@@ -29,12 +30,39 @@ export class SkillsRepository {
     }
   }
 
+  /**
+   * Guards against path traversal in the `skill.path` field.
+   * Returns false for non-absolute paths that contain `..` segments or would
+   * escape the expected base directory.
+   */
+  private isSafeSkillPath(skill: SkillEntry): boolean {
+    if (path.isAbsolute(skill.path)) {
+      // Absolute local paths are user-configured — accept them as-is.
+      return true;
+    }
+    // For relative paths (bundled / remote) validate they stay within their base
+    if (!isSafeRelativePath(skill.path)) {
+      return false;
+    }
+    // Confirm the resolved bundled path stays inside assetsPath
+    const resolved = path.resolve(this.assetsPath, skill.path);
+    if (!isPathWithin(this.assetsPath, resolved)) {
+      return false;
+    }
+    return true;
+  }
+
   /** Returns the SKILL.md content for a skill, checking bundle → cache → remote. */
   async readContent(skill: SkillEntry): Promise<string | null> {
     // Absolute-path local skill — read directly, no remote fallback
     if (path.isAbsolute(skill.path)) {
       const localFile = path.join(skill.path, 'SKILL.md');
       return fs.existsSync(localFile) ? fs.readFileSync(localFile, 'utf-8') : null;
+    }
+
+    // Guard: reject relative paths supplied by remote that could traverse the FS
+    if (!this.isSafeSkillPath(skill)) {
+      return null;
     }
 
     // Bundled asset
@@ -78,6 +106,11 @@ export class SkillsRepository {
       }
       const single = await this.readContent(skill);
       return single ? new Map([['SKILL.md', single]]) : new Map();
+    }
+
+    // Guard: reject relative paths that could escape the assets directory
+    if (!this.isSafeSkillPath(skill)) {
+      return new Map();
     }
 
     // Bundled assets directory

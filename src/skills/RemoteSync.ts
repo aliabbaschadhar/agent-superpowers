@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { SkillEntry } from './types';
 import { REMOTE_INDEX_URL } from '../constants';
+import { isHttpsUrl } from '../security';
 
 const RETRY_DELAYS_MS = [1000, 2000, 4000];
 
@@ -24,6 +25,12 @@ export class RemoteSync {
       .getConfiguration('aiSkills')
       .get<string>('remoteIndexUrl', '')
       .trim();
+
+    // Guard: only allow HTTPS URLs to prevent file:// reads or http downgrade attacks
+    if (configUrl && !isHttpsUrl(configUrl)) {
+      return null;
+    }
+
     const url = configUrl || REMOTE_INDEX_URL;
 
     for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
