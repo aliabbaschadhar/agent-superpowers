@@ -6,6 +6,20 @@ Running log of decisions, discoveries, and session context for the **AI Agent Su
 
 ## Session Log
 
+### 2026-03-10 (Documentation cleanup)
+
+**Status:** Removed 7 redundant/bloat markdown files; rewrote README.md from 440 lines → 85 lines.
+
+**Deleted:**
+
+- `DOCS_INDEX.md`, `DOCS_SUMMARY.md`, `DOCUMENTATION_COMPLETE.md` — auto-generated doc summaries, no value for end users
+- `MARKETPLACE_CHECKLIST.md`, `MARKETPLACE_READY.md`, `MARKETPLACE_SUBMISSION.md` — internal publisher checklists, not OSS-relevant
+- `QUICK_START.md` — content merged into the new slim README
+
+**Remaining .md files:** README.md · CHANGELOG.md · CONTRIBUTING.md · SECURITY.md · CODE_OF_CONDUCT.md
+
+---
+
 ### 2026-03-10
 
 **Status:** Security audit complete — 5 vulnerabilities patched, all compile-clean.
