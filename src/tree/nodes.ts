@@ -327,17 +327,13 @@ export class CollectionItem extends vscode.TreeItem {
   readonly contextValue = 'collection';
 
   constructor(public readonly collection: SkillCollection, installedCount: number) {
-    super(collection.name, vscode.TreeItemCollapsibleState.None);
+    super(collection.name, vscode.TreeItemCollapsibleState.Collapsed);
     this.description = `${collection.skillIds.length} skills${installedCount > 0 ? ` · ${installedCount} installed` : ''}`;
     this.tooltip = new vscode.MarkdownString(
       `**${collection.name}**\n\n${collection.description}\n\n` +
       `Skills: ${collection.skillIds.map(id => `\`${id}\``).join(', ')}`
     );
     this.iconPath = new vscode.ThemeIcon(collection.icon);
-    this.command = {
-      command: 'aiSkills.browseCollections',
-      title: 'Browse Collection',
-    };
   }
 }
 
@@ -348,7 +344,7 @@ export class UserCollectionItem extends vscode.TreeItem {
     public readonly collection: UserCollection,
     public readonly installedCount: number
   ) {
-    super(collection.name, vscode.TreeItemCollapsibleState.None);
+    super(collection.name, vscode.TreeItemCollapsibleState.Collapsed);
     this.id = `user-collection-${collection.id}`;
     this.description = `${collection.skillIds.length} skills${installedCount > 0 ? ` · ${installedCount} installed` : ''}`;
     this.tooltip = new vscode.MarkdownString(
@@ -356,10 +352,6 @@ export class UserCollectionItem extends vscode.TreeItem {
       `${collection.skillIds.length} skill(s)${installedCount > 0 ? ` · ${installedCount} installed` : ''}`
     );
     this.iconPath = new vscode.ThemeIcon(collection.icon ?? 'list-unordered');
-    this.command = {
-      command: 'aiSkills.browseCollections',
-      title: 'Browse Collection',
-    };
   }
 }
 

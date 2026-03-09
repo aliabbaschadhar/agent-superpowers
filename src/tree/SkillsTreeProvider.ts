@@ -168,6 +168,32 @@ export class SkillsTreeProvider implements vscode.TreeDataProvider<SkillTreeNode
       ));
     }
 
+    if (el instanceof CollectionItem) {
+      return el.collection.skillIds
+        .map(id => this.manager.findById(id))
+        .filter((s): s is SkillEntry => s !== undefined)
+        .map(s => new SkillItem(
+          s,
+          this.manager.isInstalled(s.id),
+          this.favoriteSkills.has(s.id),
+          false,
+          this.outdatedIds.has(s.id)
+        ));
+    }
+
+    if (el instanceof UserCollectionItem) {
+      return el.collection.skillIds
+        .map(id => this.manager.findById(id))
+        .filter((s): s is SkillEntry => s !== undefined)
+        .map(s => new SkillItem(
+          s,
+          this.manager.isInstalled(s.id),
+          this.favoriteSkills.has(s.id),
+          false,
+          this.outdatedIds.has(s.id)
+        ));
+    }
+
     return [];
   }
 

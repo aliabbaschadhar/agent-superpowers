@@ -7,7 +7,7 @@ import { registerPreviewCommand } from './commands/previewSkill';
 import { registerCopyIdCommand } from './commands/copySkillId';
 import { registerUninstallCommand, registerUninstallAllCommand } from './commands/uninstallSkill';
 import { registerBulkCopySkillsCommand } from './commands/bulkCopySkills';
-import { registerInstallCategoryCommand, registerInstallAllCommand } from './commands/installBulk';
+import { registerInstallCategoryCommand, registerInstallAllCommand, registerInstallCollectionCommand } from './commands/installBulk';
 import { registerBrowseCollectionsCommand } from './commands/browseCollections';
 import { registerCreateSkillCommand } from './commands/createSkill';
 import { registerExportSkillSetCommand, registerImportSkillSetCommand } from './commands/exportImportSkillSet';
@@ -124,6 +124,7 @@ export async function activate(
     registerBulkCopySkillsCommand(manager),
     registerInstallCategoryCommand(manager),
     registerInstallAllCommand(manager, treeProvider),
+    registerInstallCollectionCommand(manager),
     registerToggleFavoriteCommand(favoriteSkills, treeProvider),
     registerClearFavoritesCommand(favoriteSkills, treeProvider),
     registerBrowseCollectionsCommand(manager),

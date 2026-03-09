@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import { SkillsManager } from '../skills/SkillsManager';
 import { SkillEntry } from '../skills/types';
 import { SkillsTreeProvider } from '../tree/SkillsTreeProvider';
-import { CategoryItem } from '../tree/nodes';
+import { CategoryItem, CollectionItem, UserCollectionItem, RecommendedSectionItem } from '../tree/nodes';
 import { InstallOptions, InstallResult } from '../installers/types';
 import { SkillUpdateTracker } from '../skills/SkillUpdateTracker';
 
@@ -202,6 +202,52 @@ export function registerInstallAllCommand(
         ? `filtered results (${skills.length} skills)`
         : `all skills (${skills.length})`;
       await bulkInstall(skills, label, manager);
+    }
+  );
+}
+/** Right-click a collection node → "Install Collection" */
+export function registerInstallCollectionCommand(
+  manager: SkillsManager
+): vscode.Disposable {
+  return vscode.commands.registerCommand(
+    'aiSkills.installCollection',
+    async (item?: CollectionItem | UserCollectionItem | RecommendedSectionItem) => {
+      // Handle RecommendedSectionItem
+      if (item instanceof RecommendedSectionItem) {
+        if (item.skills.length === 0) {
+          vscode.window.showErrorMessage('AI Skills: No recommended skills available.');
+          return;
+        }
+        await bulkInstall(
+          item.skills,
+          `recommended skills (${item.skills.length} skills)`,
+          manager
+        );
+        return;
+      }
+
+      // Handle CollectionItem and UserCollectionItem
+      if (!item || !(item instanceof CollectionItem || item instanceof UserCollectionItem)) {
+        vscode.window.showErrorMessage('AI Skills: No collection selected.');
+        return;
+      }
+
+      const collection = item.collection;
+      const skillIds = collection.skillIds;
+      const skills = skillIds
+        .map(id => manager.findById(id))
+        .filter((s): s is SkillEntry => s !== undefined);
+
+      if (skills.length === 0) {
+        vscode.window.showErrorMessage('AI Skills: No valid skills found in this collection.');
+        return;
+      }
+
+      await bulkInstall(
+        skills,
+        `"${collection.name}" collection (${skills.length} skills)`,
+        manager
+      );
     }
   );
 }

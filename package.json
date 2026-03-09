@@ -98,6 +98,12 @@
         "icon": "$(cloud-download)"
       },
       {
+        "command": "aiSkills.installCollection",
+        "title": "Install Collection",
+        "category": "AI Skills",
+        "icon": "$(cloud-download)"
+      },
+      {
         "command": "aiSkills.filterTree",
         "title": "Show Installed Skills Only",
         "category": "AI Skills",
@@ -320,6 +326,11 @@
           "group": "inline@1"
         },
         {
+          "command": "aiSkills.installCollection",
+          "when": "view == aiSkillsTree && viewItem == collection",
+          "group": "inline@1"
+        },
+        {
           "command": "aiSkills.installAll",
           "when": "view == aiSkillsTree && viewItem == summary",
           "group": "inline@1"
@@ -332,6 +343,11 @@
         {
           "command": "aiSkills.clearFavorites",
           "when": "view == aiSkillsTree && viewItem == favoritesCategory",
+          "group": "inline@1"
+        },
+        {
+          "command": "aiSkills.installCollection",
+          "when": "view == aiSkillsTree && viewItem == recommended",
           "group": "inline@1"
         },
         {
@@ -370,7 +386,7 @@
           "group": "inline@2"
         },
         {
-          "command": "aiSkills.installCategory",
+          "command": "aiSkills.installCollection",
           "when": "view == aiSkillsTree && viewItem == user-collection",
           "group": "inline@3"
         }
