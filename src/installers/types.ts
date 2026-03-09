@@ -1,11 +1,3 @@
-export type AgentKind =
-  | 'claude'
-  | 'gemini'
-  | 'cursor-project'
-  | 'cursor-global'
-  | 'copilot'
-  | 'generic';
-
 export interface InstallOptions {
   skillId: string;
   /** Content of SKILL.md — used by single-file installers (Copilot, Cursor). */

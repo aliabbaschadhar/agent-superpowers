@@ -8,9 +8,6 @@ export const REMOTE_BASE_URL = 'https://raw.githubusercontent.com/sickn33/antigr
 /** UI / display */
 export const DESCRIPTION_TRUNCATE_LENGTH = 60;
 
-/** Timing */
-export const AUTO_PASTE_DELAY_MS = 80;
-
 /** Extension prefix used in all user-facing messages */
 export const EXT_PREFIX = 'AI Skills';
 
@@ -36,9 +33,6 @@ export const CMD_DELETE_COLLECTION = 'aiSkills.deleteCollection';
 export const CMD_ADD_TO_COLLECTION = 'aiSkills.addToCollection';
 export const CMD_REMOVE_FROM_COLLECTION = 'aiSkills.removeFromCollection';
 export const CMD_UPDATE_ALL = 'aiSkills.updateAll';
-
-/** globalState key for persisted favorite skill IDs */
-export const FAVORITE_STATE_KEY = 'aiSkills.favoriteIds';
 
 /** VS Code context keys */
 export const CTX_INSTALLED_FILTER = 'aiSkills.installedFilterActive';

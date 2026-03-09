@@ -74,7 +74,7 @@ export async function activate(
         if (choice === 'Install Now') {
           const { bulkInstall } = await import('./commands/installBulk');
           await bulkInstall(recommended, `${recommended.length} recommended skills`, manager, tracker);
-          treeProvider.refresh();
+          treeProvider.refreshAfterInstall();
         } else if (choice === 'Pick Skills') {
           vscode.commands.executeCommand('aiSkills.browse');
         } else if (choice === 'Not Now') {
@@ -91,10 +91,10 @@ export async function activate(
   );
 
   // Background remote sync — refresh tree only when new skills are found
-  manager.syncRemote().then(async added => {
-    if (added > 0) { treeProvider.refresh(); }
-    // Check for updates to installed skills after remote sync
+  (async () => {
     try {
+      const added = await manager.syncRemote();
+      if (added > 0) { treeProvider.refresh(); }
       const outdated = await manager.getSkillsWithUpdates(tracker);
       const outdatedIds = new Set(outdated.map(s => s.id));
       treeProvider.setOutdatedIds(outdatedIds);
@@ -109,8 +109,8 @@ export async function activate(
           vscode.commands.executeCommand('aiSkills.updateAll');
         }
       }
-    } catch { /* non-critical */ }
-  }).catch(() => { /* ignore network errors */ });
+    } catch { /* ignore network errors / non-critical */ }
+  })();
 
   context.subscriptions.push(
     treeView,
@@ -177,13 +177,13 @@ export async function activate(
   };
 
   if (!welcomed && healthy) {
-    showWelcome().catch(() => { /* ignore */ });
+    (async () => { try { await showWelcome(); } catch { /* ignore */ } })();
   }
 
   context.subscriptions.push(
     vscode.commands.registerCommand('aiSkills.showWelcome', () => {
       context.globalState.update('aiSkills.welcomed', false);
-      showWelcome().catch(() => { /* ignore */ });
+      (async () => { try { await showWelcome(); } catch { /* ignore */ } })();
     })
   );
 }

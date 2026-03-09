@@ -124,7 +124,7 @@ export function registerUninstallAllCommand(
         }
       );
 
-      treeProvider.refresh();
+      treeProvider.refreshAfterInstall();
 
       const msg = failed > 0
         ? `AI Skills: Removed ${removed} skill(s). ${failed} failed — see Output for details.`

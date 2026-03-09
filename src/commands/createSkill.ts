@@ -4,7 +4,13 @@ import * as vscode from 'vscode';
 import { SkillsManager } from '../skills/SkillsManager';
 import { log } from '../logger';
 
-const SKILL_TEMPLATE = `# {{NAME}}
+const SKILL_TEMPLATE = `---
+name: {{NAME}}
+category: {{CATEGORY}}
+risk: {{RISK}}
+---
+
+# {{NAME}}
 
 > {{DESCRIPTION}}
 
@@ -138,13 +144,11 @@ export function registerCreateSkillCommand(
       );
       if (!risk) { return; }
 
-      // Generate the file — category and risk are available for future metadata use
-      void category;
-      void risk;
-
-      // Generate the file
+      // Generate the file with category and risk written into frontmatter
       const content = SKILL_TEMPLATE
-        .replace('{{NAME}}', name)
+        .replace(/{{NAME}}/g, name)
+        .replace('{{CATEGORY}}', category)
+        .replace('{{RISK}}', risk.label)
         .replace('{{DESCRIPTION}}', description)
         .replace('{{DOMAIN}}', domain ?? name);
 

@@ -6,7 +6,7 @@ import { SkillCollection } from '../skills/collections';
 import { UserCollection } from '../skills/UserCollections';
 
 /** Human-readable display names for category slugs shown in the sidebar. */
-export const CATEGORY_DISPLAY_NAMES: Record<string, string> = {
+const CATEGORY_DISPLAY_NAMES: Record<string, string> = {
   'ai-ml': 'AI & Machine Learning',
   'api': 'API',
   'app-builder': 'App Builder',
@@ -159,6 +159,30 @@ export class FavoritesCategoryItem extends vscode.TreeItem {
   }
 }
 
+function buildSkillContextValue(
+  installed: boolean, isFavorite: boolean, isRecommended: boolean, isOutdated: boolean
+): string {
+  if (isRecommended) {
+    if (installed && isFavorite) { return 'skill-recommended.installed.favorited'; }
+    if (installed) { return 'skill-recommended.installed'; }
+    if (isFavorite) { return 'skill-recommended.favorited'; }
+    return 'skill-recommended';
+  }
+  if (installed && isFavorite && isOutdated) { return 'skill-installed.favorited.outdated'; }
+  if (installed && isOutdated) { return 'skill-installed.outdated'; }
+  if (installed && isFavorite) { return 'skill-installed.favorited'; }
+  if (installed) { return 'skill-installed'; }
+  if (isFavorite) { return 'skill.favorited'; }
+  return 'skill';
+}
+
+function buildSkillIcon(installed: boolean, isFavorite: boolean, isOutdated: boolean): vscode.ThemeIcon {
+  if (installed && isOutdated) { return new vscode.ThemeIcon('arrow-up', new vscode.ThemeColor('charts.yellow')); }
+  if (installed) { return new vscode.ThemeIcon('pass-filled', new vscode.ThemeColor('testing.iconPassed')); }
+  if (isFavorite) { return new vscode.ThemeIcon('star-full', new vscode.ThemeColor('charts.yellow')); }
+  return new vscode.ThemeIcon('circle-outline');
+}
+
 export class SkillItem extends vscode.TreeItem {
   readonly contextValue: string;
 
@@ -171,29 +195,7 @@ export class SkillItem extends vscode.TreeItem {
   ) {
     super(skill.id, vscode.TreeItemCollapsibleState.None);
 
-    if (isRecommended) {
-      if (installed && isFavorite) {
-        this.contextValue = 'skill-recommended.installed.favorited';
-      } else if (installed) {
-        this.contextValue = 'skill-recommended.installed';
-      } else if (isFavorite) {
-        this.contextValue = 'skill-recommended.favorited';
-      } else {
-        this.contextValue = 'skill-recommended';
-      }
-    } else if (installed && isFavorite && isOutdated) {
-      this.contextValue = 'skill-installed.favorited.outdated';
-    } else if (installed && isOutdated) {
-      this.contextValue = 'skill-installed.outdated';
-    } else if (installed && isFavorite) {
-      this.contextValue = 'skill-installed.favorited';
-    } else if (installed) {
-      this.contextValue = 'skill-installed';
-    } else if (isFavorite) {
-      this.contextValue = 'skill.favorited';
-    } else {
-      this.contextValue = 'skill';
-    }
+    this.contextValue = buildSkillContextValue(installed, isFavorite, isRecommended, isOutdated);
 
     const desc = skill.description;
     this.description =
@@ -203,18 +205,12 @@ export class SkillItem extends vscode.TreeItem {
 
     this.tooltip = new vscode.MarkdownString(
       `**${skill.id}**\n\n${desc}\n\n*Category: ${CATEGORY_DISPLAY_NAMES[skill.category] ?? skill.category} | Source: ${skill.source}*` +
-      (installed ? '\n\n✅ **Installed**' : '') + (isOutdated ? '\n\n\uD83D\uDD04 **Update available**' : '') + (isFavorite ? '\n\n⭐ **Favorited**' : '')
+      (installed ? '\n\n✅ **Installed**' : '') +
+      (isOutdated ? '\n\n🔄 **Update available**' : '') +
+      (isFavorite ? '\n\n⭐ **Favorited**' : '')
     );
 
-    if (installed && isOutdated) {
-      this.iconPath = new vscode.ThemeIcon('arrow-up', new vscode.ThemeColor('charts.yellow'));
-    } else if (installed) {
-      this.iconPath = new vscode.ThemeIcon('pass-filled', new vscode.ThemeColor('testing.iconPassed'));
-    } else if (isFavorite) {
-      this.iconPath = new vscode.ThemeIcon('star-full', new vscode.ThemeColor('charts.yellow'));
-    } else {
-      this.iconPath = new vscode.ThemeIcon('circle-outline');
-    }
+    this.iconPath = buildSkillIcon(installed, isFavorite, isOutdated);
 
     this.command = {
       command: 'aiSkills.preview',

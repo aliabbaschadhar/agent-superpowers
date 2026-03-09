@@ -71,6 +71,75 @@ function toQuickPickItem(
   };
 }
 
+async function handleSkillSelection(
+  skillId: string,
+  manager: SkillsManager,
+  recentSkills: RecentSkills
+): Promise<void> {
+  recentSkills.add(skillId);
+
+  const skill = manager.findById(skillId);
+  if (!skill) {
+    vscode.window.showWarningMessage(`Skill '${skillId}' not found.`);
+    return;
+  }
+
+  const skillFiles = await manager.readSkillDirectory(skill);
+  const content = skillFiles.get('SKILL.md') ?? await manager.readContent(skill);
+  const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+
+  if (!workspaceRoot) {
+    vscode.window.showWarningMessage('Open a workspace folder to install skills project-locally.');
+    return;
+  }
+  if (!content) {
+    vscode.window.showWarningMessage(`Skill '${skillId}' has no readable content.`);
+    return;
+  }
+
+  await installSkillLocally(skill.id, content, skillFiles, workspaceRoot);
+  await openSkillInChat(skill.name, skill.id, content);
+}
+
+async function installSkillLocally(
+  skillId: string,
+  content: string,
+  skillFiles: Map<string, string>,
+  workspaceRoot: string
+): Promise<void> {
+  const skillInstallDir = path.join(workspaceRoot, '.agent', 'skills', skillId);
+  if (fs.existsSync(path.join(skillInstallDir, 'SKILL.md'))) { return; }
+  const opts: InstallOptions = {
+    skillId,
+    skillContent: content,
+    skillFiles: skillFiles.size > 1 ? skillFiles : undefined,
+    workspaceRoot,
+  };
+  try {
+    await new ProjectLocalInstaller().install(opts);
+  } catch {
+    // Non-fatal — still proceed to attach context
+  }
+}
+
+async function openSkillInChat(skillName: string, skillId: string, content: string): Promise<void> {
+  const fileRefs = `#file:.agent/skills/${skillId}`;
+  try {
+    await vscode.commands.executeCommand('workbench.action.chat.open', {
+      query: fileRefs,
+      isPartialQuery: true,
+    });
+    vscode.window.showInformationMessage(
+      `$(check) '${skillName}' installed — skill files added to chat context`
+    );
+  } catch {
+    await vscode.env.clipboard.writeText(fileRefs || content);
+    vscode.window.showInformationMessage(
+      `$(clippy) '${skillName}' installed — paste in chat to add as context (Ctrl+V)`
+    );
+  }
+}
+
 export function registerBrowseCommand(
   manager: SkillsManager,
   recentSkills: RecentSkills,
@@ -229,79 +298,7 @@ export function registerBrowseCommand(
 
         // Strip icon prefix: "$(star-full) /skill-id" or "$(symbol-event) /skill-id"
         const skillId = picked.label.replace(/\$\([^)]+\)\s*\//, '');
-
-        recentSkills.add(skillId);
-
-        const skill = manager.findById(skillId);
-        if (!skill) {
-          vscode.window.showWarningMessage(`Skill '${skillId}' not found.`);
-          return;
-        }
-
-        // Read all files in the skill folder (SKILL.md + examples, resources, companions)
-        const skillFiles = await manager.readSkillDirectory(skill);
-        const content = skillFiles.get('SKILL.md') ?? await manager.readContent(skill);
-
-        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-
-        if (!workspaceRoot) {
-          vscode.window.showWarningMessage(
-            'Open a workspace folder to install skills project-locally.'
-          );
-          return;
-        }
-
-        if (!content) {
-          vscode.window.showWarningMessage(`Skill '${skillId}' has no readable content.`);
-          return;
-        }
-
-        // 1. Install project-locally (.agent/skills/{id}/) — skip if already present
-        //    to avoid the overwrite confirmation dialog on every browse selection.
-        const skillInstallDir = path.join(workspaceRoot, '.agent', 'skills', skillId);
-        const alreadyInstalled = fs.existsSync(path.join(skillInstallDir, 'SKILL.md'));
-        if (!alreadyInstalled) {
-          const opts: InstallOptions = {
-            skillId,
-            skillContent: content,
-            skillFiles: skillFiles.size > 1 ? skillFiles : undefined,
-            workspaceRoot,
-          };
-          try {
-            await new ProjectLocalInstaller().install(opts);
-          } catch {
-            // Non-fatal — still proceed to attach context
-          }
-        }
-
-        // 2. Reference the skill folder using a workspace-relative path with forward
-        //    slashes so VS Code Chat resolves it as a folder chip on all platforms.
-        const relativeSkillDir = ['.agent', 'skills', skillId].join('/');
-        const fileRefs = `#file:${relativeSkillDir}`;
-
-        // 3. Open chat panel with #file: references pre-filled as partial query
-        let openedChat = false;
-        try {
-          await vscode.commands.executeCommand('workbench.action.chat.open', {
-            query: fileRefs,
-            isPartialQuery: true,
-          });
-          openedChat = true;
-        } catch {
-          // Chat API not available — fall back to clipboard
-        }
-
-        if (!openedChat) {
-          // Fallback: copy the #file: references + skill name to clipboard
-          await vscode.env.clipboard.writeText(fileRefs || content);
-          vscode.window.showInformationMessage(
-            `$(clippy) '${skill.name}' installed — paste in chat to add as context (Ctrl+V)`
-          );
-        } else {
-          vscode.window.showInformationMessage(
-            `$(check) '${skill.name}' installed — skill files added to chat context`
-          );
-        }
+        await handleSkillSelection(skillId, manager, recentSkills);
       });
 
       qp.onDidHide(() => resolve());

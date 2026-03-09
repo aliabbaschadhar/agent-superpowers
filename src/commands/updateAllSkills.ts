@@ -54,7 +54,7 @@ export function registerUpdateAllSkillsCommand(
       }
     }
 
-    treeProvider.refresh();
+    treeProvider.refreshAfterInstall();
 
     // Clear the "updates available" context key
     const remaining = await manager.getSkillsWithUpdates(tracker);

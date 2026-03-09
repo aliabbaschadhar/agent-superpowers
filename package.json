@@ -40,7 +40,7 @@
       },
       {
         "command": "aiSkills.install",
-        "title": "Install Skill to Agent",
+        "title": "Install Skill",
         "category": "AI Skills"
       },
       {
@@ -407,13 +407,6 @@
           "default": true,
           "description": "Ask before overwriting an already-installed skill file."
         },
-        "aiSkills.autoPasteDelayMs": {
-          "type": "number",
-          "default": 80,
-          "minimum": 0,
-          "maximum": 2000,
-          "description": "Delay in milliseconds between focus and paste when sending a skill ID to Claude Code chat. Increase on slower machines."
-        },
         "aiSkills.localSkillsPath": {
           "type": "string",
           "default": "",
@@ -423,13 +416,6 @@
           "type": "string",
           "default": "",
           "description": "Override the remote skills index URL (GitHub raw URL or Gist). Leave empty to use the built-in default."
-        },
-        "aiSkills.welcomed": {
-          "type": "boolean",
-          "default": false,
-          "scope": "application",
-          "description": "Internal flag tracking whether the extension welcome message has been shown.",
-          "ignoreSync": true
         }
       }
     }

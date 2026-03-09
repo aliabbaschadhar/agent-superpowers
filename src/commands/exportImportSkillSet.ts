@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { SkillsManager } from '../skills/SkillsManager';
 import { log, logError } from '../logger';
+import { bulkInstall } from './installBulk';
 
 /**
  * File format for exported skill sets:
@@ -151,62 +152,20 @@ export function registerImportSkillSetCommand(
       );
       if (confirm !== 'Install') { return; }
 
-      // Bulk install using the same direct-write approach as installBulk
-      let installed = 0;
-      let failed = 0;
+      // Bulk install via the shared bulkInstall helper
+      const skillEntries = toInstall
+        .map(id => manager.findById(id))
+        .filter((s): s is NonNullable<ReturnType<typeof manager.findById>> => s !== undefined);
 
-      await vscode.window.withProgress(
-        {
-          location: vscode.ProgressLocation.Notification,
-          title: `Importing "${payload.name}"…`,
-          cancellable: true,
-        },
-        async (progress, token) => {
-          for (let i = 0; i < toInstall.length; i++) {
-            if (token.isCancellationRequested) { break; }
+      await bulkInstall(skillEntries, `"${payload.name}"`, manager);
 
-            const id = toInstall[i];
-            progress.report({
-              message: `(${i + 1}/${toInstall.length}) ${id}`,
-              increment: (1 / toInstall.length) * 100,
-            });
-
-            const skill = manager.findById(id);
-            if (!skill) { failed++; continue; }
-
-            try {
-              const skillFiles = await manager.readSkillDirectory(skill);
-              const content = skillFiles.get('SKILL.md') ?? await manager.readContent(skill);
-              if (!content) { failed++; continue; }
-
-              const destDir = path.join(workspaceRoot, '.agent', 'skills', id);
-              fs.mkdirSync(destDir, { recursive: true });
-              fs.writeFileSync(path.join(destDir, 'SKILL.md'), content, 'utf-8');
-
-              if (skillFiles.size > 1) {
-                for (const [relPath, fileContent] of skillFiles) {
-                  if (relPath === 'SKILL.md') { continue; }
-                  const dest = path.join(destDir, relPath);
-                  fs.mkdirSync(path.dirname(dest), { recursive: true });
-                  fs.writeFileSync(dest, fileContent, 'utf-8');
-                }
-              }
-              installed++;
-            } catch {
-              failed++;
-            }
-          }
-        }
-      );
-
-      const parts = [`${installed} installed`];
-      if (failed > 0) { parts.push(`${failed} failed`); }
-      if (unknownIds.length > 0) { parts.push(`${unknownIds.length} not in index`); }
-
-      log(`Import skill set "${payload.name}": ${parts.join(', ')}`);
-      vscode.window.showInformationMessage(
-        `AI Skills import "${payload.name}" complete: ${parts.join(' · ')}.`
-      );
+      const unknownMsg = unknownIds.length > 0 ? ` · ${unknownIds.length} not in index` : '';
+      log(`Import skill set "${payload.name}": complete${unknownMsg}`);
+      if (unknownIds.length > 0) {
+        vscode.window.showInformationMessage(
+          `AI Skills: Import complete. ${unknownIds.length} skill ID(s) not found in index.`
+        );
+      }
     }
   );
 }
