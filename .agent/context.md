@@ -26,6 +26,11 @@ Running log of decisions, discoveries, and session context for the **AI Agent Su
 - `WorkspaceScanner` only reads the root `package.json`; monorepos with nested packages are not scanned.
 - Webview preview is plain text; no syntax highlighting for Markdown.
 
+**What was fixed (browse & bulk-copy skill delivery):**
+- **`aiSkills.browse` (Ctrl+Shift+/):** Replaced broken `workbench.action.chat.open isPartialQuery` call (which required the skill to already be installed globally — it never was). Now: reads the entire skill folder (`SKILL.md` + all companion files), installs project-locally to `.agent/skills/{id}/`, concatenates all file content (with `=== filename ===` section headers), writes to clipboard, then focuses the detected agent chat panel. User pastes with Ctrl+V.
+- **`aiSkills.bulkCopy`:** Now installs each selected skill project-locally before copying. Clipboard content changed from bare `skill-id` lines to `/skill-id` lines (correct format for agent invocation). Success toast reports install count.
+- **`buildCombinedContent` helper:** Added to `browseSkills.ts` — iterates the `Map<string, string>` returned by `readSkillDirectory()` and produces a single string with all skill files concatenated.
+
 ---
 
 ### 2026-03-08

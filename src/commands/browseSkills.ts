@@ -1,10 +1,13 @@
+import * as fs from 'fs';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { SkillsManager, SkillEntry } from '../skills/SkillsManager';
 import { ERR_NO_SKILLS } from '../constants';
 import { RecentSkills } from '../recentSkills';
 import { FavoriteSkills } from '../favoriteSkills';
 import { FuzzySearch } from '../skills/FuzzySearch';
-import { recommendedAgent } from '../editorDetector';
+import { ProjectLocalInstaller } from '../installers/projectLocalInstaller';
+import { InstallOptions } from '../installers/types';
 
 /**
  * Parses special filter prefixes from browse query text.
@@ -54,44 +57,6 @@ function applyFilters(
     result = result.filter(s => manager.isInstalled(s.id));
   }
   return result;
-}
-
-/**
- * Returns the VS Code command IDs to attempt, in order, for focusing the
- * active AI-chat input panel. Ordered from most-specific to generic fallback.
- */
-function getChatFocusCommands(agent: string): string[] {
-  switch (agent) {
-    case 'claude':
-      return [
-        'claude.focusChat',
-        'workbench.view.extension.claude-code',
-        'workbench.action.chat.open',
-      ];
-    case 'gemini':
-      return [
-        'gemini.focusChat',
-        'workbench.view.extension.gemini',
-        'workbench.action.chat.open',
-      ];
-    case 'copilot':
-      return [
-        'workbench.action.chat.open',
-        'workbench.panel.chat.view.copilot.focus',
-        'github.copilot.chat.focus',
-      ];
-    case 'cursor':
-      return [
-        'aichat.newchataction',
-        'workbench.action.chat.open',
-      ];
-    default:
-      return [
-        'workbench.action.chat.open',
-        'claude.focusChat',
-        'workbench.view.extension.claude-code',
-      ];
-  }
 }
 
 function toQuickPickItem(
@@ -151,7 +116,7 @@ export function registerBrowseCommand(
             ]
             : []),
           {
-            label: 'Filter tips: /cat:ai  /cat:security  /installed  #tag',
+            label: 'Filter tips: /installed  #tag',
             kind: vscode.QuickPickItemKind.Separator,
           },
           { label: 'All Skills', kind: vscode.QuickPickItemKind.Separator },
@@ -211,7 +176,7 @@ export function registerBrowseCommand(
     }
 
     const qp = vscode.window.createQuickPick();
-    qp.placeholder = `Search ${skills.length} skills… Try: /cat:ai  /cat:security  /installed  #tag`;
+    qp.placeholder = 'Search skills to add into your project';
     qp.matchOnDetail = false;
     qp.matchOnDescription = false;
     qp.items = buildItems('');
@@ -264,37 +229,77 @@ export function registerBrowseCommand(
 
         // Strip icon prefix: "$(star-full) /skill-id" or "$(symbol-event) /skill-id"
         const skillId = picked.label.replace(/\$\([^)]+\)\s*\//, '');
-        const command = `/${skillId}`;
 
         recentSkills.add(skillId);
 
-        let sent = false;
-        try {
-          await vscode.commands.executeCommand('workbench.action.chat.open', {
-            query: command,
-            isPartialQuery: true,
-          });
-          sent = true;
-        } catch {
-          // Not available — fall through to focus-then-paste
+        const skill = manager.findById(skillId);
+        if (!skill) {
+          vscode.window.showWarningMessage(`Skill '${skillId}' not found.`);
+          return;
         }
 
-        if (!sent) {
-          const agent = recommendedAgent();
-          const focusCmds = getChatFocusCommands(agent);
-          for (const focusCmd of focusCmds) {
-            try {
-              await vscode.commands.executeCommand(focusCmd);
-              break;
-            } catch {
-              // try next
-            }
+        // Read all files in the skill folder (SKILL.md + examples, resources, companions)
+        const skillFiles = await manager.readSkillDirectory(skill);
+        const content = skillFiles.get('SKILL.md') ?? await manager.readContent(skill);
+
+        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+
+        if (!workspaceRoot) {
+          vscode.window.showWarningMessage(
+            'Open a workspace folder to install skills project-locally.'
+          );
+          return;
+        }
+
+        if (!content) {
+          vscode.window.showWarningMessage(`Skill '${skillId}' has no readable content.`);
+          return;
+        }
+
+        // 1. Install project-locally (.agent/skills/{id}/) — skip if already present
+        //    to avoid the overwrite confirmation dialog on every browse selection.
+        const skillInstallDir = path.join(workspaceRoot, '.agent', 'skills', skillId);
+        const alreadyInstalled = fs.existsSync(path.join(skillInstallDir, 'SKILL.md'));
+        if (!alreadyInstalled) {
+          const opts: InstallOptions = {
+            skillId,
+            skillContent: content,
+            skillFiles: skillFiles.size > 1 ? skillFiles : undefined,
+            workspaceRoot,
+          };
+          try {
+            await new ProjectLocalInstaller().install(opts);
+          } catch {
+            // Non-fatal — still proceed to attach context
           }
         }
 
-        if (!sent) {
-          vscode.window.showWarningMessage(
-            `$(symbol-event) Could not send ${command} to chat — AI chat panel not found.`
+        // 2. Reference the skill folder using a workspace-relative path with forward
+        //    slashes so VS Code Chat resolves it as a folder chip on all platforms.
+        const relativeSkillDir = ['.agent', 'skills', skillId].join('/');
+        const fileRefs = `#file:${relativeSkillDir}`;
+
+        // 3. Open chat panel with #file: references pre-filled as partial query
+        let openedChat = false;
+        try {
+          await vscode.commands.executeCommand('workbench.action.chat.open', {
+            query: fileRefs,
+            isPartialQuery: true,
+          });
+          openedChat = true;
+        } catch {
+          // Chat API not available — fall back to clipboard
+        }
+
+        if (!openedChat) {
+          // Fallback: copy the #file: references + skill name to clipboard
+          await vscode.env.clipboard.writeText(fileRefs || content);
+          vscode.window.showInformationMessage(
+            `$(clippy) '${skill.name}' installed — paste in chat to add as context (Ctrl+V)`
+          );
+        } else {
+          vscode.window.showInformationMessage(
+            `$(check) '${skill.name}' installed — skill files added to chat context`
           );
         }
       });
