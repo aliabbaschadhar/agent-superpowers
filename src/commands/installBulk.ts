@@ -7,12 +7,13 @@ import { SkillEntry } from '../skills/types';
 import { SkillsTreeProvider } from '../tree/SkillsTreeProvider';
 import { CategoryItem, CollectionItem, UserCollectionItem, RecommendedSectionItem } from '../tree/nodes';
 import { InstallOptions, InstallResult } from '../installers/types';
+import { ProjectLocalInstaller } from '../installers/projectLocalInstaller';
 import { SkillUpdateTracker } from '../skills/SkillUpdateTracker';
 
 // ─── Path helper ──────────────────────────────────────────────────────────────
 
 function computeTargetPath(skillId: string, workspaceRoot: string): string {
-  return path.join(workspaceRoot, '.agent', 'skills', skillId, 'SKILL.md');
+  return new ProjectLocalInstaller().targetPath({ skillId, skillContent: '', workspaceRoot });
 }
 
 /**
@@ -43,6 +44,46 @@ function writeDirectly(destPath: string, opts: InstallOptions): InstallResult {
 
 // ─── Core bulk install logic ───────────────────────────────────────────────────
 
+interface InstallCounts { installed: number; skipped: number; failed: number; cancelled: boolean }
+
+async function installSingleSkill(
+  skill: SkillEntry,
+  workspaceRoot: string,
+  overwriteExisting: boolean | null,
+  manager: SkillsManager,
+  tracker: SkillUpdateTracker | undefined
+): Promise<'installed' | 'skipped' | 'failed'> {
+  const destPath = computeTargetPath(skill.id, workspaceRoot);
+  if (overwriteExisting === false && fs.existsSync(destPath)) { return 'skipped'; }
+  try {
+    const skillFiles = await manager.readSkillDirectory(skill);
+    const content = skillFiles.get('SKILL.md') ?? await manager.readContent(skill);
+    if (!content) { return 'failed'; }
+    const opts: InstallOptions = {
+      skillId: skill.id,
+      skillContent: content,
+      skillFiles: skillFiles.size > 1 ? skillFiles : undefined,
+      workspaceRoot,
+    };
+    const result = writeDirectly(destPath, opts);
+    if (result.success) {
+      if (tracker) { tracker.setHash(skill.id, content); }
+      return 'installed';
+    }
+    return 'failed';
+  } catch {
+    return 'failed';
+  }
+}
+
+function reportResults(counts: InstallCounts): void {
+  const parts = [`${counts.installed} installed`];
+  if (counts.skipped > 0) { parts.push(`${counts.skipped} skipped`); }
+  if (counts.failed > 0) { parts.push(`${counts.failed} failed`); }
+  if (counts.cancelled) { parts.push('cancelled'); }
+  vscode.window.showInformationMessage(`AI Skills bulk install complete: ${parts.join(' · ')}.`);
+}
+
 export async function bulkInstall(
   skills: SkillEntry[],
   label: string,
@@ -62,32 +103,16 @@ export async function bulkInstall(
     return;
   }
 
-  // ── Conflict detection ─────────────────────────────────────────────────────
-  //
-  // Resolve skip-vs-overwrite once for the whole batch instead of per-skill.
-  //
-  // overwriteExisting:
-  //   true  → overwrite all (silently)
-  //   false → skip existing skills
-  //   null  → no conflicts found, proceed normally
   let overwriteExisting: boolean | null = null;
-
   const cfg = vscode.workspace.getConfiguration('aiSkills');
   const confirmOverwrite = cfg.get<boolean>('confirmOverwrite', true);
 
   if (confirmOverwrite) {
-    const conflicting = skills.filter(s =>
-      fs.existsSync(computeTargetPath(s.id, workspaceRoot))
-    );
-
+    const conflicting = skills.filter(s => fs.existsSync(computeTargetPath(s.id, workspaceRoot)));
     if (conflicting.length > 0) {
       const choice = await vscode.window.showWarningMessage(
-        `${conflicting.length} of ${skills.length} skills are already installed. ` +
-        'What would you like to do?',
-        { modal: true },
-        'Skip Existing',
-        'Overwrite All',
-        'Cancel'
+        `${conflicting.length} of ${skills.length} skills are already installed. What would you like to do?`,
+        { modal: true }, 'Skip Existing', 'Overwrite All', 'Cancel'
       );
       if (!choice || choice === 'Cancel') { return; }
       overwriteExisting = choice === 'Overwrite All';
@@ -96,74 +121,21 @@ export async function bulkInstall(
     overwriteExisting = true;
   }
 
-  // ── Install loop ───────────────────────────────────────────────────────────
-  let installed = 0;
-  let skipped = 0;
-  let failed = 0;
-  let cancelled = false;
+  const counts: InstallCounts = { installed: 0, skipped: 0, failed: 0, cancelled: false };
 
   await vscode.window.withProgress(
-    {
-      location: vscode.ProgressLocation.Notification,
-      title: `Installing ${label}…`,
-      cancellable: true,
-    },
+    { location: vscode.ProgressLocation.Notification, title: `Installing ${label}…`, cancellable: true },
     async (progress, token) => {
-      const total = skills.length;
-
-      for (let i = 0; i < total; i++) {
-        if (token.isCancellationRequested) {
-          cancelled = true;
-          break;
-        }
-
-        const skill = skills[i];
-        progress.report({
-          message: `(${i + 1}/${total}) ${skill.id}`,
-          increment: (1 / total) * 100,
-        });
-
-        try {
-          const destPath = computeTargetPath(skill.id, workspaceRoot);
-
-          if (overwriteExisting === false && fs.existsSync(destPath)) {
-            skipped++;
-            continue;
-          }
-
-          const skillFiles = await manager.readSkillDirectory(skill);
-          const content = skillFiles.get('SKILL.md') ?? await manager.readContent(skill);
-          if (!content) { failed++; continue; }
-
-          const opts: InstallOptions = {
-            skillId: skill.id,
-            skillContent: content,
-            skillFiles: skillFiles.size > 1 ? skillFiles : undefined,
-            workspaceRoot,
-          };
-
-          const result = writeDirectly(destPath, opts);
-          if (result.success) {
-            installed++;
-            if (tracker) { tracker.setHash(skill.id, content); }
-          } else {
-            failed++;
-          }
-        } catch {
-          failed++;
-        }
+      for (let i = 0; i < skills.length; i++) {
+        if (token.isCancellationRequested) { counts.cancelled = true; break; }
+        progress.report({ message: `(${i + 1}/${skills.length}) ${skills[i].id}`, increment: (1 / skills.length) * 100 });
+        const outcome = await installSingleSkill(skills[i], workspaceRoot, overwriteExisting, manager, tracker);
+        counts[outcome]++;
       }
     }
   );
 
-  const parts = [`${installed} installed`];
-  if (skipped > 0) { parts.push(`${skipped} skipped`); }
-  if (failed > 0) { parts.push(`${failed} failed`); }
-  if (cancelled) { parts.push('cancelled'); }
-
-  vscode.window.showInformationMessage(
-    `AI Skills bulk install complete: ${parts.join(' · ')}.`
-  );
+  reportResults(counts);
 }
 
 // ─── Command registrations ─────────────────────────────────────────────────────

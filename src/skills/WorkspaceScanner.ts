@@ -104,48 +104,46 @@ export class WorkspaceScanner {
     tokens: Set<string>,
     knownTokens: Set<string>
   ): Promise<void> {
-    // ── package.json ────────────────────────────────────────────────────────
+    this.parsePackageJsonDeps(root, tokens);
+    this.detectFilePresence(root, tokens);
+    this.parsePythonDeps(root, tokens);
+
+    // Remove tokens that have no skill mapping (keeps results clean)
+    for (const tok of [...tokens]) {
+      if (!knownTokens.has(tok)) { tokens.delete(tok); }
+    }
+  }
+
+  private parsePackageJsonDeps(root: string, tokens: Set<string>): void {
     const pkgPath = path.join(root, 'package.json');
-    if (fs.existsSync(pkgPath)) {
-      try {
-        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')) as Record<string, unknown>;
-        const allDeps: Record<string, unknown> = {
-          ...((pkg.dependencies as Record<string, unknown>) ?? {}),
-          ...((pkg.devDependencies as Record<string, unknown>) ?? {}),
-        };
-        for (const dep of Object.keys(allDeps)) {
-          const tok = PKG_DEP_MAP[dep];
-          if (tok) { tokens.add(tok); }
-        }
-        // TypeScript — also check tsconfig.json
-        if (fs.existsSync(path.join(root, 'tsconfig.json')) || allDeps['typescript']) {
-          tokens.add('typescript');
-        }
-      } catch { /* malformed JSON — skip */ }
-    }
+    if (!fs.existsSync(pkgPath)) { return; }
+    try {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')) as Record<string, unknown>;
+      const allDeps: Record<string, unknown> = {
+        ...((pkg.dependencies as Record<string, unknown>) ?? {}),
+        ...((pkg.devDependencies as Record<string, unknown>) ?? {}),
+      };
+      for (const dep of Object.keys(allDeps)) {
+        const tok = PKG_DEP_MAP[dep];
+        if (tok) { tokens.add(tok); }
+      }
+      if (fs.existsSync(path.join(root, 'tsconfig.json')) || allDeps['typescript']) {
+        tokens.add('typescript');
+      }
+    } catch { /* malformed JSON — skip */ }
+  }
 
-    // ── go.mod ───────────────────────────────────────────────────────────────
-    if (fs.existsSync(path.join(root, 'go.mod'))) {
-      tokens.add('go');
-    }
+  private detectFilePresence(root: string, tokens: Set<string>): void {
+    if (fs.existsSync(path.join(root, 'go.mod'))) { tokens.add('go'); }
+    if (fs.existsSync(path.join(root, 'Cargo.toml'))) { tokens.add('rust'); }
 
-    // ── Cargo.toml ───────────────────────────────────────────────────────────
-    if (fs.existsSync(path.join(root, 'Cargo.toml'))) {
-      tokens.add('rust');
-    }
-
-    // ── Python ───────────────────────────────────────────────────────────────
     const hasPyFiles =
       fs.existsSync(path.join(root, 'requirements.txt')) ||
       fs.existsSync(path.join(root, 'pyproject.toml')) ||
       fs.existsSync(path.join(root, 'setup.py')) ||
       fs.existsSync(path.join(root, 'Pipfile'));
-    if (hasPyFiles) {
-      tokens.add('python');
-      this.parsePythonDeps(root, tokens);
-    }
+    if (hasPyFiles) { tokens.add('python'); this.parsePythonDeps(root, tokens); }
 
-    // ── JVM ──────────────────────────────────────────────────────────────────
     if (
       fs.existsSync(path.join(root, 'pom.xml')) ||
       fs.existsSync(path.join(root, 'build.gradle')) ||
@@ -155,9 +153,7 @@ export class WorkspaceScanner {
       if (
         fs.existsSync(path.join(root, 'build.gradle.kts')) ||
         fs.existsSync(path.join(root, 'src', 'main', 'kotlin'))
-      ) {
-        tokens.add('kotlin');
-      }
+      ) { tokens.add('kotlin'); }
       try {
         const pomPath = path.join(root, 'pom.xml');
         if (fs.existsSync(pomPath)) {
@@ -169,52 +165,33 @@ export class WorkspaceScanner {
       } catch { /* ignore */ }
     }
 
-    // ── .NET / C# ────────────────────────────────────────────────────────────
     if (this.anyFileInRoot(root, '.csproj') || this.anyFileInRoot(root, '.sln')) {
       tokens.add('dotnet');
       tokens.add('csharp');
     }
 
-    // ── Docker ──────────────────────────────────────────────────────────────
     if (
       fs.existsSync(path.join(root, 'Dockerfile')) ||
       fs.existsSync(path.join(root, 'docker-compose.yml')) ||
       fs.existsSync(path.join(root, 'docker-compose.yaml'))
-    ) {
-      tokens.add('docker');
-    }
+    ) { tokens.add('docker'); }
 
-    // ── Terraform ───────────────────────────────────────────────────────────
-    if (this.anyFileInRoot(root, '.tf')) {
-      tokens.add('terraform');
-    }
+    if (this.anyFileInRoot(root, '.tf')) { tokens.add('terraform'); }
 
-    // ── Kubernetes ──────────────────────────────────────────────────────────
     if (
       fs.existsSync(path.join(root, 'k8s')) ||
       fs.existsSync(path.join(root, 'kubernetes')) ||
       this.hasSubdir(root, 'helm')
-    ) {
-      tokens.add('kubernetes');
-    }
+    ) { tokens.add('kubernetes'); }
 
-    // ── iOS / Swift ─────────────────────────────────────────────────────────
     if (this.anyFileInRoot(root, '.xcodeproj') || this.anyFileInRoot(root, '.swift')) {
       tokens.add('swift');
     }
 
-    // ── Android ─────────────────────────────────────────────────────────────
     if (
       fs.existsSync(path.join(root, 'AndroidManifest.xml')) ||
       fs.existsSync(path.join(root, 'app', 'src', 'main', 'AndroidManifest.xml'))
-    ) {
-      tokens.add('android');
-    }
-
-    // Remove tokens that have no skill mapping (keeps results clean)
-    for (const tok of [...tokens]) {
-      if (!knownTokens.has(tok)) { tokens.delete(tok); }
-    }
+    ) { tokens.add('android'); }
   }
 
   private parsePythonDeps(root: string, tokens: Set<string>): void {

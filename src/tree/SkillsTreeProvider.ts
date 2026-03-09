@@ -17,7 +17,6 @@ export class SkillsTreeProvider implements vscode.TreeDataProvider<SkillTreeNode
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-  private filterText = '';
   private showInstalledOnly = false;
   private recommendedSkills: SkillEntry[] = [];
   private detectedTechs: string[] = [];
@@ -43,12 +42,6 @@ export class SkillsTreeProvider implements vscode.TreeDataProvider<SkillTreeNode
     this._onDidChangeTreeData.fire();
   }
 
-  /** Update the active filter and re-render the tree. Pass empty string to clear. */
-  setFilter(text: string): void {
-    this.filterText = text.toLowerCase().trim();
-    this._onDidChangeTreeData.fire();
-  }
-
   /** Toggle the "installed only" filter and update the VS Code context key. */
   toggleInstalledFilter(): void {
     this.showInstalledOnly = !this.showInstalledOnly;
@@ -66,6 +59,11 @@ export class SkillsTreeProvider implements vscode.TreeDataProvider<SkillTreeNode
   }
 
   refresh(): void {
+    this._onDidChangeTreeData.fire();
+  }
+
+  /** Invalidate the install cache and refresh the tree. Call after install/uninstall. */
+  refreshAfterInstall(): void {
     this.manager.invalidateInstallCache();
     this._onDidChangeTreeData.fire();
   }
@@ -75,10 +73,8 @@ export class SkillsTreeProvider implements vscode.TreeDataProvider<SkillTreeNode
   }
 
   getChildren(el?: SkillTreeNode): SkillTreeNode[] {
-    const filter = this.filterText;
-
     if (!el) {
-      return this.buildRootChildren(filter);
+      return this.buildRootChildren();
     }
 
     if (el instanceof GettingStartedItem) {
@@ -154,12 +150,11 @@ export class SkillsTreeProvider implements vscode.TreeDataProvider<SkillTreeNode
     }
 
     if (el instanceof CategoryItem) {
-      const skills = this.manager.getByCategory(el.category);
-      let filtered = filter ? skills.filter(s => this.skillMatches(s, filter)) : skills;
+      let skills = this.manager.getByCategory(el.category);
       if (this.showInstalledOnly) {
-        filtered = filtered.filter(s => this.manager.isInstalled(s.id));
+        skills = skills.filter(s => this.manager.isInstalled(s.id));
       }
-      return filtered.map(s => new SkillItem(
+      return skills.map(s => new SkillItem(
         s,
         this.manager.isInstalled(s.id),
         this.favoriteSkills.has(s.id),
@@ -197,92 +192,67 @@ export class SkillsTreeProvider implements vscode.TreeDataProvider<SkillTreeNode
     return [];
   }
 
-  private buildRootChildren(filter: string): SkillTreeNode[] {
+  private buildRootChildren(): SkillTreeNode[] {
     const categories = this.manager.getCategories();
     const total = this.manager.getAll().length;
     const installedCount = this.manager.countInstalled();
 
-    const isFiltering = filter.length > 0;
-
-    // Recommendations are always visible, regardless of active filters
+    // Recommendations are always visible
     const recommendations: SkillTreeNode[] = this.recommendedSkills.length > 0
       ? [new RecommendedSectionItem(this.recommendedSkills, this.detectedTechs)]
       : [];
 
-    if (!isFiltering && !this.showInstalledOnly) {
-      const favIds = this.favoriteSkills.get();
-      const favSection: SkillTreeNode[] = favIds.length > 0
-        ? [new FavoritesCategoryItem(favIds.length)]
-        : [];
+    const favIds = this.favoriteSkills.get();
+    const favSection: SkillTreeNode[] = favIds.length > 0
+      ? [new FavoritesCategoryItem(favIds.length)]
+      : [];
 
-      const installedSkills = this.manager.getAll().filter(s => this.manager.isInstalled(s.id));
-      const installedSection: SkillTreeNode[] = installedSkills.length > 0
-        ? [new InstalledSectionItem(installedSkills)]
-        : [];
+    const installedSkills = this.manager.getAll().filter(s => this.manager.isInstalled(s.id));
+    const installedSection: SkillTreeNode[] = installedSkills.length > 0
+      ? [new InstalledSectionItem(installedSkills)]
+      : [];
 
-      // Onboarding section for first-time users (shown when no skills installed yet)
-      const onboarding: SkillTreeNode[] = this.showOnboarding && installedCount === 0
-        ? [new GettingStartedItem()]
-        : [];
+    const onboarding: SkillTreeNode[] = this.showOnboarding && installedCount === 0
+      ? [new GettingStartedItem()]
+      : [];
 
-      // Collections section
-      const collections: SkillTreeNode[] = [
-        new CollectionsSectionItem(SKILL_COLLECTIONS, this.userCollections.getAll().length),
-      ];
+    const collections: SkillTreeNode[] = [
+      new CollectionsSectionItem(SKILL_COLLECTIONS, this.userCollections.getAll().length),
+    ];
 
-      return [
-        new SummaryItem(total, installedCount),
-        ...onboarding,
-        ...favSection,
-        ...recommendations,
-        ...installedSection,
-        ...collections,
-        new AllCategoriesItem(categories.length),
-      ];
-    }
+    const categoryNodes: SkillTreeNode[] = this.showInstalledOnly
+      ? categories
+        .filter(cat => this.manager.getByCategory(cat).some(s => this.manager.isInstalled(s.id)))
+        .map(cat => {
+          const count = this.manager.getByCategory(cat).filter(s => this.manager.isInstalled(s.id)).length;
+          return new CategoryItem(cat, count);
+        })
+      : [new AllCategoriesItem(categories.length)];
 
-    // Apply text filter and/or installed-only filter
-    const filteredCats = categories
-      .filter(cat => {
-        const skills = this.manager.getByCategory(cat);
-        const textOk = isFiltering ? skills.some(s => this.skillMatches(s, filter)) : true;
-        const installOk = this.showInstalledOnly
-          ? skills.some(s => this.manager.isInstalled(s.id))
-          : true;
-        return textOk && installOk;
-      })
-      .map(cat => {
-        let skills = this.manager.getByCategory(cat);
-        if (isFiltering) { skills = skills.filter(s => this.skillMatches(s, filter)); }
-        if (this.showInstalledOnly) { skills = skills.filter(s => this.manager.isInstalled(s.id)); }
-        return new CategoryItem(cat, skills.length, isFiltering);
-      });
-
-    return [...recommendations, ...filteredCats];
+    return [
+      new SummaryItem(total, installedCount),
+      ...onboarding,
+      ...favSection,
+      ...recommendations,
+      ...installedSection,
+      ...collections,
+      ...categoryNodes,
+    ];
   }
 
-  /** True when a search filter is currently active. */
+  /** True when the installed-only filter is currently active. */
   isFiltering(): boolean {
-    return this.filterText.length > 0;
+    return this.showInstalledOnly;
   }
 
   /**
    * Returns the skills currently visible in the tree.
-   * If a filter is active only matching skills are returned;
-   * otherwise every skill is returned.
+   * When the installed-only filter is active, only installed skills are returned.
    */
   getFilteredSkills(): SkillEntry[] {
-    const filter = this.filterText;
-    if (!filter) {
-      return this.manager.getAll();
+    if (this.showInstalledOnly) {
+      return this.manager.getAll().filter(s => this.manager.isInstalled(s.id));
     }
-    return this.manager.getAll().filter(s => this.skillMatches(s, filter));
-  }
-
-  private skillMatches(skill: SkillEntry, filter: string): boolean {
-    return (
-      skill.id.includes(filter) ||
-      skill.description.toLowerCase().includes(filter)
-    );
+    return this.manager.getAll();
   }
 }

@@ -28,7 +28,6 @@ export const SKILL_COLLECTIONS: SkillCollection[] = [
       'code-reviewer',
       'systematic-debugging',
       'git-pr-workflows-pr-enhance',
-      'architect-review',
     ],
   },
   {

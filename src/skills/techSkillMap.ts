@@ -40,7 +40,6 @@ export const TECH_SKILL_MAP: Record<string, string[]> = {
   csharp: ['csharp-pro', 'dotnet-backend', 'dotnet-backend-patterns'],
   // ── Mobile ──────────────────────────────────────────────────────────────────
   'react-native': ['react-native-architecture', 'react-patterns', 'mobile-design'],
-  reactnative: ['react-native-architecture', 'react-patterns', 'mobile-design'],
   expo: ['react-native-architecture', 'expo-deployment', 'mobile-design'],
   flutter: ['flutter-expert', 'mobile-design'],
   swift: ['ios-developer', 'swiftui-expert-skill', 'hig-foundations'],
@@ -89,7 +88,7 @@ export const TECH_DISPLAY_NAMES: Record<string, string> = {
   python: 'Python', fastapi: 'FastAPI', django: 'Django', flask: 'Flask', pytest: 'pytest',
   go: 'Go', golang: 'Go', rust: 'Rust',
   java: 'Java', kotlin: 'Kotlin', spring: 'Spring', dotnet: '.NET', csharp: 'C#',
-  'react-native': 'React Native', reactnative: 'React Native', expo: 'Expo',
+  'react-native': 'React Native', expo: 'Expo',
   flutter: 'Flutter', swift: 'Swift', android: 'Android',
   postgres: 'PostgreSQL', postgresql: 'PostgreSQL', prisma: 'Prisma',
   mongodb: 'MongoDB', redis: 'Redis', mysql: 'MySQL', sqlite: 'SQLite',

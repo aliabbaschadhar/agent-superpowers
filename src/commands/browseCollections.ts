@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { SkillsManager } from '../skills/SkillsManager';
 import { SkillEntry } from '../skills/types';
 import { SKILL_COLLECTIONS } from '../skills/collections';
+import { bulkInstall } from './installBulk';
 
 /**
  * Registers the `aiSkills.browseCollections` command — lets users pick a
@@ -72,57 +73,7 @@ export function registerBrowseCollectionsCommand(
           return;
         }
 
-        // Delegate to bulk install (reuse existing installCategory-style flow)
-        let installed = 0;
-        let failed = 0;
-        const fs = await import('fs');
-        const path = await import('path');
-
-        await vscode.window.withProgress(
-          {
-            location: vscode.ProgressLocation.Notification,
-            title: `Installing "${collection.name}"…`,
-            cancellable: true,
-          },
-          async (progress, token) => {
-            for (let i = 0; i < resolved.length; i++) {
-              if (token.isCancellationRequested) { break; }
-              const skill = resolved[i];
-              progress.report({
-                message: `(${i + 1}/${resolved.length}) ${skill.id}`,
-                increment: (1 / resolved.length) * 100,
-              });
-
-              try {
-                const skillFiles = await manager.readSkillDirectory(skill);
-                const content = skillFiles.get('SKILL.md') ?? await manager.readContent(skill);
-                if (!content) { failed++; continue; }
-
-                const destDir = path.join(workspaceRoot, '.agent', 'skills', skill.id);
-                fs.mkdirSync(destDir, { recursive: true });
-                fs.writeFileSync(path.join(destDir, 'SKILL.md'), content, 'utf-8');
-
-                if (skillFiles.size > 1) {
-                  for (const [relPath, fileContent] of skillFiles) {
-                    if (relPath === 'SKILL.md') { continue; }
-                    const dest = path.join(destDir, relPath);
-                    fs.mkdirSync(path.dirname(dest), { recursive: true });
-                    fs.writeFileSync(dest, fileContent, 'utf-8');
-                  }
-                }
-                installed++;
-              } catch {
-                failed++;
-              }
-            }
-          }
-        );
-
-        const parts = [`${installed} installed`];
-        if (failed > 0) { parts.push(`${failed} failed`); }
-        vscode.window.showInformationMessage(
-          `AI Skills: "${collection.name}" — ${parts.join(' · ')}.`
-        );
+        await bulkInstall(resolved, `"${collection.name}"`, manager);
       } else {
         // Preview a single skill
         const skillId = action.label.replace(/\$\([^)]+\)\s*/, '');
