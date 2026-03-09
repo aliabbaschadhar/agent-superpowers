@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { InstallOptions, InstallResult } from './types';
 import { logError } from '../logger';
+import { safeResolvePath } from '../security';
 
 export abstract class BaseInstaller {
   abstract label: string;
@@ -43,7 +44,8 @@ export abstract class BaseInstaller {
       if (opts.skillFiles) {
         for (const [relPath, content] of opts.skillFiles) {
           if (relPath === 'SKILL.md') { continue; }   // already written above
-          const companionDest = path.join(skillDir, relPath);
+          const companionDest = safeResolvePath(skillDir, relPath);
+          if (!companionDest) { continue; }            // skip traversal attempts
           fs.mkdirSync(path.dirname(companionDest), { recursive: true });
           fs.writeFileSync(companionDest, content, 'utf-8');
         }

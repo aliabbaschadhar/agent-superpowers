@@ -5,6 +5,7 @@ import { SkillEntry } from './types';
 import { SkillsRepository } from './SkillsRepository';
 import { RemoteSync } from './RemoteSync';
 import { TECH_SKILL_MAP } from './techSkillMap';
+import { isValidSkillPath } from '../security';
 
 export { SkillEntry } from './types';
 
@@ -160,6 +161,9 @@ export class SkillsManager {
   private mergeSkills(incoming: SkillEntry[]): void {
     const existingIds = new Set(this.skills.map(s => s.id));
     for (const s of incoming) {
+      // Reject absolute paths and any path with '..' traversal sequences.
+      // Remote index entries must use safe relative paths only.
+      if (path.isAbsolute(s.path) || !isValidSkillPath(s.path)) { continue; }
       if (!existingIds.has(s.id)) {
         this.skills.push(s);
         existingIds.add(s.id);

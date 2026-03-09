@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import { SkillEntry } from './types';
 import { REMOTE_BASE_URL } from '../constants';
 import { detectInstalledIds } from './InstallationDetector';
+import { safeResolvePath, MAX_REMOTE_RESPONSE_BYTES } from '../security';
 
 /**
  * Handles all local and remote file I/O for skill content.
@@ -55,8 +56,13 @@ export class SkillsRepository {
       const res = await fetch(url);
       if (!res.ok) { return null; }
       const content = await res.text();
-      fs.mkdirSync(path.dirname(cachedPath), { recursive: true });
-      fs.writeFileSync(cachedPath, content, 'utf-8');
+      if (content.length > MAX_REMOTE_RESPONSE_BYTES) { return null; }
+      // Verify the cache write stays within storagePath
+      const safeSkillDir = safeResolvePath(this.storagePath, skill.path);
+      if (!safeSkillDir) { return null; }
+      const safeCache = path.join(safeSkillDir, 'SKILL.md');
+      fs.mkdirSync(path.dirname(safeCache), { recursive: true });
+      fs.writeFileSync(safeCache, content, 'utf-8');
       return content;
     } catch {
       return null;
@@ -99,11 +105,15 @@ export class SkillsRepository {
       const res = await fetch(mainUrl);
       if (!res.ok) { return new Map(); }
       const mainContent = await res.text();
+      if (mainContent.length > MAX_REMOTE_RESPONSE_BYTES) { return new Map(); }
 
-      fs.mkdirSync(cachedDir, { recursive: true });
-      fs.writeFileSync(path.join(cachedDir, 'SKILL.md'), mainContent, 'utf-8');
-      await this.fetchCompanionFiles(skill, mainContent, cachedDir);
-      return this.walkDir(cachedDir);
+      // Verify the cache directory stays within storagePath
+      const safeCachedDir = safeResolvePath(this.storagePath, skill.path);
+      if (!safeCachedDir) { return new Map(); }
+      fs.mkdirSync(safeCachedDir, { recursive: true });
+      fs.writeFileSync(path.join(safeCachedDir, 'SKILL.md'), mainContent, 'utf-8');
+      await this.fetchCompanionFiles(skill, mainContent, safeCachedDir);
+      return this.walkDir(safeCachedDir);
     } catch {
       return new Map();
     }
@@ -192,14 +202,18 @@ export class SkillsRepository {
 
     await Promise.allSettled(
       [...refs].map(async (ref) => {
-        const destFile = path.join(cacheDir, ref);
+        // Verify the destination stays within the cache directory
+        const destFile = safeResolvePath(cacheDir, ref);
+        if (!destFile) { return; }
         if (fs.existsSync(destFile)) { return; }
         try {
           const url = `${REMOTE_BASE_URL}${skill.path}/${ref}`;
           const res = await fetch(url);
           if (!res.ok) { return; }
+          const content = await res.text();
+          if (content.length > MAX_REMOTE_RESPONSE_BYTES) { return; }
           fs.mkdirSync(path.dirname(destFile), { recursive: true });
-          fs.writeFileSync(destFile, await res.text(), 'utf-8');
+          fs.writeFileSync(destFile, content, 'utf-8');
         } catch { /* best-effort */ }
       })
     );

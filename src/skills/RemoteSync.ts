@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { SkillEntry } from './types';
 import { REMOTE_INDEX_URL } from '../constants';
+import { isHttpsUrl, MAX_REMOTE_RESPONSE_BYTES } from '../security';
 
 export class RemoteSync {
   constructor(private readonly storagePath: string) { }
@@ -18,12 +19,22 @@ export class RemoteSync {
         .getConfiguration('aiSkills')
         .get<string>('remoteIndexUrl', '')
         .trim();
+
+      // Reject non-HTTPS custom URLs to prevent plaintext data interception
+      if (configUrl && !isHttpsUrl(configUrl)) {
+        return null;
+      }
+
       const url = configUrl || REMOTE_INDEX_URL;
 
       const res = await fetch(url);
       if (!res.ok) { return null; }
 
-      const skills = (await res.json()) as SkillEntry[];
+      // Guard against unexpectedly large responses
+      const text = await res.text();
+      if (text.length > MAX_REMOTE_RESPONSE_BYTES) { return null; }
+
+      const skills = JSON.parse(text) as SkillEntry[];
 
       if (!fs.existsSync(this.storagePath)) {
         fs.mkdirSync(this.storagePath, { recursive: true });

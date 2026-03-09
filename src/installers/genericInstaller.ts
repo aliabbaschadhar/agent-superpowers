@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { InstallOptions, InstallResult } from './types';
+import { safeResolvePath } from '../security';
 
 export class GenericInstaller {
   label = 'Custom Path';
@@ -29,7 +30,8 @@ export class GenericInstaller {
       if (opts.skillFiles) {
         for (const [relPath, content] of opts.skillFiles) {
           if (relPath === 'SKILL.md') { continue; }
-          const companionDest = path.join(skillDir, relPath);
+          const companionDest = safeResolvePath(skillDir, relPath);
+          if (!companionDest) { continue; }            // skip traversal attempts
           fs.mkdirSync(path.dirname(companionDest), { recursive: true });
           fs.writeFileSync(companionDest, content, 'utf-8');
         }
