@@ -11,6 +11,8 @@ import {
   registerInstallCategoryCommand,
   registerInstallAllCommand,
   registerInstallCollectionCommand,
+  registerUninstallCategoryCommand,
+  registerUninstallCollectionCommand,
 } from './commands/installBulk';
 import { registerBrowseCollectionsCommand } from './commands/browseCollections';
 import { registerCreateSkillCommand } from './commands/createSkill';
@@ -30,6 +32,8 @@ import {
   registerRemoveFromCollectionCommand,
 } from './commands/addToCollection';
 import { registerUpdateAllSkillsCommand } from './commands/updateAllSkills';
+import { registerRefreshCatalogCommand, writeCatalogToWorkspace } from './commands/refreshCatalog';
+import { registerRequestSkillTool } from './tools/requestSkillTool';
 import { ERR_BUNDLE_INCOMPLETE, CMD_FILTER_TREE, CTX_UPDATES_AVAILABLE } from './constants';
 import { WorkspaceScanner } from './skills/WorkspaceScanner';
 import { initLogger, log } from './logger';
@@ -116,8 +120,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     try {
       const added = await manager.syncRemote();
       if (added > 0) {
-        treeProvider.refresh();
+        treeProvider.refreshAfterInstall();
       }
+      // Silently refresh the workspace skills catalog after every sync
+      writeCatalogToWorkspace(manager).catch(() => {
+        /* non-critical */
+      });
       const outdated = await manager.getSkillsWithUpdates(tracker);
       const outdatedIds = new Set(outdated.map((s) => s.id));
       treeProvider.setOutdatedIds(outdatedIds);
@@ -150,6 +158,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     registerInstallCategoryCommand(manager),
     registerInstallAllCommand(manager, treeProvider),
     registerInstallCollectionCommand(manager),
+    registerUninstallCategoryCommand(manager, treeProvider),
+    registerUninstallCollectionCommand(manager, treeProvider),
     registerToggleFavoriteCommand(favoriteSkills, treeProvider),
     registerClearFavoritesCommand(favoriteSkills, treeProvider),
     registerBrowseCollectionsCommand(manager),
@@ -162,6 +172,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     registerAddToCollectionCommand(manager, userCollections, treeProvider),
     registerRemoveFromCollectionCommand(userCollections, treeProvider),
     registerUpdateAllSkillsCommand(manager, tracker, treeProvider),
+    registerRefreshCatalogCommand(manager),
+    registerRequestSkillTool(manager),
     vscode.commands.registerCommand('aiSkills.refreshTree', async () => {
       await vscode.window.withProgress(
         {
@@ -170,7 +182,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         },
         async () => {
           const added = await manager.syncRemote();
-          treeProvider.refresh();
+          treeProvider.refreshAfterInstall();
           if (added > 0) {
             vscode.window.showInformationMessage(`AI Skills: Found ${added} new skill(s)!`);
           }
@@ -183,7 +195,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('aiSkills.localSkillsPath')) {
         manager.loadLocalSources();
-        treeProvider.refresh();
+        treeProvider.refreshAfterInstall();
       }
     })
   );

@@ -134,7 +134,11 @@ export class SkillsTreeProvider implements vscode.TreeDataProvider<SkillTreeNode
 
     if (el instanceof AllCategoriesItem) {
       const categories = this.manager.getCategories();
-      return categories.map((cat) => new CategoryItem(cat, this.manager.getByCategory(cat).length));
+      return categories.map((cat) => {
+        const skills = this.manager.getByCategory(cat);
+        const installedCount = skills.filter((s) => this.manager.isInstalled(s.id)).length;
+        return new CategoryItem(cat, skills.length, false, installedCount);
+      });
     }
 
     if (el instanceof InstalledSectionItem) {

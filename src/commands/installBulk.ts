@@ -183,6 +183,60 @@ export async function bulkInstall(
   reportResults(counts);
 }
 
+// ─── Bulk uninstall helper ────────────────────────────────────────────────────
+
+async function bulkUninstallSkills(
+  skills: SkillEntry[],
+  label: string,
+  workspaceRoot: string,
+  treeProvider: SkillsTreeProvider
+): Promise<void> {
+  if (skills.length === 0) {
+    vscode.window.showInformationMessage('AI Skills: No installed skills to remove.');
+    return;
+  }
+
+  const confirm = await vscode.window.showWarningMessage(
+    `Remove ${skills.length} installed skill(s) from ${label}?`,
+    { modal: true },
+    'Remove All',
+    'Cancel'
+  );
+  if (confirm !== 'Remove All') {
+    return;
+  }
+
+  let removed = 0;
+  let failed = 0;
+
+  await vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Notification,
+      title: `Uninstalling ${label}…`,
+      cancellable: false,
+    },
+    async () => {
+      for (const skill of skills) {
+        const skillDir = path.join(workspaceRoot, '.agent', 'skills', skill.id);
+        try {
+          fs.rmSync(skillDir, { recursive: true, force: true });
+          removed++;
+        } catch {
+          failed++;
+        }
+      }
+    }
+  );
+
+  treeProvider.refreshAfterInstall();
+
+  const msg =
+    failed > 0
+      ? `AI Skills: Removed ${removed} skill(s). ${failed} failed — see Output for details.`
+      : `AI Skills: Removed ${removed} skill(s) from ${label}.`;
+  vscode.window.showInformationMessage(msg);
+}
+
 // ─── Command registrations ─────────────────────────────────────────────────────
 
 /** Right-click a category node → "Install All in Category" */
@@ -213,6 +267,67 @@ export function registerInstallAllCommand(
     await bulkInstall(skills, label, manager);
   });
 }
+/** Right-click a fully-installed category node → "Uninstall All in Category" */
+export function registerUninstallCategoryCommand(
+  manager: SkillsManager,
+  treeProvider: SkillsTreeProvider
+): vscode.Disposable {
+  return vscode.commands.registerCommand(
+    'aiSkills.uninstallCategory',
+    async (item?: CategoryItem) => {
+      if (!item?.category) {
+        vscode.window.showErrorMessage('AI Skills: No category selected.');
+        return;
+      }
+      const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+      if (!workspaceRoot) {
+        vscode.window.showErrorMessage('AI Skills: No workspace folder is open.');
+        return;
+      }
+      const installedSkills = manager
+        .getByCategory(item.category)
+        .filter((s) => manager.isInstalled(s.id));
+      await bulkUninstallSkills(
+        installedSkills,
+        `"${item.category}" category`,
+        workspaceRoot,
+        treeProvider
+      );
+    }
+  );
+}
+
+/** Right-click a fully-installed collection node → "Uninstall Collection" */
+export function registerUninstallCollectionCommand(
+  manager: SkillsManager,
+  treeProvider: SkillsTreeProvider
+): vscode.Disposable {
+  return vscode.commands.registerCommand(
+    'aiSkills.uninstallCollection',
+    async (item?: CollectionItem | UserCollectionItem) => {
+      if (!item?.collection) {
+        vscode.window.showErrorMessage('AI Skills: No collection selected.');
+        return;
+      }
+      const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+      if (!workspaceRoot) {
+        vscode.window.showErrorMessage('AI Skills: No workspace folder is open.');
+        return;
+      }
+      const installedSkills = item.collection.skillIds
+        .map((id) => manager.findById(id))
+        .filter((s): s is SkillEntry => s !== undefined)
+        .filter((s) => manager.isInstalled(s.id));
+      await bulkUninstallSkills(
+        installedSkills,
+        `"${item.collection.name}" collection`,
+        workspaceRoot,
+        treeProvider
+      );
+    }
+  );
+}
+
 /** Right-click a collection node → "Install Collection" */
 export function registerInstallCollectionCommand(manager: SkillsManager): vscode.Disposable {
   return vscode.commands.registerCommand(

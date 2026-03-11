@@ -90,6 +90,57 @@ function run() {
   // ai-skills repo ships most skills as "uncategorized".
   console.log('[prebuild] Running skill categorization...');
   execSync(`node ${path.join(__dirname, 'categorize-skills.js')}`, { stdio: 'inherit' });
+
+  // Re-read the (potentially re-categorized) index for the catalog
+  const catalogIndex = JSON.parse(
+    fs.readFileSync(path.join(ASSETS_DIR, 'skills_index.json'), 'utf-8')
+  );
+
+  console.log('[prebuild] Generating skills-catalog.md...');
+  const catalogContent = generateSkillsCatalog(catalogIndex);
+  fs.writeFileSync(path.join(ASSETS_DIR, 'skills-catalog.md'), catalogContent);
+  console.log('[prebuild] skills-catalog.md written.');
+}
+
+/**
+ * Generates a human- and AI-readable Markdown catalog from a skills index array.
+ * Groups entries under ## <category> headings for easy scanning by Copilot Chat.
+ *
+ * @param {Array<{id: string, name: string, category: string, description: string, risk: string}>} skillsIndex
+ * @returns {string} Markdown content
+ */
+function generateSkillsCatalog(skillsIndex) {
+  // Group by category
+  const byCategory = {};
+  for (const skill of skillsIndex) {
+    const cat = skill.category || 'uncategorized';
+    if (!byCategory[cat]) {
+      byCategory[cat] = [];
+    }
+    byCategory[cat].push(skill);
+  }
+
+  const sortedCategories = Object.keys(byCategory).sort();
+  const lines = [
+    '# AI Agent Skills — Full Catalog',
+    '',
+    `> Auto-generated from the skills index. Total: **${skillsIndex.length} skills** across **${sortedCategories.length} categories**.`,
+    '> When asked "what skill should I use?", browse this file and suggest the most relevant skill IDs.',
+    '> Install a skill: `Ctrl+Shift+/` → search for the skill ID → press Enter.',
+    '',
+  ];
+
+  for (const category of sortedCategories) {
+    lines.push(`## ${category}`);
+    lines.push('');
+    for (const skill of byCategory[category]) {
+      const riskNote = skill.risk && skill.risk !== 'none' ? ` _(risk: ${skill.risk})_` : '';
+      lines.push(`- **${skill.id}**: ${skill.description}${riskNote}`);
+    }
+    lines.push('');
+  }
+
+  return lines.join('\n');
 }
 
 run();

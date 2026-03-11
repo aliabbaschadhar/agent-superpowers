@@ -127,12 +127,13 @@ export class SummaryItem extends vscode.TreeItem {
 }
 
 export class CategoryItem extends vscode.TreeItem {
-  readonly contextValue = 'category';
+  readonly contextValue: string;
 
   constructor(
     public readonly category: string,
     public readonly skillCount: number,
-    isFiltered = false
+    isFiltered = false,
+    installedCount = 0
   ) {
     const displayName = CATEGORY_DISPLAY_NAMES[category.toLowerCase()] ?? category;
     super(displayName, vscode.TreeItemCollapsibleState.Collapsed);
@@ -140,6 +141,8 @@ export class CategoryItem extends vscode.TreeItem {
     this.tooltip = `${displayName} (${skillCount} skills)`;
     const iconName = isFiltered ? 'filter' : (CATEGORY_ICONS[category.toLowerCase()] ?? 'folder');
     this.iconPath = new vscode.ThemeIcon(iconName);
+    this.contextValue =
+      installedCount > 0 && installedCount === skillCount ? 'category.installed' : 'category';
   }
 }
 
@@ -193,7 +196,8 @@ function buildSkillContextValue(
 function buildSkillIcon(
   installed: boolean,
   isFavorite: boolean,
-  isOutdated: boolean
+  isOutdated: boolean,
+  risk: SkillEntry['risk'] = 'none'
 ): vscode.ThemeIcon {
   if (installed && isOutdated) {
     return new vscode.ThemeIcon('arrow-up', new vscode.ThemeColor('charts.yellow'));
@@ -203,6 +207,15 @@ function buildSkillIcon(
   }
   if (isFavorite) {
     return new vscode.ThemeIcon('star-full', new vscode.ThemeColor('charts.yellow'));
+  }
+  if (risk === 'unknown') {
+    return new vscode.ThemeIcon(
+      'circle-outline',
+      new vscode.ThemeColor('editorWarning.foreground')
+    );
+  }
+  if (risk === 'safe') {
+    return new vscode.ThemeIcon('circle-outline', new vscode.ThemeColor('testing.iconPassed'));
   }
   return new vscode.ThemeIcon('circle-outline');
 }
@@ -227,14 +240,22 @@ export class SkillItem extends vscode.TreeItem {
         ? desc.slice(0, DESCRIPTION_TRUNCATE_LENGTH) + '…'
         : desc;
 
+    const riskLine =
+      skill.risk === 'safe'
+        ? '\n\n🛡️ **Risk: safe**'
+        : skill.risk === 'unknown'
+          ? '\n\n⚠️ **Risk: unknown**'
+          : '';
+
     this.tooltip = new vscode.MarkdownString(
       `**${skill.id}**\n\n${desc}\n\n*Category: ${CATEGORY_DISPLAY_NAMES[skill.category] ?? skill.category} | Source: ${skill.source}*` +
+        riskLine +
         (installed ? '\n\n✅ **Installed**' : '') +
         (isOutdated ? '\n\n🔄 **Update available**' : '') +
         (isFavorite ? '\n\n⭐ **Favorited**' : '')
     );
 
-    this.iconPath = buildSkillIcon(installed, isFavorite, isOutdated);
+    this.iconPath = buildSkillIcon(installed, isFavorite, isOutdated, skill.risk);
 
     this.command = {
       command: 'aiSkills.preview',
@@ -345,7 +366,7 @@ export class CollectionsSectionItem extends vscode.TreeItem {
 }
 
 export class CollectionItem extends vscode.TreeItem {
-  readonly contextValue = 'collection';
+  readonly contextValue: string;
 
   constructor(
     public readonly collection: SkillCollection,
@@ -358,11 +379,15 @@ export class CollectionItem extends vscode.TreeItem {
         `Skills: ${collection.skillIds.map((id) => `\`${id}\``).join(', ')}`
     );
     this.iconPath = new vscode.ThemeIcon(collection.icon);
+    this.contextValue =
+      installedCount === collection.skillIds.length && collection.skillIds.length > 0
+        ? 'collection.installed'
+        : 'collection';
   }
 }
 
 export class UserCollectionItem extends vscode.TreeItem {
-  readonly contextValue = 'user-collection';
+  readonly contextValue: string;
 
   constructor(
     public readonly collection: UserCollection,
@@ -376,6 +401,10 @@ export class UserCollectionItem extends vscode.TreeItem {
         `${collection.skillIds.length} skill(s)${installedCount > 0 ? ` · ${installedCount} installed` : ''}`
     );
     this.iconPath = new vscode.ThemeIcon(collection.icon ?? 'list-unordered');
+    this.contextValue =
+      installedCount === collection.skillIds.length && collection.skillIds.length > 0
+        ? 'user-collection.installed'
+        : 'user-collection';
   }
 }
 

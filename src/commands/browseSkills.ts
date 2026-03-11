@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { SkillsManager, SkillEntry } from '../skills/SkillsManager';
-import { ERR_NO_SKILLS } from '../constants';
+import { ERR_NO_SKILLS, CONF_SHOW_RISK_BADGE } from '../constants';
 import { RecentSkills } from '../recentSkills';
 import { FavoriteSkills } from '../favoriteSkills';
 import { FuzzySearch } from '../skills/FuzzySearch';
@@ -20,6 +20,7 @@ import { InstallOptions } from '../installers/types';
 interface BrowseFilters {
   category?: string;
   installedOnly?: boolean;
+  risk?: 'safe' | 'unknown' | 'none';
   query: string;
 }
 
@@ -40,6 +41,13 @@ function parseFilters(raw: string): BrowseFilters {
     text = text.replace(/\/installed\b/i, '');
   }
 
+  // /risk:safe  /risk:unknown  /risk:none
+  const riskMatch = text.match(/\/risk:(safe|unknown|none)/i);
+  if (riskMatch) {
+    filters.risk = riskMatch[1].toLowerCase() as BrowseFilters['risk'];
+    text = text.replace(riskMatch[0], '');
+  }
+
   filters.query = text.trim().toLowerCase();
   return filters;
 }
@@ -56,13 +64,42 @@ function applyFilters(
   if (filters.installedOnly) {
     result = result.filter((s) => manager.isInstalled(s.id));
   }
+  if (filters.risk) {
+    result = result.filter((s) => s.risk === filters.risk);
+  }
   return result;
 }
 
+function riskBadge(risk: SkillEntry['risk']): string {
+  if (risk === 'safe') {
+    return ' $(shield)';
+  }
+  if (risk === 'unknown') {
+    return ' $(warning)';
+  }
+  return '';
+}
+
+function isRiskBadgeEnabled(): boolean {
+  return vscode.workspace.getConfiguration().get<boolean>(CONF_SHOW_RISK_BADGE, true);
+}
+
 function toQuickPickItem(skill: SkillEntry, isFavorite = false): vscode.QuickPickItem {
+  const showRisk = isRiskBadgeEnabled();
+  const badge = showRisk && skill.risk !== 'none' ? riskBadge(skill.risk) : '';
+  const riskLabel = showRisk && skill.risk !== 'none' ? ` · ${skill.risk}` : '';
+  const categoryStr = skill.category !== 'uncategorized' ? skill.category : '';
+  const description = categoryStr
+    ? `${categoryStr}${riskLabel}`
+    : riskLabel
+      ? skill.risk
+      : undefined;
+
   return {
-    label: isFavorite ? `$(star-full) /${skill.id}` : `$(symbol-event) /${skill.id}`,
-    description: skill.category !== 'uncategorized' ? skill.category : undefined,
+    label: isFavorite
+      ? `$(star-full) /${skill.id}${badge}`
+      : `$(symbol-event) /${skill.id}${badge}`,
+    description,
     detail: skill.description,
   };
 }

@@ -6,6 +6,20 @@ Running log of decisions, discoveries, and session context for the **AI Agent Su
 
 ## Session Log
 
+### 2026-03-10 (Copilot LM Tool — aiSkills_requestSkill)
+
+**Status:** Implemented. Copilot can now install and load skills on-demand during response generation.
+
+**What was implemented:**
+
+- **`src/tools/requestSkillTool.ts`** — New `RequestSkillTool` class implementing `vscode.LanguageModelTool<{ skillId: string }>`. `prepareInvocation` validates the skill ID and shows a native VS Code confirmation dialog when the skill is not yet installed. `invoke` installs the skill via the existing `aiSkills.install` command pipeline, then reads and returns the full `SKILL.md` content as a `LanguageModelToolResult`. Fast-path skips install and confirmation when the skill is already present.
+- **`src/extension.ts`** — Imports `registerRequestSkillTool` and pushes the returned Disposable onto `context.subscriptions`.
+- **`package.json`** — `engines.vscode` bumped to `^1.90.0` (required for stable `vscode.lm.registerTool`). `@types/vscode` bumped to `^1.90.0`. Added `contributes.languageModelTools` entry with full `modelDescription`, `inputSchema`, and `canBeReferencedInPrompt: true`.
+- **`.github/copilot-instructions.md`** — Added _"Using the Skill Request Tool"_ section with trigger-to-skillId mapping table, usage examples, behavior, and rules.
+- **`CHANGELOG.md`** — Added feature entry under `[Unreleased]`.
+
+**Key constraint met:** No proposed VS Code APIs used. `vscode.lm.registerTool` is stable from VS Code 1.90.
+
 ### 2026-03-10 (Documentation cleanup)
 
 **Status:** Removed 7 redundant/bloat markdown files; rewrote README.md from 440 lines → 85 lines.
@@ -105,14 +119,15 @@ Running log of decisions, discoveries, and session context for the **AI Agent Su
 
 ## Key Decisions
 
-| Date       | Decision                               | Rationale                                                                                                |
-| ---------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| 2026-03-05 | Bundle all skills inside `.vsix`       | Zero-dependency offline experience; no CDN reliability risk                                              |
-| 2026-03-05 | Fuse.js as sole runtime dep            | Fast, zero-config fuzzy search with no server round-trips                                                |
-| 2026-03-05 | `esbuild` + `Bun` build chain          | Fastest TS bundling; Bun for script execution parity                                                     |
-| 2026-03-06 | Separate `RemoteSync` class            | Separation of concerns; sync can be swapped (e.g., GraphQL later)                                        |
-| 2026-03-06 | Gemini CLI installer added             | Growing Gemini user base; feature parity with Claude                                                     |
-| 2026-03-08 | Project-local install (.agent/skills/) | Skills scoped to workspace; avoids polluting global agent configs; aligns with repo-committed skill sets |
+| Date       | Decision                                  | Rationale                                                                                                |
+| ---------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------- | --- | ----------------------------------------------------------- |
+| 2026-03-10 | Copilot LM Tool (`aiSkills_requestSkill`) | On-demand skill injection during Copilot responses without requiring pre-installation                    |
+| 2026-03-10 | `engines.vscode` bumped to `^1.90.0`      | `vscode.lm.registerTool` is stable from 1.90; no proposed API flag needed                                |     | Zero-dependency offline experience; no CDN reliability risk |
+| 2026-03-05 | Fuse.js as sole runtime dep               | Fast, zero-config fuzzy search with no server round-trips                                                |
+| 2026-03-05 | `esbuild` + `Bun` build chain             | Fastest TS bundling; Bun for script execution parity                                                     |
+| 2026-03-06 | Separate `RemoteSync` class               | Separation of concerns; sync can be swapped (e.g., GraphQL later)                                        |
+| 2026-03-06 | Gemini CLI installer added                | Growing Gemini user base; feature parity with Claude                                                     |
+| 2026-03-08 | Project-local install (.agent/skills/)    | Skills scoped to workspace; avoids polluting global agent configs; aligns with repo-committed skill sets |
 
 ---
 

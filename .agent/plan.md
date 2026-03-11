@@ -4,6 +4,13 @@ Roadmap and sprint planning for **AI Agent Superpowers** v1.2.0 and beyond.
 
 ---
 
+## Completed Features
+
+- [x] **Copilot LM Tool — `aiSkills_requestSkill`** (2026-03-10)
+      Implemented `src/tools/requestSkillTool.ts`. Registered in `extension.ts`. Declared in `package.json` under `contributes.languageModelTools`. Updated `copilot-instructions.md` with usage guidance.
+
+---
+
 ## Current Version: 1.1.0
 
 Released 2026-03-06. Stable. Published to VS Code Marketplace.
@@ -18,53 +25,53 @@ Released 2026-03-06. Stable. Published to VS Code Marketplace.
 ### P0 — Must Have
 
 - [ ] **Memoize `InstallationDetector`**  
-  *Problem:* Full disk scan on every tree refresh causes lag on large setups.  
-  *Solution:* Cache install state in a `Map<string, boolean>`; invalidate only when a command writes to or deletes from an install path (hook into installer `install()`/`uninstall()` methods).  
-  *Files:* `src/skills/InstallationDetector.ts`, `src/commands/installSkill.ts`, `src/commands/uninstallSkill.ts`
+      _Problem:_ Full disk scan on every tree refresh causes lag on large setups.  
+      _Solution:_ Cache install state in a `Map<string, boolean>`; invalidate only when a command writes to or deletes from an install path (hook into installer `install()`/`uninstall()` methods).  
+      _Files:_ `src/skills/InstallationDetector.ts`, `src/commands/installSkill.ts`, `src/commands/uninstallSkill.ts`
 
 - [ ] **Add retry logic to `RemoteSync`**  
-  *Problem:* Any transient network error silently aborts the sync with no retry.  
-  *Solution:* Implement exponential back-off (3 retries, 1s / 2s / 4s), then give up silently.  
-  *Files:* `src/skills/RemoteSync.ts`
+      _Problem:_ Any transient network error silently aborts the sync with no retry.  
+      _Solution:_ Implement exponential back-off (3 retries, 1s / 2s / 4s), then give up silently.  
+      _Files:_ `src/skills/RemoteSync.ts`
 
 - [ ] **Markdown syntax highlighting in preview webview**  
-  *Problem:* Skill preview shows raw Markdown as plain text.  
-  *Solution:* Render Markdown via `vscode.commands.executeCommand('markdown.api.render', ...)` or a lightweight Marked.js inside the webview.  
-  *Files:* `src/commands/previewSkill.ts`
+      _Problem:_ Skill preview shows raw Markdown as plain text.  
+      _Solution:_ Render Markdown via `vscode.commands.executeCommand('markdown.api.render', ...)` or a lightweight Marked.js inside the webview.  
+      _Files:_ `src/commands/previewSkill.ts`
 
 ### P1 — Should Have
 
 - [ ] **Monorepo workspace scan**  
-  *Problem:* `WorkspaceScanner` only reads the root `package.json`.  
-  *Solution:* Walk all `package.json` files up to 2 levels deep with `glob`; merge detected technologies.  
-  *Files:* `src/skills/WorkspaceScanner.ts`
+      _Problem:_ `WorkspaceScanner` only reads the root `package.json`.  
+      _Solution:_ Walk all `package.json` files up to 2 levels deep with `glob`; merge detected technologies.  
+      _Files:_ `src/skills/WorkspaceScanner.ts`
 
 - [ ] **Installer unit tests**  
-  *Problem:* Zero test coverage for installer classes.  
-  *Solution:* Add `test/installers/` with Jest-style mocha tests mocking `fs` operations.  
-  *Files:* `test/installers/claudeInstaller.test.ts`, `geminiInstaller.test.ts`, etc.
+      _Problem:_ Zero test coverage for installer classes.  
+      _Solution:_ Add `test/installers/` with Jest-style mocha tests mocking `fs` operations.  
+      _Files:_ `test/installers/claudeInstaller.test.ts`, `geminiInstaller.test.ts`, etc.
 
 - [ ] **Show skill `source` badge in tree**  
-  *Problem:* Users can't distinguish bundled vs remote vs local skills.  
-  *Solution:* Add a `description` property to `SkillNode` showing `[local]` or `[remote]` suffix.  
-  *Files:* `src/tree/nodes.ts`, `src/tree/SkillsTreeProvider.ts`
+      _Problem:_ Users can't distinguish bundled vs remote vs local skills.  
+      _Solution:_ Add a `description` property to `SkillNode` showing `[local]` or `[remote]` suffix.  
+      _Files:_ `src/tree/nodes.ts`, `src/tree/SkillsTreeProvider.ts`
 
 ### P2 — Nice to Have
 
 - [ ] **Bulk uninstall by category**  
-  *Problem:* Only per-skill uninstall exists.  
-  *Solution:* Add `aiSkills.uninstallCategory` command mirroring `aiSkills.installCategory`.  
-  *Files:* `src/commands/installBulk.ts` (extend), `package.json` contributes
+      _Problem:_ Only per-skill uninstall exists.  
+      _Solution:_ Add `aiSkills.uninstallCategory` command mirroring `aiSkills.installCategory`.  
+      _Files:_ `src/commands/installBulk.ts` (extend), `package.json` contributes
 
 - [ ] **Skill update detection**  
-  *Problem:* If a skill's remote content is updated, users don't know.  
-  *Solution:* Store a content hash on install; compare with remote on `syncRemote()`, notify if outdated.  
-  *Files:* `src/skills/RemoteSync.ts`, `src/skills/InstallationDetector.ts`
+      _Problem:_ If a skill's remote content is updated, users don't know.  
+      _Solution:_ Store a content hash on install; compare with remote on `syncRemote()`, notify if outdated.  
+      _Files:_ `src/skills/RemoteSync.ts`, `src/skills/InstallationDetector.ts`
 
 - [ ] **Open SKILL.md in editor after install**  
-  *Problem:* After install the user has no quick way to inspect the installed file.  
-  *Solution:* Offer "Open file" action in the post-install notification.  
-  *Files:* `src/commands/installSkill.ts`
+      _Problem:_ After install the user has no quick way to inspect the installed file.  
+      _Solution:_ Offer "Open file" action in the post-install notification.  
+      _Files:_ `src/commands/installSkill.ts`
 
 ---
 

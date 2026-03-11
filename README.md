@@ -75,6 +75,60 @@ Search `aiSkills.` in VS Code Settings (`Ctrl+,`):
 
 ---
 
+## GitHub Copilot Setup
+
+After installing skills, add this to your `.github/copilot-instructions.md` so Copilot automatically discovers and uses them:
+
+````markdown
+## AI Agent Skills
+
+This project uses AI Agent Superpowers skills stored in `.agent/skills/`.
+
+### How to use skills
+
+- Each installed skill lives at `.agent/skills/<skill-id>/SKILL.md`
+- Before answering domain-specific questions, check if a relevant skill exists:
+  - React / frontend → `.agent/skills/react-patterns/SKILL.md`
+  - API design → `.agent/skills/api-design-principles/SKILL.md`
+  - Security → `.agent/skills/api-security-best-practices/SKILL.md`
+  - AI / agents → `.agent/skills/ai-agents-architect/SKILL.md`
+  - …and so on for any other installed skill
+
+### Loading a skill
+
+Reference a skill file directly in your prompt:
+
+```
+#file:.agent/skills/react-patterns/SKILL.md
+```
+
+Or use the `aiSkills_requestSkill` Language Model Tool during a Copilot response:
+
+```
+#tool:aiSkills_requestSkill {"skillId": "react-patterns"}
+```
+
+- If the skill is **already installed**, it loads instantly with no prompt.
+- If the skill is **not installed**, VS Code will ask for confirmation before writing any file.
+
+### Skill catalog
+
+Browse all 940+ available skills:
+
+- Open `assets/skills-catalog.md` (or `.agent/skills-catalog.md` after a sync)
+- Or press `Ctrl+Shift+/` in VS Code to fuzzy-search and install skills
+
+### Rules
+
+1. Always check `.agent/skills/` before answering domain-specific questions.
+2. When loading a skill, apply its guidance to your entire response.
+3. Only reference skill IDs you can confirm exist in the catalog — never guess.
+````
+
+> **Tip:** You can also auto-generate this block by running **AI Skills: Copy Copilot Instructions** from the Command Palette (`Ctrl+Shift+P`).
+
+---
+
 ## Contributing & Support
 
 - Bugs / features → [GitHub Issues](https://github.com/aliabbaschadhar/agent-superpowers/issues)

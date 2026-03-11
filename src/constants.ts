@@ -35,6 +35,10 @@ export const CMD_DELETE_COLLECTION = 'aiSkills.deleteCollection';
 export const CMD_ADD_TO_COLLECTION = 'aiSkills.addToCollection';
 export const CMD_REMOVE_FROM_COLLECTION = 'aiSkills.removeFromCollection';
 export const CMD_UPDATE_ALL = 'aiSkills.updateAll';
+export const CMD_REFRESH_CATALOG = 'aiSkills.refreshCatalog';
+
+/** Configuration keys */
+export const CONF_SHOW_RISK_BADGE = 'aiSkills.showRiskBadge';
 
 /** VS Code context keys */
 export const CTX_INSTALLED_FILTER = 'aiSkills.installedFilterActive';

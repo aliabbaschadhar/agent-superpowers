@@ -1,8 +1,8 @@
 {
   "name": "agent-superpowers",
   "displayName": "AI Agent Superpowers",
-  "description": "Browse, preview, and install 940+ AI agent skills for Claude Code, Gemini CLI, Cursor, GitHub Copilot, and more.",
-  "version": "1.1.0",
+  "description": "Browse, preview, and install 940+ AI agent skills for github copilot, cursor, antigravity, winsurf, zed.",
+  "version": "1.0.0",
   "publisher": "aliabbaschadhar",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -15,15 +15,13 @@
     "url": "https://github.com/aliabbaschadhar/agent-superpowers/issues"
   },
   "keywords": [
-    "claude-code",
     "cursor",
     "copilot",
     "ai-skills",
     "agentic",
     "skill-picker",
     "llm",
-    "ai-agent",
-    "gemini-cli"
+    "ai-agent"
   ],
   "categories": [
     "AI",
@@ -31,7 +29,7 @@
     "Snippets"
   ],
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.90.0"
   },
   "main": "./dist/extension.js",
   "activationEvents": [
@@ -52,6 +50,18 @@
       {
         "command": "aiSkills.uninstall",
         "title": "Uninstall Skill",
+        "category": "AI Skills",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "aiSkills.uninstallCategory",
+        "title": "Uninstall All in Category",
+        "category": "AI Skills",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "aiSkills.uninstallCollection",
+        "title": "Uninstall Collection",
         "category": "AI Skills",
         "icon": "$(trash)"
       },
@@ -191,6 +201,12 @@
         "title": "Update All Installed Skills",
         "category": "AI Skills",
         "icon": "$(sync)"
+      },
+      {
+        "command": "aiSkills.refreshCatalog",
+        "title": "Refresh Skills Catalog",
+        "category": "AI Skills",
+        "icon": "$(list-unordered)"
       }
     ],
     "viewsContainers": {
@@ -307,11 +323,6 @@
           "group": "inline@2"
         },
         {
-          "command": "aiSkills.installFromTree",
-          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed/",
-          "group": "inline@3"
-        },
-        {
           "command": "aiSkills.toggleFavorite",
           "when": "view == aiSkillsTree && viewItem =~ /^skill-installed/",
           "group": "inline@4"
@@ -319,11 +330,16 @@
         {
           "command": "aiSkills.uninstall",
           "when": "view == aiSkillsTree && viewItem =~ /^skill-installed/",
-          "group": "inline@5"
+          "group": "inline@3"
         },
         {
           "command": "aiSkills.installCategory",
           "when": "view == aiSkillsTree && viewItem == category",
+          "group": "inline@1"
+        },
+        {
+          "command": "aiSkills.uninstallCategory",
+          "when": "view == aiSkillsTree && viewItem == category.installed",
           "group": "inline@1"
         },
         {
@@ -334,6 +350,11 @@
         {
           "command": "aiSkills.installCollection",
           "when": "view == aiSkillsTree && viewItem == collection",
+          "group": "inline@1"
+        },
+        {
+          "command": "aiSkills.uninstallCollection",
+          "when": "view == aiSkillsTree && viewItem == collection.installed",
           "group": "inline@1"
         },
         {
@@ -395,6 +416,11 @@
           "command": "aiSkills.installCollection",
           "when": "view == aiSkillsTree && viewItem == user-collection",
           "group": "inline@3"
+        },
+        {
+          "command": "aiSkills.uninstallCollection",
+          "when": "view == aiSkillsTree && viewItem == user-collection.installed",
+          "group": "inline@3"
         }
       ]
     },
@@ -405,6 +431,27 @@
         "mac": "cmd+shift+/"
       }
     ],
+    "languageModelTools": [
+      {
+        "name": "aiSkills_requestSkill",
+        "displayName": "AI Skills: Request Skill",
+        "modelDescription": "Installs and retrieves an AI agent skill from the catalog by its kebab-case ID. Call this tool when you need domain-specific knowledge that a skill provides (e.g. react-patterns for React, api-design-principles for REST APIs, ai-agents-architect for agent design). Pass the exact skill ID. Returns the full SKILL.md content to use in your response. Do NOT call this for skills already in context.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "requestSkill",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "skillId": {
+              "type": "string",
+              "description": "The kebab-case skill ID from the catalog, e.g. \"react-patterns\" or \"api-design-principles\"."
+            }
+          },
+          "required": [
+            "skillId"
+          ]
+        }
+      }
+    ],
     "configuration": {
       "title": "AI Agent Skills",
       "properties": {
@@ -412,6 +459,11 @@
           "type": "boolean",
           "default": true,
           "description": "Ask before overwriting an already-installed skill file."
+        },
+        "aiSkills.showRiskBadge": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show a risk-level badge (safe / unknown) next to each skill in the Browse QuickPick and sidebar tooltip."
         },
         "aiSkills.localSkillsPath": {
           "type": "string",
@@ -448,7 +500,7 @@
     "@eslint/js": "^10.0.0",
     "@types/mocha": "^10.0.6",
     "@types/node": "^25.3.3",
-    "@types/vscode": "^1.85.0",
+    "@types/vscode": "^1.90.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "@vscode/test-electron": "^2.3.9",
