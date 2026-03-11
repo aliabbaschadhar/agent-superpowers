@@ -1,8 +1,8 @@
 {
   "name": "agent-superpowers",
   "displayName": "AI Agent Superpowers",
-  "description": "Browse, preview, and install 940+ AI agent skills for Claude Code, Gemini CLI, Cursor, GitHub Copilot, and more.",
-  "version": "1.1.0",
+  "description": "Browse, preview, and install 940+ AI agent skills for github copilot, cursor, antigravity, winsurf, zed.",
+  "version": "1.0.0",
   "publisher": "aliabbaschadhar",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -15,22 +15,26 @@
     "url": "https://github.com/aliabbaschadhar/agent-superpowers/issues"
   },
   "keywords": [
-    "claude-code",
     "cursor",
     "copilot",
     "ai-skills",
     "agentic",
     "skill-picker",
     "llm",
-    "ai-agent",
-    "gemini-cli"
+    "ai-agent"
   ],
-  "categories": ["AI", "Other", "Snippets"],
+  "categories": [
+    "AI",
+    "Other",
+    "Snippets"
+  ],
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.90.0"
   },
   "main": "./dist/extension.js",
-  "activationEvents": ["onStartupFinished"],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "contributes": {
     "commands": [
       {
@@ -40,12 +44,30 @@
       },
       {
         "command": "aiSkills.install",
-        "title": "Install Skill to Agent",
+        "title": "Install Skill",
         "category": "AI Skills"
       },
       {
         "command": "aiSkills.uninstall",
         "title": "Uninstall Skill",
+        "category": "AI Skills",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "aiSkills.uninstallCategory",
+        "title": "Uninstall All in Category",
+        "category": "AI Skills",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "aiSkills.uninstallCollection",
+        "title": "Uninstall Collection",
+        "category": "AI Skills",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "aiSkills.uninstallAll",
+        "title": "Uninstall All Installed Skills",
         "category": "AI Skills",
         "icon": "$(trash)"
       },
@@ -92,10 +114,99 @@
         "icon": "$(cloud-download)"
       },
       {
+        "command": "aiSkills.installCollection",
+        "title": "Install Collection",
+        "category": "AI Skills",
+        "icon": "$(cloud-download)"
+      },
+      {
         "command": "aiSkills.filterTree",
         "title": "Show Installed Skills Only",
         "category": "AI Skills",
         "icon": "$(filter)"
+      },
+      {
+        "command": "aiSkills.browseCollections",
+        "title": "Browse Skill Collections",
+        "category": "AI Skills",
+        "icon": "$(package)"
+      },
+      {
+        "command": "aiSkills.createSkill",
+        "title": "Create New Skill",
+        "category": "AI Skills",
+        "icon": "$(add)"
+      },
+      {
+        "command": "aiSkills.exportSkillSet",
+        "title": "Export Installed Skills as Set",
+        "category": "AI Skills",
+        "icon": "$(export)"
+      },
+      {
+        "command": "aiSkills.showWelcome",
+        "title": "Show Welcome Message",
+        "category": "AI Skills"
+      },
+      {
+        "command": "aiSkills.importSkillSet",
+        "title": "Import Skill Set from File",
+        "category": "AI Skills",
+        "icon": "$(import)"
+      },
+      {
+        "command": "aiSkills.toggleFavorite",
+        "title": "Toggle Favorite",
+        "category": "AI Skills",
+        "icon": "$(star)"
+      },
+      {
+        "command": "aiSkills.clearFavorites",
+        "title": "Clear All Favorites",
+        "category": "AI Skills",
+        "icon": "$(star-delete)"
+      },
+      {
+        "command": "aiSkills.createCollection",
+        "title": "New Custom Collection",
+        "category": "AI Skills",
+        "icon": "$(add)"
+      },
+      {
+        "command": "aiSkills.editCollection",
+        "title": "Edit Collection",
+        "category": "AI Skills",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "aiSkills.deleteCollection",
+        "title": "Delete Collection",
+        "category": "AI Skills",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "aiSkills.addToCollection",
+        "title": "Add to Collection",
+        "category": "AI Skills",
+        "icon": "$(list-ordered)"
+      },
+      {
+        "command": "aiSkills.removeFromCollection",
+        "title": "Remove from Collection",
+        "category": "AI Skills",
+        "icon": "$(remove)"
+      },
+      {
+        "command": "aiSkills.updateAll",
+        "title": "Update All Installed Skills",
+        "category": "AI Skills",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "aiSkills.refreshCatalog",
+        "title": "Refresh Skills Catalog",
+        "category": "AI Skills",
+        "icon": "$(list-unordered)"
       }
     ],
     "viewsContainers": {
@@ -143,6 +254,36 @@
           "command": "aiSkills.installAll",
           "when": "view == aiSkillsTree",
           "group": "navigation@3"
+        },
+        {
+          "command": "aiSkills.browseCollections",
+          "when": "view == aiSkillsTree",
+          "group": "2_collections@1"
+        },
+        {
+          "command": "aiSkills.createSkill",
+          "when": "view == aiSkillsTree",
+          "group": "2_collections@2"
+        },
+        {
+          "command": "aiSkills.createCollection",
+          "when": "view == aiSkillsTree",
+          "group": "2_collections@3"
+        },
+        {
+          "command": "aiSkills.exportSkillSet",
+          "when": "view == aiSkillsTree",
+          "group": "3_importexport@1"
+        },
+        {
+          "command": "aiSkills.importSkillSet",
+          "when": "view == aiSkillsTree",
+          "group": "3_importexport@2"
+        },
+        {
+          "command": "aiSkills.updateAll",
+          "when": "view == aiSkillsTree && aiSkills.updatesAvailable",
+          "group": "navigation@4"
         }
       ],
       "view/item/context": [
@@ -162,29 +303,34 @@
           "group": "inline@3"
         },
         {
-          "command": "aiSkills.uninstall",
+          "command": "aiSkills.toggleFavorite",
           "when": "view == aiSkillsTree && viewItem =~ /^skill(\\.favorited)?$/",
           "group": "inline@4"
         },
         {
+          "command": "aiSkills.addToCollection",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill/",
+          "group": "context@1"
+        },
+        {
           "command": "aiSkills.preview",
-          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed(\\.favorited)?$/",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed/",
           "group": "inline@1"
         },
         {
           "command": "aiSkills.copyId",
-          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed(\\.favorited)?$/",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed/",
           "group": "inline@2"
         },
         {
-          "command": "aiSkills.installFromTree",
-          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed(\\.favorited)?$/",
-          "group": "inline@3"
+          "command": "aiSkills.toggleFavorite",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed/",
+          "group": "inline@4"
         },
         {
           "command": "aiSkills.uninstall",
-          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed(\\.favorited)?$/",
-          "group": "inline@4"
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-installed/",
+          "group": "inline@3"
         },
         {
           "command": "aiSkills.installCategory",
@@ -192,9 +338,89 @@
           "group": "inline@1"
         },
         {
+          "command": "aiSkills.uninstallCategory",
+          "when": "view == aiSkillsTree && viewItem == category.installed",
+          "group": "inline@1"
+        },
+        {
+          "command": "aiSkills.installCategory",
+          "when": "view == aiSkillsTree && viewItem == allCategories",
+          "group": "inline@1"
+        },
+        {
+          "command": "aiSkills.installCollection",
+          "when": "view == aiSkillsTree && viewItem == collection",
+          "group": "inline@1"
+        },
+        {
+          "command": "aiSkills.uninstallCollection",
+          "when": "view == aiSkillsTree && viewItem == collection.installed",
+          "group": "inline@1"
+        },
+        {
           "command": "aiSkills.installAll",
           "when": "view == aiSkillsTree && viewItem == summary",
           "group": "inline@1"
+        },
+        {
+          "command": "aiSkills.uninstallAll",
+          "when": "view == aiSkillsTree && viewItem == installedSection",
+          "group": "inline@1"
+        },
+        {
+          "command": "aiSkills.clearFavorites",
+          "when": "view == aiSkillsTree && viewItem == favoritesCategory",
+          "group": "inline@1"
+        },
+        {
+          "command": "aiSkills.installCollection",
+          "when": "view == aiSkillsTree && viewItem == recommended",
+          "group": "inline@1"
+        },
+        {
+          "command": "aiSkills.preview",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-recommended/",
+          "group": "inline@1"
+        },
+        {
+          "command": "aiSkills.copyId",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-recommended/",
+          "group": "inline@2"
+        },
+        {
+          "command": "aiSkills.installFromTree",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-recommended(?!.*\\.installed)/",
+          "group": "inline@3"
+        },
+        {
+          "command": "aiSkills.uninstall",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-recommended.*\\.installed/",
+          "group": "inline@3"
+        },
+        {
+          "command": "aiSkills.toggleFavorite",
+          "when": "view == aiSkillsTree && viewItem =~ /^skill-recommended/",
+          "group": "inline@4"
+        },
+        {
+          "command": "aiSkills.editCollection",
+          "when": "view == aiSkillsTree && viewItem == user-collection",
+          "group": "inline@1"
+        },
+        {
+          "command": "aiSkills.deleteCollection",
+          "when": "view == aiSkillsTree && viewItem == user-collection",
+          "group": "inline@2"
+        },
+        {
+          "command": "aiSkills.installCollection",
+          "when": "view == aiSkillsTree && viewItem == user-collection",
+          "group": "inline@3"
+        },
+        {
+          "command": "aiSkills.uninstallCollection",
+          "when": "view == aiSkillsTree && viewItem == user-collection.installed",
+          "group": "inline@3"
         }
       ]
     },
@@ -205,31 +431,30 @@
         "mac": "cmd+shift+/"
       }
     ],
+    "languageModelTools": [
+      {
+        "name": "aiSkills_requestSkill",
+        "displayName": "AI Skills: Request Skill",
+        "modelDescription": "Installs and retrieves an AI agent skill from the catalog by its kebab-case ID. Call this tool when you need domain-specific knowledge that a skill provides (e.g. react-patterns for React, api-design-principles for REST APIs, ai-agents-architect for agent design). Pass the exact skill ID. Returns the full SKILL.md content to use in your response. Do NOT call this for skills already in context.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "requestSkill",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "skillId": {
+              "type": "string",
+              "description": "The kebab-case skill ID from the catalog, e.g. \"react-patterns\" or \"api-design-principles\"."
+            }
+          },
+          "required": [
+            "skillId"
+          ]
+        }
+      }
+    ],
     "configuration": {
       "title": "AI Agent Skills",
       "properties": {
-        "aiSkills.defaultAgent": {
-          "type": "string",
-          "enum": ["auto", "claude", "gemini", "cursor", "copilot", "generic"],
-          "default": "auto",
-          "description": "Default install target. 'auto' detects from the running editor."
-        },
-        "aiSkills.claudeSkillsPath": {
-          "type": "string",
-          "default": "",
-          "description": "Override directory for Claude Code skills. Leave empty for ~/.claude/skills."
-        },
-        "aiSkills.geminiSkillsPath": {
-          "type": "string",
-          "default": "",
-          "description": "Override directory for Gemini CLI skills. Leave empty for ~/.gemini/skills."
-        },
-        "aiSkills.cursorScope": {
-          "type": "string",
-          "enum": ["project", "global"],
-          "default": "project",
-          "description": "Install Cursor rules at project (.cursor/rules/) or global level (~/.cursor/rules/)."
-        },
         "aiSkills.confirmOverwrite": {
           "type": "boolean",
           "default": true,
@@ -238,14 +463,7 @@
         "aiSkills.showRiskBadge": {
           "type": "boolean",
           "default": true,
-          "description": "Show risk level badge in the skill QuickPick list."
-        },
-        "aiSkills.autoPasteDelayMs": {
-          "type": "number",
-          "default": 80,
-          "minimum": 0,
-          "maximum": 2000,
-          "description": "Delay in milliseconds between focus and paste when sending a skill ID to Claude Code chat. Increase on slower machines."
+          "description": "Show a risk-level badge (safe / unknown) next to each skill in the Browse QuickPick and sidebar tooltip."
         },
         "aiSkills.localSkillsPath": {
           "type": "string",
@@ -266,30 +484,50 @@
     "compile:watch": "bun run esbuild.config.js --watch",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.js\" \"*.{json,md}\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"scripts/**/*.js\" \"*.{json,md}\"",
     "type-check": "tsc --noEmit",
+    "validate-skills": "bun run scripts/validate-skills.js",
     "pretest": "bun run scripts/prebuild.js && bun run esbuild.config.js && bun run type-check -p tsconfig.test.json",
     "test": "bun run ./test-out/test/runTests.js",
     "vscode:prepublish": "bun run scripts/prebuild.js && bun run esbuild.config.js --production",
     "package": "bun run vscode:prepublish && vsce package --no-dependencies",
     "publish": "vsce publish --no-dependencies",
-    "clean": "rimraf dist assets test-out"
+    "clean": "rimraf dist assets test-out",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",
     "@types/mocha": "^10.0.6",
     "@types/node": "^25.3.3",
-    "@types/vscode": "^1.85.0",
+    "@types/vscode": "^1.90.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "@vscode/test-electron": "^2.3.9",
     "@vscode/vsce": "^3.7.1",
     "esbuild": "^0.27.3",
     "eslint": "^10.0.1",
+    "eslint-config-prettier": "^10.1.8",
     "glob": "^13.0.5",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.3.2",
+    "prettier": "^3.8.1",
     "rimraf": "^5.0.5",
     "typescript": "^5.3.3"
   },
   "dependencies": {
     "fuse.js": "^7.1.0"
+  },
+  "lint-staged": {
+    "src/**/*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "scripts/**/*.js": [
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
   }
 }

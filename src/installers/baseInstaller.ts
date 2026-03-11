@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { InstallOptions, InstallResult } from './types';
 import { logError } from '../logger';
+import { isSafeRelativePath, isPathWithin } from '../security';
 
 export abstract class BaseInstaller {
   abstract label: string;
@@ -42,11 +43,33 @@ export abstract class BaseInstaller {
       // Write companion files (e.g. rest.md, scripts/api_validator.py) when present
       if (opts.skillFiles) {
         for (const [relPath, content] of opts.skillFiles) {
-          if (relPath === 'SKILL.md') { continue; }   // already written above
+          if (relPath === 'SKILL.md') {
+            continue;
+          } // already written above
+          // Guard: reject companion paths that escape the skill directory
+          if (!isSafeRelativePath(relPath)) {
+            logError(
+              `Skipping companion file with unsafe path: '${relPath}'`,
+              new Error('path traversal attempt')
+            );
+            continue;
+          }
           const companionDest = path.join(skillDir, relPath);
+          if (!isPathWithin(skillDir, companionDest)) {
+            logError(
+              `Skipping companion file outside skill dir: '${relPath}'`,
+              new Error('path traversal attempt')
+            );
+            continue;
+          }
           fs.mkdirSync(path.dirname(companionDest), { recursive: true });
           fs.writeFileSync(companionDest, content, 'utf-8');
         }
+      }
+
+      // Record content hash so future syncs can detect updates
+      if (opts.tracker) {
+        opts.tracker.setHash(opts.skillId, opts.skillContent);
       }
 
       return { success: true, destPath, message: `Installed to ${destPath}` };

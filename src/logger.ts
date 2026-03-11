@@ -13,7 +13,5 @@ export function log(msg: string): void {
 
 export function logError(msg: string, err?: unknown): void {
   const detail = err instanceof Error ? err.message : err !== undefined ? String(err) : '';
-  channel?.appendLine(
-    `[${new Date().toISOString()}] ERROR: ${msg}${detail ? ' — ' + detail : ''}`
-  );
+  channel?.appendLine(`[${new Date().toISOString()}] ERROR: ${msg}${detail ? ' — ' + detail : ''}`);
 }

@@ -1,88 +1,139 @@
-# AI Agent Skills
+# AI Agent Superpowers
 
-> Browse, preview, and install 940+ AI agent skills for Claude Code, Gemini CLI, Cursor, GitHub Copilot, and any other AI coding assistant.
+> Browse, preview, and install **940+ AI agent skills** for GitHub Copilot, Cursor, Winsurf and AntiGravity.
 
-![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/aliabbaschadhar.ai-agent-skills)
-![Installs](https://img.shields.io/visual-studio-marketplace/i/aliabbaschadhar.ai-agent-skills)
-![License](https://img.shields.io/badge/license-MIT-blue)
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/aliabbaschadhar.agent-superpowers?label=Marketplace&color=0078d4)](https://marketplace.visualstudio.com/items?itemName=aliabbaschadhar.agent-superpowers)
+[![Installs](https://img.shields.io/visual-studio-marketplace/i/aliabbaschadhar.agent-superpowers)](https://marketplace.visualstudio.com/items?itemName=aliabbaschadhar.agent-superpowers)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+---
+
+## Install
+
+1. Open VS Code Extensions (`Ctrl+Shift+X`)
+2. Search **"AI Agent Superpowers"** by aliabbaschadhar
+3. Click **Install** — no config needed, works offline
 
 ---
 
 ## Features
 
-### Sidebar Skills Browser
-A dedicated Activity Bar panel organizes all 940+ skills by category. Click any skill to preview its content instantly in a side panel.
+| Feature                       | How                                                                |
+| ----------------------------- | ------------------------------------------------------------------ |
+| **Sidebar browser**           | Activity Bar → brain icon — browse 940+ skills by category         |
+| **Quick browse**              | `Ctrl+Shift+/` — fuzzy-search, select, `/<id>` copied to clipboard |
+| **Preview**                   | View `SKILL.md` content before installing                          |
+| **One-click install**         | Install any skill to your agent's config directory                 |
+| **Workspace recommendations** | Auto-detects your stack and suggests relevant skills               |
+| **Favorites & Recents**       | Quick access to your most-used skills                              |
+| **Bulk install**              | Install an entire category or all skills at once                   |
 
-### Browse & Paste (Ctrl+Shift+/)
-Open a searchable QuickPick over all skills. Selecting one copies `/<skill-id>` to your clipboard and attempts to paste it directly into Claude Code or Gemini CLI chat.
+### Install targets
 
-### Install to Your AI Agent
-Right-click any skill in the sidebar (or use the Command Palette) to install it as a persistent file to:
-
-| Agent | Installed To |
-|-------|-------------|
-| **Claude Code** | `~/.claude/skills/{id}/SKILL.md` |
-| **Gemini CLI** | `~/.gemini/skills/{id}/SKILL.md` |
-| **Cursor** (project) | `.cursor/rules/{id}.mdc` |
-| **Cursor** (global) | `~/.cursor/rules/{id}.mdc` |
-| **GitHub Copilot** | `.github/copilot-instructions.md` (append) |
-| **Custom Path** | Any directory you specify |
-
-The extension **auto-detects your editor** (Cursor vs VS Code) and pre-selects the appropriate agent.
-
-### Preview Any Skill
-View the full `SKILL.md` content in a read-only side panel before installing — no files written until you confirm.
+| Agent          | Path                              |
+| -------------- | --------------------------------- |
+| Claude Code    | `~/.claude/skills/{id}/SKILL.md`  |
+| Gemini CLI     | `~/.gemini/skills/{id}/SKILL.md`  |
+| Cursor         | `.cursor/rules/{id}.mdc`          |
+| GitHub Copilot | `.github/copilot-instructions.md` |
+| Generic        | Any custom directory              |
 
 ---
 
-## Usage
+## Quick Start
 
-### Via Keyboard
-- Press `Ctrl+Shift+/` (`Cmd+Shift+/` on Mac) to open the Browse QuickPick.
-- Type any skill name or description to filter.
-- Press Enter to copy `/<skill-id>` to clipboard (auto-pastes into Claude Code if focused).
+```bash
+# 1. Press Ctrl+Shift+/ in VS Code
+# 2. Type a skill name (e.g. "react", "security", "aws")
+# 3. Press Enter — /<skill-id> is copied to your clipboard
+# 4. Paste into your AI chat
+```
 
-### Via Sidebar
-1. Click the **AI Agent Skills** icon in the Activity Bar (brain icon).
-2. Expand any category to browse skills.
-3. Click a skill to preview its content.
-4. Use the inline buttons to:
-   - **Eye icon**: Preview SKILL.md
-   - **Clipboard icon**: Copy `/<skill-id>`
-   - **Download icon**: Install to agent
+Or open the sidebar, click any skill → **Install** to make it a persistent rule.
 
-### Via Command Palette
-Open `Ctrl+Shift+P` and type `AI Skills:` to see all commands.
+---
+
+## Skill Categories
+
+`ai-engineer` · `react-patterns` · `api-design-principles` · `aws-serverless` ·
+`api-security-best-practices` · `android-jetpack-compose-expert` · `3d-web-experience` ·
+`sql-query-optimizer` · `kubernetes-patterns` · and **930+ more**.
 
 ---
 
 ## Configuration
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `aiSkills.defaultAgent` | `auto` | Default install target: `auto`, `claude`, `cursor`, `copilot`, `generic` |
-| `aiSkills.claudeSkillsPath` | `` | Override for Claude Code skills dir (default: `~/.claude/skills`) |
-| `aiSkills.cursorScope` | `project` | Install Cursor rules at `project` or `global` scope |
-| `aiSkills.confirmOverwrite` | `true` | Ask before overwriting an existing skill file |
-| `aiSkills.showRiskBadge` | `true` | Show risk level badge in Browse QuickPick |
+Search `aiSkills.` in VS Code Settings (`Ctrl+,`):
+
+| Setting                     | Default | Description                       |
+| --------------------------- | ------- | --------------------------------- |
+| `aiSkills.confirmOverwrite` | `true`  | Prompt before overwriting a skill |
+| `aiSkills.showRiskBadge`    | `true`  | Risk level in Browse QuickPick    |
+| `aiSkills.localSkillsPath`  | `""`    | Custom local skills folder        |
+| `aiSkills.autoPasteDelayMs` | `80`    | Auto-paste delay (ms)             |
+| `aiSkills.remoteIndexUrl`   | `""`    | Override remote index URL         |
 
 ---
 
-## What Are Skills?
+## GitHub Copilot Setup
 
-Skills are reusable AI instruction files (`SKILL.md`) that give your AI assistant specialized knowledge and behavior. Invoke one with `/<skill-id>` in Claude Code chat, or install it persistently to your agent's rules directory so it's always active.
+After installing skills, add this to your `.github/copilot-instructions.md` so Copilot automatically discovers and uses them:
 
-Examples: `ai-engineer`, `api-design-principles`, `react-patterns`, `security-review`, `3d-web-experience`, and 940+ more.
+````markdown
+## AI Agent Skills
+
+This project uses AI Agent Superpowers skills stored in `.agent/skills/`.
+
+### How to use skills
+
+- Each installed skill lives at `.agent/skills/<skill-id>/SKILL.md`
+- Before answering domain-specific questions, check if a relevant skill exists:
+  - React / frontend → `.agent/skills/react-patterns/SKILL.md`
+  - API design → `.agent/skills/api-design-principles/SKILL.md`
+  - Security → `.agent/skills/api-security-best-practices/SKILL.md`
+  - AI / agents → `.agent/skills/ai-agents-architect/SKILL.md`
+  - …and so on for any other installed skill
+
+### Loading a skill
+
+Reference a skill file directly in your prompt:
+
+```
+#file:.agent/skills/react-patterns/SKILL.md
+```
+
+Or use the `aiSkills_requestSkill` Language Model Tool during a Copilot response:
+
+```
+#tool:aiSkills_requestSkill {"skillId": "react-patterns"}
+```
+
+- If the skill is **already installed**, it loads instantly with no prompt.
+- If the skill is **not installed**, VS Code will ask for confirmation before writing any file.
+
+### Skill catalog
+
+Browse all 940+ available skills:
+
+- Open `assets/skills-catalog.md` (or `.agent/skills-catalog.md` after a sync)
+- Or press `Ctrl+Shift+/` in VS Code to fuzzy-search and install skills
+
+### Rules
+
+1. Always check `.agent/skills/` before answering domain-specific questions.
+2. When loading a skill, apply its guidance to your entire response.
+3. Only reference skill IDs you can confirm exist in the catalog — never guess.
+````
+
+> **Tip:** You can also auto-generate this block by running **AI Skills: Copy Copilot Instructions** from the Command Palette (`Ctrl+Shift+P`).
 
 ---
 
-## Requirements
+## Contributing & Support
 
-- VS Code 1.85+ (also works in Cursor and VSCodium)
-- No external dependencies — all skill data is bundled inside the extension
+- Bugs / features → [GitHub Issues](https://github.com/aliabbaschadhar/agent-superpowers/issues)
+- Pull requests → see [CONTRIBUTING.md](CONTRIBUTING.md)
+- Security → see [SECURITY.md](SECURITY.md)
+- Changelog → [CHANGELOG.md](CHANGELOG.md)
 
----
-
-## License
-
-MIT — see [LICENSE](LICENSE)
+MIT License · Built by [aliabbaschadhar](https://github.com/aliabbaschadhar) ❤️

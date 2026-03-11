@@ -4,11 +4,11 @@ const STATE_KEY = 'aiSkills.recentIds';
 const MAX_RECENT = 10;
 
 export class RecentSkills {
-  constructor(private readonly context: vscode.ExtensionContext) { }
+  constructor(private readonly context: vscode.ExtensionContext) {}
 
   add(skillId: string): void {
     const current = this.get();
-    const updated = [skillId, ...current.filter(id => id !== skillId)].slice(0, MAX_RECENT);
+    const updated = [skillId, ...current.filter((id) => id !== skillId)].slice(0, MAX_RECENT);
     this.context.globalState.update(STATE_KEY, updated);
   }
 

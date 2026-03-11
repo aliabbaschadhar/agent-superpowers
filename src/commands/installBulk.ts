@@ -1,54 +1,24 @@
 import * as fs from 'fs';
-import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
 import { SkillsManager } from '../skills/SkillsManager';
 import { SkillEntry } from '../skills/types';
 import { SkillsTreeProvider } from '../tree/SkillsTreeProvider';
-import { CategoryItem } from '../tree/nodes';
+import {
+  CategoryItem,
+  CollectionItem,
+  UserCollectionItem,
+  RecommendedSectionItem,
+} from '../tree/nodes';
 import { InstallOptions, InstallResult } from '../installers/types';
-import { CopilotInstaller } from '../installers/copilotInstaller';
-import { pickAgent, AgentOption } from './agentPicker';
+import { ProjectLocalInstaller } from '../installers/projectLocalInstaller';
+import { SkillUpdateTracker } from '../skills/SkillUpdateTracker';
 
-// ─── Path helpers ──────────────────────────────────────────────────────────────
+// ─── Path helper ──────────────────────────────────────────────────────────────
 
-/**
- * Compute the expected on-disk target path for a skill, given an agent.
- * Returns null for Copilot (single-file append, different detection logic)
- * and when required context (workspaceRoot / genericBase) is missing.
- */
-function computeTargetPath(
-  agentId: string,
-  skillId: string,
-  workspaceRoot?: string,
-  genericBase?: string
-): string | null {
-  const cfg = vscode.workspace.getConfiguration('aiSkills');
-  const home = os.homedir();
-
-  switch (agentId) {
-    case 'claude': {
-      const override = cfg.get<string>('claudeSkillsPath', '').trim();
-      const base = override || path.join(home, '.claude', 'skills');
-      return path.join(base, skillId, 'SKILL.md');
-    }
-    case 'gemini': {
-      const override = cfg.get<string>('geminiSkillsPath', '').trim();
-      const base = override || path.join(home, '.gemini', 'skills');
-      return path.join(base, skillId, 'SKILL.md');
-    }
-    case 'cursor-global':
-      return path.join(home, '.cursor', 'rules', skillId + '.mdc');
-    case 'cursor-project':
-      return workspaceRoot
-        ? path.join(workspaceRoot, '.cursor', 'rules', skillId + '.mdc')
-        : null;
-    case 'generic':
-      return genericBase ? path.join(genericBase, skillId, 'SKILL.md') : null;
-    default:
-      return null;
-  }
+function computeTargetPath(skillId: string, workspaceRoot: string): string {
+  return new ProjectLocalInstaller().targetPath({ skillId, skillContent: '', workspaceRoot });
 }
 
 /**
@@ -63,7 +33,9 @@ function writeDirectly(destPath: string, opts: InstallOptions): InstallResult {
 
     if (opts.skillFiles) {
       for (const [relPath, content] of opts.skillFiles) {
-        if (relPath === 'SKILL.md') { continue; }
+        if (relPath === 'SKILL.md') {
+          continue;
+        }
         const companionDest = path.join(skillDir, relPath);
         fs.mkdirSync(path.dirname(companionDest), { recursive: true });
         fs.writeFileSync(companionDest, content, 'utf-8');
@@ -79,91 +51,106 @@ function writeDirectly(destPath: string, opts: InstallOptions): InstallResult {
 
 // ─── Core bulk install logic ───────────────────────────────────────────────────
 
-async function bulkInstall(
+interface InstallCounts {
+  installed: number;
+  skipped: number;
+  failed: number;
+  cancelled: boolean;
+}
+
+async function installSingleSkill(
+  skill: SkillEntry,
+  workspaceRoot: string,
+  overwriteExisting: boolean | null,
+  manager: SkillsManager,
+  tracker: SkillUpdateTracker | undefined
+): Promise<'installed' | 'skipped' | 'failed'> {
+  const destPath = computeTargetPath(skill.id, workspaceRoot);
+  if (overwriteExisting === false && fs.existsSync(destPath)) {
+    return 'skipped';
+  }
+  try {
+    const skillFiles = await manager.readSkillDirectory(skill);
+    const content = skillFiles.get('SKILL.md') ?? (await manager.readContent(skill));
+    if (!content) {
+      return 'failed';
+    }
+    const opts: InstallOptions = {
+      skillId: skill.id,
+      skillContent: content,
+      skillFiles: skillFiles.size > 1 ? skillFiles : undefined,
+      workspaceRoot,
+    };
+    const result = writeDirectly(destPath, opts);
+    if (result.success) {
+      if (tracker) {
+        tracker.setHash(skill.id, content);
+      }
+      return 'installed';
+    }
+    return 'failed';
+  } catch {
+    return 'failed';
+  }
+}
+
+function reportResults(counts: InstallCounts): void {
+  const parts = [`${counts.installed} installed`];
+  if (counts.skipped > 0) {
+    parts.push(`${counts.skipped} skipped`);
+  }
+  if (counts.failed > 0) {
+    parts.push(`${counts.failed} failed`);
+  }
+  if (counts.cancelled) {
+    parts.push('cancelled');
+  }
+  vscode.window.showInformationMessage(`AI Skills bulk install complete: ${parts.join(' · ')}.`);
+}
+
+export async function bulkInstall(
   skills: SkillEntry[],
   label: string,
-  manager: SkillsManager
+  manager: SkillsManager,
+  tracker?: SkillUpdateTracker
 ): Promise<void> {
   if (skills.length === 0) {
     vscode.window.showInformationMessage('AI Skills: No skills to install.');
     return;
   }
 
-  const agentChoice: AgentOption | undefined = await pickAgent(
-    `Install ${skills.length} skill${skills.length > 1 ? 's' : ''} to which agent?`
-  );
-  if (!agentChoice) { return; }
-
   const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-
-  // ── Copilot large-batch warning ────────────────────────────────────────────
-  if (agentChoice.id === 'copilot' && skills.length > 20) {
-    const proceed = await vscode.window.showWarningMessage(
-      `Installing ${skills.length} skills to GitHub Copilot will append all content ` +
-      'into a single file (.github/copilot-instructions.md), which may become very large. Continue?',
-      { modal: true },
-      'Continue',
-      'Cancel'
+  if (!workspaceRoot) {
+    vscode.window.showErrorMessage(
+      'AI Skills: No workspace folder is open. Open a project folder first, then install skills.'
     );
-    if (proceed !== 'Continue') { return; }
+    return;
   }
 
-  // ── Generic: prompt for base directory once ────────────────────────────────
-  let genericBase: string | undefined;
-  if (agentChoice.id === 'generic') {
-    const entered = await vscode.window.showInputBox({
-      prompt: `Enter the base directory for all ${skills.length} skills`,
-      placeHolder: '/path/to/my-agent/skills/',
-      validateInput: v => (v && v.trim().length > 0 ? null : 'Path cannot be empty'),
-    });
-    if (!entered) { return; }
-    genericBase = entered.trim();
-  }
-
-  // ── Conflict detection for non-Copilot agents ──────────────────────────────
-  //
-  // Instead of showing a modal for every existing skill, we resolve the
-  // skip-vs-overwrite decision once for the whole batch.
-  //
-  // overwriteExisting:
-  //   true  → overwrite all (silently)
-  //   false → skip existing skills
-  //   null  → no conflicts found, proceed normally
   let overwriteExisting: boolean | null = null;
+  const cfg = vscode.workspace.getConfiguration('aiSkills');
+  const confirmOverwrite = cfg.get<boolean>('confirmOverwrite', true);
 
-  if (agentChoice.id !== 'copilot') {
-    const cfg = vscode.workspace.getConfiguration('aiSkills');
-    const confirmOverwrite = cfg.get<boolean>('confirmOverwrite', true);
-
-    if (confirmOverwrite) {
-      const conflicting = skills.filter(s => {
-        const p = computeTargetPath(agentChoice.id, s.id, workspaceRoot, genericBase);
-        return p ? fs.existsSync(p) : false;
-      });
-
-      if (conflicting.length > 0) {
-        const choice = await vscode.window.showWarningMessage(
-          `${conflicting.length} of ${skills.length} skills are already installed. ` +
-          'What would you like to do?',
-          { modal: true },
-          'Skip Existing',
-          'Overwrite All',
-          'Cancel'
-        );
-        if (!choice || choice === 'Cancel') { return; }
-        overwriteExisting = choice === 'Overwrite All';
+  if (confirmOverwrite) {
+    const conflicting = skills.filter((s) => fs.existsSync(computeTargetPath(s.id, workspaceRoot)));
+    if (conflicting.length > 0) {
+      const choice = await vscode.window.showWarningMessage(
+        `${conflicting.length} of ${skills.length} skills are already installed. What would you like to do?`,
+        { modal: true },
+        'Skip Existing',
+        'Overwrite All',
+        'Cancel'
+      );
+      if (!choice || choice === 'Cancel') {
+        return;
       }
-    } else {
-      // confirmOverwrite is false → overwrite everything silently
-      overwriteExisting = true;
+      overwriteExisting = choice === 'Overwrite All';
     }
+  } else {
+    overwriteExisting = true;
   }
 
-  // ── Install loop ───────────────────────────────────────────────────────────
-  let installed = 0;
-  let skipped = 0;
-  let failed = 0;
-  let cancelled = false;
+  const counts: InstallCounts = { installed: 0, skipped: 0, failed: 0, cancelled: false };
 
   await vscode.window.withProgress(
     {
@@ -172,61 +159,68 @@ async function bulkInstall(
       cancellable: true,
     },
     async (progress, token) => {
-      const total = skills.length;
-
-      for (let i = 0; i < total; i++) {
+      for (let i = 0; i < skills.length; i++) {
         if (token.isCancellationRequested) {
-          cancelled = true;
+          counts.cancelled = true;
           break;
         }
-
-        const skill = skills[i];
         progress.report({
-          message: `(${i + 1}/${total}) ${skill.id}`,
-          increment: (1 / total) * 100,
+          message: `(${i + 1}/${skills.length}) ${skills[i].id}`,
+          increment: (1 / skills.length) * 100,
         });
+        const outcome = await installSingleSkill(
+          skills[i],
+          workspaceRoot,
+          overwriteExisting,
+          manager,
+          tracker
+        );
+        counts[outcome]++;
+      }
+    }
+  );
 
+  reportResults(counts);
+}
+
+// ─── Bulk uninstall helper ────────────────────────────────────────────────────
+
+async function bulkUninstallSkills(
+  skills: SkillEntry[],
+  label: string,
+  workspaceRoot: string,
+  treeProvider: SkillsTreeProvider
+): Promise<void> {
+  if (skills.length === 0) {
+    vscode.window.showInformationMessage('AI Skills: No installed skills to remove.');
+    return;
+  }
+
+  const confirm = await vscode.window.showWarningMessage(
+    `Remove ${skills.length} installed skill(s) from ${label}?`,
+    { modal: true },
+    'Remove All',
+    'Cancel'
+  );
+  if (confirm !== 'Remove All') {
+    return;
+  }
+
+  let removed = 0;
+  let failed = 0;
+
+  await vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Notification,
+      title: `Uninstalling ${label}…`,
+      cancellable: false,
+    },
+    async () => {
+      for (const skill of skills) {
+        const skillDir = path.join(workspaceRoot, '.agent', 'skills', skill.id);
         try {
-          // Copilot: delegate entirely to CopilotInstaller (append + sentinel logic)
-          if (agentChoice.id === 'copilot') {
-            const skillFiles = await manager.readSkillDirectory(skill);
-            const content = skillFiles.get('SKILL.md') ?? await manager.readContent(skill);
-            if (!content) { failed++; continue; }
-
-            const opts: InstallOptions = {
-              skillId: skill.id,
-              skillContent: content,
-              skillFiles: skillFiles.size > 1 ? skillFiles : undefined,
-              workspaceRoot,
-            };
-            const result = await new CopilotInstaller().install(opts);
-            result.success ? installed++ : failed++;
-            continue;
-          }
-
-          // All other agents: compute path and write directly
-          const destPath = computeTargetPath(agentChoice.id, skill.id, workspaceRoot, genericBase);
-          if (!destPath) { failed++; continue; }
-
-          // Skip if already installed and user chose "Skip Existing"
-          if (overwriteExisting === false && fs.existsSync(destPath)) {
-            skipped++;
-            continue;
-          }
-
-          const skillFiles = await manager.readSkillDirectory(skill);
-          const content = skillFiles.get('SKILL.md') ?? await manager.readContent(skill);
-          if (!content) { failed++; continue; }
-
-          const opts: InstallOptions = {
-            skillId: skill.id,
-            skillContent: content,
-            skillFiles: skillFiles.size > 1 ? skillFiles : undefined,
-            workspaceRoot,
-          };
-
-          const result = writeDirectly(destPath, opts);
-          result.success ? installed++ : failed++;
+          fs.rmSync(skillDir, { recursive: true, force: true });
+          removed++;
         } catch {
           failed++;
         }
@@ -234,22 +228,19 @@ async function bulkInstall(
     }
   );
 
-  const parts = [`${installed} installed`];
-  if (skipped > 0) { parts.push(`${skipped} skipped`); }
-  if (failed > 0) { parts.push(`${failed} failed`); }
-  if (cancelled) { parts.push('cancelled'); }
+  treeProvider.refreshAfterInstall();
 
-  vscode.window.showInformationMessage(
-    `AI Skills bulk install complete: ${parts.join(' · ')}.`
-  );
+  const msg =
+    failed > 0
+      ? `AI Skills: Removed ${removed} skill(s). ${failed} failed — see Output for details.`
+      : `AI Skills: Removed ${removed} skill(s) from ${label}.`;
+  vscode.window.showInformationMessage(msg);
 }
 
 // ─── Command registrations ─────────────────────────────────────────────────────
 
 /** Right-click a category node → "Install All in Category" */
-export function registerInstallCategoryCommand(
-  manager: SkillsManager
-): vscode.Disposable {
+export function registerInstallCategoryCommand(manager: SkillsManager): vscode.Disposable {
   return vscode.commands.registerCommand(
     'aiSkills.installCategory',
     async (item?: CategoryItem) => {
@@ -258,11 +249,7 @@ export function registerInstallCategoryCommand(
         return;
       }
       const skills = manager.getByCategory(item.category);
-      await bulkInstall(
-        skills,
-        `"${item.category}" (${skills.length} skills)`,
-        manager
-      );
+      await bulkInstall(skills, `"${item.category}" (${skills.length} skills)`, manager);
     }
   );
 }
@@ -272,14 +259,116 @@ export function registerInstallAllCommand(
   manager: SkillsManager,
   treeProvider: SkillsTreeProvider
 ): vscode.Disposable {
+  return vscode.commands.registerCommand('aiSkills.installAll', async () => {
+    const skills = treeProvider.getFilteredSkills();
+    const label = treeProvider.isFiltering()
+      ? `filtered results (${skills.length} skills)`
+      : `all skills (${skills.length})`;
+    await bulkInstall(skills, label, manager);
+  });
+}
+/** Right-click a fully-installed category node → "Uninstall All in Category" */
+export function registerUninstallCategoryCommand(
+  manager: SkillsManager,
+  treeProvider: SkillsTreeProvider
+): vscode.Disposable {
   return vscode.commands.registerCommand(
-    'aiSkills.installAll',
-    async () => {
-      const skills = treeProvider.getFilteredSkills();
-      const label = treeProvider.isFiltering()
-        ? `filtered results (${skills.length} skills)`
-        : `all skills (${skills.length})`;
-      await bulkInstall(skills, label, manager);
+    'aiSkills.uninstallCategory',
+    async (item?: CategoryItem) => {
+      if (!item?.category) {
+        vscode.window.showErrorMessage('AI Skills: No category selected.');
+        return;
+      }
+      const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+      if (!workspaceRoot) {
+        vscode.window.showErrorMessage('AI Skills: No workspace folder is open.');
+        return;
+      }
+      const installedSkills = manager
+        .getByCategory(item.category)
+        .filter((s) => manager.isInstalled(s.id));
+      await bulkUninstallSkills(
+        installedSkills,
+        `"${item.category}" category`,
+        workspaceRoot,
+        treeProvider
+      );
+    }
+  );
+}
+
+/** Right-click a fully-installed collection node → "Uninstall Collection" */
+export function registerUninstallCollectionCommand(
+  manager: SkillsManager,
+  treeProvider: SkillsTreeProvider
+): vscode.Disposable {
+  return vscode.commands.registerCommand(
+    'aiSkills.uninstallCollection',
+    async (item?: CollectionItem | UserCollectionItem) => {
+      if (!item?.collection) {
+        vscode.window.showErrorMessage('AI Skills: No collection selected.');
+        return;
+      }
+      const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+      if (!workspaceRoot) {
+        vscode.window.showErrorMessage('AI Skills: No workspace folder is open.');
+        return;
+      }
+      const installedSkills = item.collection.skillIds
+        .map((id) => manager.findById(id))
+        .filter((s): s is SkillEntry => s !== undefined)
+        .filter((s) => manager.isInstalled(s.id));
+      await bulkUninstallSkills(
+        installedSkills,
+        `"${item.collection.name}" collection`,
+        workspaceRoot,
+        treeProvider
+      );
+    }
+  );
+}
+
+/** Right-click a collection node → "Install Collection" */
+export function registerInstallCollectionCommand(manager: SkillsManager): vscode.Disposable {
+  return vscode.commands.registerCommand(
+    'aiSkills.installCollection',
+    async (item?: CollectionItem | UserCollectionItem | RecommendedSectionItem) => {
+      // Handle RecommendedSectionItem
+      if (item instanceof RecommendedSectionItem) {
+        if (item.skills.length === 0) {
+          vscode.window.showErrorMessage('AI Skills: No recommended skills available.');
+          return;
+        }
+        await bulkInstall(
+          item.skills,
+          `recommended skills (${item.skills.length} skills)`,
+          manager
+        );
+        return;
+      }
+
+      // Handle CollectionItem and UserCollectionItem
+      if (!item || !(item instanceof CollectionItem || item instanceof UserCollectionItem)) {
+        vscode.window.showErrorMessage('AI Skills: No collection selected.');
+        return;
+      }
+
+      const collection = item.collection;
+      const skillIds = collection.skillIds;
+      const skills = skillIds
+        .map((id) => manager.findById(id))
+        .filter((s): s is SkillEntry => s !== undefined);
+
+      if (skills.length === 0) {
+        vscode.window.showErrorMessage('AI Skills: No valid skills found in this collection.');
+        return;
+      }
+
+      await bulkInstall(
+        skills,
+        `"${collection.name}" collection (${skills.length} skills)`,
+        manager
+      );
     }
   );
 }

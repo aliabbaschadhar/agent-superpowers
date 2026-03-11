@@ -1,11 +1,3 @@
-export type AgentKind =
-  | 'claude'
-  | 'gemini'
-  | 'cursor-project'
-  | 'cursor-global'
-  | 'copilot'
-  | 'generic';
-
 export interface InstallOptions {
   skillId: string;
   /** Content of SKILL.md — used by single-file installers (Copilot, Cursor). */
@@ -19,6 +11,12 @@ export interface InstallOptions {
   skillFiles?: Map<string, string>;
   /** First open workspace folder path; may be undefined if no folder is open. */
   workspaceRoot?: string;
+  /**
+   * Optional update tracker. When provided, a SHA-256 hash of the installed
+   * content is recorded after a successful install so future syncs can detect
+   * when an update is available.
+   */
+  tracker?: import('../skills/SkillUpdateTracker').SkillUpdateTracker;
 }
 
 export interface InstallResult {

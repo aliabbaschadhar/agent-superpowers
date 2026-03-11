@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import { SkillEntry } from './types';
 import { REMOTE_BASE_URL } from '../constants';
 import { detectInstalledIds } from './InstallationDetector';
+import { isSafeRelativePath, isPathWithin } from '../security';
 
 /**
  * Handles all local and remote file I/O for skill content.
@@ -13,7 +14,7 @@ export class SkillsRepository {
   constructor(
     private readonly assetsPath: string,
     private readonly storagePath: string
-  ) { }
+  ) {}
 
   /** Returns the Set of skill IDs installed across all known agent targets. */
   getInstalledIds(skills: SkillEntry[]): Set<string> {
@@ -29,12 +30,39 @@ export class SkillsRepository {
     }
   }
 
+  /**
+   * Guards against path traversal in the `skill.path` field.
+   * Returns false for non-absolute paths that contain `..` segments or would
+   * escape the expected base directory.
+   */
+  private isSafeSkillPath(skill: SkillEntry): boolean {
+    if (path.isAbsolute(skill.path)) {
+      // Absolute local paths are user-configured — accept them as-is.
+      return true;
+    }
+    // For relative paths (bundled / remote) validate they stay within their base
+    if (!isSafeRelativePath(skill.path)) {
+      return false;
+    }
+    // Confirm the resolved bundled path stays inside assetsPath
+    const resolved = path.resolve(this.assetsPath, skill.path);
+    if (!isPathWithin(this.assetsPath, resolved)) {
+      return false;
+    }
+    return true;
+  }
+
   /** Returns the SKILL.md content for a skill, checking bundle → cache → remote. */
   async readContent(skill: SkillEntry): Promise<string | null> {
     // Absolute-path local skill — read directly, no remote fallback
     if (path.isAbsolute(skill.path)) {
       const localFile = path.join(skill.path, 'SKILL.md');
       return fs.existsSync(localFile) ? fs.readFileSync(localFile, 'utf-8') : null;
+    }
+
+    // Guard: reject relative paths supplied by remote that could traverse the FS
+    if (!this.isSafeSkillPath(skill)) {
+      return null;
     }
 
     // Bundled asset
@@ -53,7 +81,9 @@ export class SkillsRepository {
     try {
       const url = `${REMOTE_BASE_URL}${skill.path}/SKILL.md`;
       const res = await fetch(url);
-      if (!res.ok) { return null; }
+      if (!res.ok) {
+        return null;
+      }
       const content = await res.text();
       fs.mkdirSync(path.dirname(cachedPath), { recursive: true });
       fs.writeFileSync(cachedPath, content, 'utf-8');
@@ -71,9 +101,16 @@ export class SkillsRepository {
     // Local absolute-path skill
     if (path.isAbsolute(skill.path)) {
       const files = this.walkDir(skill.path);
-      if (files.size > 0) { return files; }
+      if (files.size > 0) {
+        return files;
+      }
       const single = await this.readContent(skill);
       return single ? new Map([['SKILL.md', single]]) : new Map();
+    }
+
+    // Guard: reject relative paths that could escape the assets directory
+    if (!this.isSafeSkillPath(skill)) {
+      return new Map();
     }
 
     // Bundled assets directory
@@ -97,7 +134,9 @@ export class SkillsRepository {
     try {
       const mainUrl = `${REMOTE_BASE_URL}${skill.path}/SKILL.md`;
       const res = await fetch(mainUrl);
-      if (!res.ok) { return new Map(); }
+      if (!res.ok) {
+        return new Map();
+      }
       const mainContent = await res.text();
 
       fs.mkdirSync(cachedDir, { recursive: true });
@@ -115,7 +154,9 @@ export class SkillsRepository {
       return path.join(skill.path, 'SKILL.md');
     }
     const bundledPath = path.join(this.assetsPath, skill.path, 'SKILL.md');
-    if (fs.existsSync(bundledPath)) { return bundledPath; }
+    if (fs.existsSync(bundledPath)) {
+      return bundledPath;
+    }
     return path.join(this.storagePath, skill.path, 'SKILL.md');
   }
 
@@ -126,23 +167,33 @@ export class SkillsRepository {
   loadLocalSources(skills: SkillEntry[]): number {
     const config = vscode.workspace.getConfiguration('aiSkills');
     let localPath = config.get<string>('localSkillsPath', '').trim();
-    if (!localPath) { return 0; }
+    if (!localPath) {
+      return 0;
+    }
 
     if (localPath.startsWith('~')) {
       const home = process.env.HOME ?? process.env.USERPROFILE ?? '';
       localPath = path.join(home, localPath.slice(1));
     }
 
-    if (!fs.existsSync(localPath)) { return 0; }
+    if (!fs.existsSync(localPath)) {
+      return 0;
+    }
 
     let added = 0;
     try {
       for (const entry of fs.readdirSync(localPath, { withFileTypes: true })) {
-        if (!entry.isDirectory()) { continue; }
+        if (!entry.isDirectory()) {
+          continue;
+        }
         const skillFile = path.join(localPath, entry.name, 'SKILL.md');
-        if (!fs.existsSync(skillFile)) { continue; }
+        if (!fs.existsSync(skillFile)) {
+          continue;
+        }
         const id = `local-${entry.name}`;
-        if (skills.some(s => s.id === id)) { continue; }
+        if (skills.some((s) => s.id === id)) {
+          continue;
+        }
         skills.push({
           id,
           path: path.join(localPath as string, entry.name),
@@ -154,21 +205,31 @@ export class SkillsRepository {
         });
         added++;
       }
-    } catch { /* ignore read errors, e.g. permission denied */ }
+    } catch {
+      /* ignore read errors, e.g. permission denied */
+    }
     return added;
   }
 
   /** Recursively walks `dir` and returns a Map<relPath, content> for every file. */
   walkDir(dir: string, base = dir): Map<string, string> {
     const result = new Map<string, string>();
-    if (!fs.existsSync(dir)) { return result; }
+    if (!fs.existsSync(dir)) {
+      return result;
+    }
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const full = path.join(dir, entry.name);
       const rel = path.relative(base, full).replace(/\\/g, '/');
       if (entry.isDirectory()) {
-        for (const [k, v] of this.walkDir(full, base)) { result.set(k, v); }
+        for (const [k, v] of this.walkDir(full, base)) {
+          result.set(k, v);
+        }
       } else {
-        try { result.set(rel, fs.readFileSync(full, 'utf-8')); } catch { /* skip unreadable */ }
+        try {
+          result.set(rel, fs.readFileSync(full, 'utf-8'));
+        } catch {
+          /* skip unreadable */
+        }
       }
     }
     return result;
@@ -187,20 +248,28 @@ export class SkillsRepository {
     const refs = new Set<string>();
     let m: RegExpExecArray | null;
     while ((m = pattern.exec(mainContent)) !== null) {
-      if (m[1] !== 'SKILL.md') { refs.add(m[1]); }
+      if (m[1] !== 'SKILL.md') {
+        refs.add(m[1]);
+      }
     }
 
     await Promise.allSettled(
       [...refs].map(async (ref) => {
         const destFile = path.join(cacheDir, ref);
-        if (fs.existsSync(destFile)) { return; }
+        if (fs.existsSync(destFile)) {
+          return;
+        }
         try {
           const url = `${REMOTE_BASE_URL}${skill.path}/${ref}`;
           const res = await fetch(url);
-          if (!res.ok) { return; }
+          if (!res.ok) {
+            return;
+          }
           fs.mkdirSync(path.dirname(destFile), { recursive: true });
           fs.writeFileSync(destFile, await res.text(), 'utf-8');
-        } catch { /* best-effort */ }
+        } catch {
+          /* best-effort */
+        }
       })
     );
   }
