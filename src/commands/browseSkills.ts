@@ -344,8 +344,12 @@ export function registerBrowseCommand(
           return;
         }
 
-        // Strip icon prefix: "$(star-full) /skill-id" or "$(symbol-event) /skill-id"
-        const skillId = picked.label.replace(/\$\([^)]+\)\s*\//, '');
+        // Strip all codicons and the leading "/" to extract the bare skill ID.
+        // Labels look like: "$(symbol-event) /skill-id $(shield)"
+        const skillId = picked.label
+          .replace(/\$\([^)]+\)\s*/g, '') // remove every $(icon) and trailing whitespace
+          .replace(/^\//, '') // remove leading slash
+          .trim();
         await handleSkillSelection(skillId, manager, recentSkills);
       });
 
