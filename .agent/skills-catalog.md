@@ -1,6 +1,6 @@
 # AI Agent Skills — Full Catalog
 
-> Auto-generated. Total: **1244 skills** across **55 categories**.
+> Auto-generated. Total: **1251 skills** across **56 categories**.
 > When asked "what skill should I use?", browse this file and suggest the most relevant skill IDs.
 > Install a skill: `Ctrl+Shift+/` → search for the skill ID → press Enter.
 
@@ -372,6 +372,10 @@
   apps, DeFi protocols, or blockchain infrastructure.
   _(risk: unknown)_
 - **defi-protocol-templates**: Implement DeFi protocols with production-ready templates for staking, AMMs, governance, and lending systems. Use when building decentralized finance applications or smart contract protocols. _(risk: unknown)_
+
+## business
+
+- **lex**: Centralized 'Truth Engine' for cross-jurisdictional legal context (US, EU, CA) and contract scaffolding. _(risk: safe)_
 
 ## cloud-devops
 
@@ -847,6 +851,7 @@
 ## data-ai
 
 - **seek-and-analyze-video**: Seek and analyze video content using Memories.ai Large Visual Memory Model for persistent video intelligence _(risk: safe)_
+- **local-llm-expert**: Master local LLM inference, model selection, VRAM optimization, and local deployment using Ollama, llama.cpp, vLLM, and LM Studio. Expert in quantization formats (GGUF, EXL2) and local AI privacy. _(risk: unknown)_
 
 ## data-engineering
 
@@ -1011,6 +1016,7 @@
 - **bug-hunter**: Systematically finds and fixes bugs using proven debugging techniques. Traces from symptoms to root cause, implements fixes, and prevents regression. _(risk: safe)_
 - **codebase-audit-pre-push**: Deep audit before GitHub push: removes junk files, dead code, security holes, and optimization issues. Checks every file line-by-line for production readiness. _(risk: safe)_
 - **performance-optimizer**: Identifies and fixes performance bottlenecks in code, databases, and APIs. Measures before and after to prove improvements. _(risk: safe)_
+- **skill-check**: Validate Claude Code skills against the agentskills specification. Catches structural, semantic, and naming issues before users do. _(risk: safe)_
 
 ## dotnet
 
@@ -2049,6 +2055,12 @@
 - **yann-lecun-tecnico**: Sub-skill técnica de Yann LeCun. Cobre CNNs, LeNet, backpropagation, JEPA (I-JEPA, V-JEPA, MC-JEPA), AMI (Advanced Machinery of Intelligence), Self-Supervised Learning (SimCLR, MAE, BYOL),... _(risk: safe)_
 - **zeroize-audit**: Detects missing zeroization of sensitive data in source code and identifies zeroization removed by compiler optimizations, with assembly-level analysis, and control-flow verification. Use for auditing C/C++/Rust code handling secrets, keys, passwords, or other sensitive data. _(risk: unknown)_
 - **zod-validation-expert**: Expert in Zod — TypeScript-first schema validation. Covers parsing, custom errors, refinements, type inference, and integration with React Hook Form, Next.js, and tRPC. _(risk: safe)_
+- **ai-md**: Convert human-written CLAUDE.md into AI-native structured-label format. Battle-tested across 4 models. Same rules, fewer tokens, higher compliance. _(risk: safe)_
+- **explain-like-socrates**: Explains concepts using Socratic-style dialogue. Use when the user asks to explain, teach or help understand a concept like socrates.
+  _(risk: safe)_
+- **keyword-extractor**: Extracts up to 50 highly relevant SEO keywords from text. Use when user wants to generate or extract keywords for given text.
+  _(risk: safe)_
+- **yes-md**: 6-layer AI governance: safety gates, evidence-based debugging, anti-slack detection, and machine-enforced hooks. Makes AI safe, thorough, and honest. _(risk: safe)_
 
 ## voice-agents
 

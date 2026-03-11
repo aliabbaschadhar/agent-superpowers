@@ -1,6 +1,6 @@
 # AI Agent Superpowers
 
-> Browse, preview, and install **940+ AI agent skills** for GitHub Copilot, Cursor, Winsurf and AntiGravity.
+> Browse, preview, and install **940+ AI agent skills** for GitHub Copilot, Cursor, Windsurf and AntiGravity.
 
 [![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/aliabbaschadhar.agent-superpowers?label=Marketplace&color=0078d4)](https://marketplace.visualstudio.com/items?itemName=aliabbaschadhar.agent-superpowers)
 [![Installs](https://img.shields.io/visual-studio-marketplace/i/aliabbaschadhar.agent-superpowers)](https://marketplace.visualstudio.com/items?itemName=aliabbaschadhar.agent-superpowers)
@@ -32,22 +32,19 @@
 
 | Agent          | Path                              |
 | -------------- | --------------------------------- |
-| Claude Code    | `~/.claude/skills/{id}/SKILL.md`  |
-| Gemini CLI     | `~/.gemini/skills/{id}/SKILL.md`  |
-| Cursor         | `.cursor/rules/{id}.mdc`          |
 | GitHub Copilot | `.github/copilot-instructions.md` |
-| Generic        | Any custom directory              |
+| Cursor         | `.cursor/instructions.md`         |
+| Windsurf       | `.windsurf/instructions.md`       |
+| AntiGravity    | `.antigravity/instructions.md`    |
 
 ---
 
 ## Quick Start
 
-```bash
-# 1. Press Ctrl+Shift+/ in VS Code
-# 2. Type a skill name (e.g. "react", "security", "aws")
-# 3. Press Enter — /<skill-id> is copied to your clipboard
-# 4. Paste into your AI chat
-```
+- Press `Ctrl+Shift+/` in VS Code
+- Type a skill name (e.g. "react", "security", "aws")
+- Press Enter — `/<skill-id>` is copied to your clipboard
+- Paste into your editor's AI chat
 
 Or open the sidebar, click any skill → **Install** to make it a persistent rule.
 
@@ -70,14 +67,13 @@ Search `aiSkills.` in VS Code Settings (`Ctrl+,`):
 | `aiSkills.confirmOverwrite` | `true`  | Prompt before overwriting a skill |
 | `aiSkills.showRiskBadge`    | `true`  | Risk level in Browse QuickPick    |
 | `aiSkills.localSkillsPath`  | `""`    | Custom local skills folder        |
-| `aiSkills.autoPasteDelayMs` | `80`    | Auto-paste delay (ms)             |
 | `aiSkills.remoteIndexUrl`   | `""`    | Override remote index URL         |
 
 ---
 
-## GitHub Copilot Setup
+## Editor Integration
 
-After installing skills, add this to your `.github/copilot-instructions.md` so Copilot automatically discovers and uses them:
+After installing skills, add this to your editor in `.github/copilot-instructions.md` or `.cursor/instructions.md` or `.windsurf/instructions.md` or `.antigravity/instructions.md` so agent automatically discovers and uses them:
 
 ````markdown
 ## AI Agent Skills
