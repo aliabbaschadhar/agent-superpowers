@@ -450,6 +450,123 @@
             "skillId"
           ]
         }
+      },
+      {
+        "name": "aiSkills_listInstalled",
+        "displayName": "AI Skills: List Installed Skills",
+        "modelDescription": "Lists all installed AI agent skills with their metadata. Use this to discover what skills are already available in the current workspace. Optionally filter by category or limit results.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "listInstalled",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string",
+              "description": "Optional category filter (e.g. \"react-patterns\", \"api-design\"). Returns only skills in this category."
+            },
+            "limit": {
+              "type": "number",
+              "description": "Maximum number of skills to return. Default: 100"
+            }
+          }
+        }
+      },
+      {
+        "name": "aiSkills_searchSkills",
+        "displayName": "AI Skills: Search Skills",
+        "modelDescription": "Searches the AI skills catalog by keyword using fuzzy matching. Returns skills matching the query with installation status. Use this to discover relevant skills before installing them.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "searchSkills",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query - matches against skill names, descriptions, and categories."
+            },
+            "category": {
+              "type": "string",
+              "description": "Optional category filter to narrow results."
+            },
+            "limit": {
+              "type": "number",
+              "description": "Maximum results to return. Default: 20"
+            },
+            "includeInstalled": {
+              "type": "boolean",
+              "description": "Whether to include installation status. Default: true"
+            }
+          },
+          "required": [
+            "query"
+          ]
+        }
+      },
+      {
+        "name": "aiSkills_getSkillInfo",
+        "displayName": "AI Skills: Get Skill Info",
+        "modelDescription": "Retrieves metadata and optional preview for a specific skill without installing it. Use this to get skill details like category, risk level, and description before deciding to install.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getSkillInfo",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "skillId": {
+              "type": "string",
+              "description": "The skill ID to retrieve information for, e.g. \"react-patterns\"."
+            },
+            "includePreview": {
+              "type": "boolean",
+              "description": "Include full skill content preview (only if installed). Default: false"
+            }
+          },
+          "required": [
+            "skillId"
+          ]
+        }
+      },
+      {
+        "name": "aiSkills_checkUpdates",
+        "displayName": "AI Skills: Check for Updates",
+        "modelDescription": "Checks installed skills for available updates by comparing content hashes. Call this to determine if any installed skills have newer versions available in the catalog.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "checkUpdates",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "skillId": {
+              "type": "string",
+              "description": "Optional specific skill ID to check. If omitted, checks all installed skills."
+            }
+          }
+        }
+      },
+      {
+        "name": "aiSkills_batchInstall",
+        "displayName": "AI Skills: Batch Install",
+        "modelDescription": "Installs multiple AI skills in a single operation. Provide an array of skill IDs or a category name to install all skills in that category. Useful for setting up a complete skill set for a project.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "batchInstall",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "skillIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Array of skill IDs to install, e.g. [\"react-patterns\", \"typescript-best-practices\"]."
+            },
+            "category": {
+              "type": "string",
+              "description": "Install all skills in a category. If provided, overrides skillIds."
+            },
+            "overwrite": {
+              "type": "boolean",
+              "description": "Overwrite existing skills without prompting. Default: false"
+            }
+          }
+        }
       }
     ],
     "configuration": {

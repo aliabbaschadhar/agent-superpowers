@@ -850,8 +850,8 @@
 
 ## data-ai
 
-- **seek-and-analyze-video**: Seek and analyze video content using Memories.ai Large Visual Memory Model for persistent video intelligence _(risk: safe)_
 - **local-llm-expert**: Master local LLM inference, model selection, VRAM optimization, and local deployment using Ollama, llama.cpp, vLLM, and LM Studio. Expert in quantization formats (GGUF, EXL2) and local AI privacy. _(risk: unknown)_
+- **seek-and-analyze-video**: Seek and analyze video content using Memories.ai Large Visual Memory Model for persistent video intelligence _(risk: safe)_
 
 ## data-engineering
 
@@ -1714,6 +1714,7 @@
 - **agentmail**: Email infrastructure for AI agents. Create accounts, send/receive emails, manage webhooks, and check karma balance via the AgentMail API. _(risk: safe)_
 - **agents-md**: This skill should be used when the user asks to "create AGENTS.md", "update AGENTS.md", "maintain agent docs", "set up CLAUDE.md", or needs to keep agent instructions concise. Enforces research-backed best practices for minimal, high-signal agent documentation. _(risk: unknown)_
 - **ai-analyzer**: AI驱动的综合健康分析系统，整合多维度健康数据、识别异常模式、预测健康风险、提供个性化建议。支持智能问答和AI健康报告生成。 _(risk: unknown)_
+- **ai-md**: Convert human-written CLAUDE.md into AI-native structured-label format. Battle-tested across 4 models. Same rules, fewer tokens, higher compliance. _(risk: safe)_
 - **ai-studio-image**: Geracao de imagens humanizadas via Google AI Studio (Gemini). Fotos realistas estilo influencer ou educacional com iluminacao natural e imperfeicoes sutis. _(risk: safe)_
 - **alpha-vantage**: Access real-time and historical stock market data, forex rates, cryptocurrency prices, commodities, economic indicators, and 50+ technical indicators via the Alpha Vantage API. Use when fetching stock prices (OHLCV), company fundamentals (income statement, balance sheet, cash... _(risk: unknown)_
 - **amazon-alexa**: Integracao completa com Amazon Alexa para criar skills de voz inteligentes, transformar Alexa em assistente com Claude como cerebro (projeto Auri) e integrar com AWS ecosystem (Lambda, DynamoDB,... _(risk: safe)_
@@ -1784,6 +1785,8 @@
   evolve, evolution, contribute, contribution, self-improve, self-improvement,
   add pattern, new pattern, capture learning, document solution,
   hooks, hook system, auto-trigger, skill... _(risk: unknown)_
+- **explain-like-socrates**: Explains concepts using Socratic-style dialogue. Use when the user asks to explain, teach or help understand a concept like socrates.
+  _(risk: safe)_
 - **expo-api-routes**: Guidelines for creating API routes in Expo Router with EAS Hosting _(risk: unknown)_
 - **expo-cicd-workflows**: Helps understand and write EAS workflow YAML files for Expo projects. Use this skill when the user asks about CI/CD or workflows in an Expo or EAS context, mentions .eas/workflows/, or wants help with EAS build pipelines or deployment automation. _(risk: unknown)_
 - **expo-dev-client**: Build and distribute Expo development clients locally or via TestFlight _(risk: unknown)_
@@ -1845,6 +1848,8 @@
 - **instagram**: Integracao completa com Instagram via Graph API. Publicacao, analytics, comentarios, DMs, hashtags, agendamento, templates e gestao de contas Business/Creator. _(risk: critical)_
 - **issues**: Interact with GitHub issues - create, list, and view issues. _(risk: unknown)_
 - **junta-leiloeiros**: Coleta e consulta dados de leiloeiros oficiais de todas as 27 Juntas Comerciais do Brasil. Scraper multi-UF, banco SQLite, API FastAPI e exportacao CSV/JSON. _(risk: safe)_
+- **keyword-extractor**: Extracts up to 50 highly relevant SEO keywords from text. Use when user wants to generate or extract keywords for given text.
+  _(risk: safe)_
 - **leiloeiro-avaliacao**: Avaliacao pericial de imoveis em leilao. Valor de mercado, liquidacao forcada, ABNT NBR 14653, metodos comparativo/renda/custo, CUB e margem de seguranca. _(risk: safe)_
 - **leiloeiro-edital**: Analise e auditoria de editais de leilao judicial e extrajudicial. Riscos ocultos, clausulas perigosas, debitos, ocupante e classificacao da oportunidade. _(risk: safe)_
 - **leiloeiro-ia**: Especialista em leiloes judiciais e extrajudiciais de imoveis. Analise juridica, pericial e de mercado integrada. Orquestra os 5 modulos especializados. _(risk: safe)_
@@ -2053,14 +2058,9 @@
 - **yann-lecun-debate**: Sub-skill de debates e posições de Yann LeCun. Cobre críticas técnicas detalhadas aos LLMs, rivalidades intelectuais (LeCun vs Hinton, Sutskever, Russell, Yudkowsky, Bostrom), lista completa de... _(risk: safe)_
 - **yann-lecun-filosofia**: Sub-skill filosófica e pedagógica de Yann LeCun. Cobre filosofia do open source (LLaMA, soberania tecnológica, analogia Linux), análise de incentivos Meta vs OpenAI vs Google, modo professor... _(risk: safe)_
 - **yann-lecun-tecnico**: Sub-skill técnica de Yann LeCun. Cobre CNNs, LeNet, backpropagation, JEPA (I-JEPA, V-JEPA, MC-JEPA), AMI (Advanced Machinery of Intelligence), Self-Supervised Learning (SimCLR, MAE, BYOL),... _(risk: safe)_
+- **yes-md**: 6-layer AI governance: safety gates, evidence-based debugging, anti-slack detection, and machine-enforced hooks. Makes AI safe, thorough, and honest. _(risk: safe)_
 - **zeroize-audit**: Detects missing zeroization of sensitive data in source code and identifies zeroization removed by compiler optimizations, with assembly-level analysis, and control-flow verification. Use for auditing C/C++/Rust code handling secrets, keys, passwords, or other sensitive data. _(risk: unknown)_
 - **zod-validation-expert**: Expert in Zod — TypeScript-first schema validation. Covers parsing, custom errors, refinements, type inference, and integration with React Hook Form, Next.js, and tRPC. _(risk: safe)_
-- **ai-md**: Convert human-written CLAUDE.md into AI-native structured-label format. Battle-tested across 4 models. Same rules, fewer tokens, higher compliance. _(risk: safe)_
-- **explain-like-socrates**: Explains concepts using Socratic-style dialogue. Use when the user asks to explain, teach or help understand a concept like socrates.
-  _(risk: safe)_
-- **keyword-extractor**: Extracts up to 50 highly relevant SEO keywords from text. Use when user wants to generate or extract keywords for given text.
-  _(risk: safe)_
-- **yes-md**: 6-layer AI governance: safety gates, evidence-based debugging, anti-slack detection, and machine-enforced hooks. Makes AI safe, thorough, and honest. _(risk: safe)_
 
 ## voice-agents
 

@@ -34,6 +34,11 @@ import {
 import { registerUpdateAllSkillsCommand } from './commands/updateAllSkills';
 import { registerRefreshCatalogCommand, writeCatalogToWorkspace } from './commands/refreshCatalog';
 import { registerRequestSkillTool } from './tools/requestSkillTool';
+import { registerListInstalledTool } from './tools/listInstalledTool';
+import { registerSearchSkillsTool } from './tools/searchSkillsTool';
+import { registerGetSkillInfoTool } from './tools/getSkillInfoTool';
+import { registerCheckUpdatesTool } from './tools/checkUpdatesTool';
+import { registerBatchInstallTool } from './tools/batchInstallTool';
 import { ERR_BUNDLE_INCOMPLETE, CMD_FILTER_TREE, CTX_UPDATES_AVAILABLE } from './constants';
 import { WorkspaceScanner } from './skills/WorkspaceScanner';
 import { initLogger, log } from './logger';
@@ -174,6 +179,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     registerUpdateAllSkillsCommand(manager, tracker, treeProvider),
     registerRefreshCatalogCommand(manager),
     registerRequestSkillTool(manager),
+    registerListInstalledTool(manager),
+    registerSearchSkillsTool(manager),
+    registerGetSkillInfoTool(manager),
+    registerCheckUpdatesTool(manager, tracker),
+    registerBatchInstallTool(manager, tracker),
     vscode.commands.registerCommand('aiSkills.refreshTree', async () => {
       await vscode.window.withProgress(
         {
