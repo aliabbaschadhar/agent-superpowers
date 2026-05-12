@@ -8,6 +8,7 @@ import { FavoriteSkills } from '../favoriteSkills';
 import { FuzzySearch } from '../skills/FuzzySearch';
 import { ProjectLocalInstaller } from '../installers/projectLocalInstaller';
 import { InstallOptions } from '../installers/types';
+import { openSkillsInChat } from '../chat/openInChat';
 
 /**
  * Parses special filter prefixes from browse query text.
@@ -131,7 +132,7 @@ async function handleSkillSelection(
   }
 
   await installSkillLocally(skill.id, content, skillFiles, workspaceRoot);
-  await openSkillInChat(skill.name, skill.id, content);
+  await openSkillsInChat([skill.id]);
 }
 
 async function installSkillLocally(
@@ -157,40 +158,7 @@ async function installSkillLocally(
   }
 }
 
-async function openSkillInChat(skillName: string, skillId: string, content: string): Promise<void> {
-  // Preferred path: open the @aiSkills participant pre-filled with the skill ID.
-  // The participant streams the full skill content directly into the conversation —
-  // this mirrors the Antigravity /skill-id experience.
-  try {
-    await vscode.commands.executeCommand('workbench.action.chat.open', {
-      query: `@aiSkills ${skillId}`,
-      isPartialQuery: false,
-    });
-    vscode.window.showInformationMessage(
-      `$(check) '${skillName}' activated — skill content loading in chat`
-    );
-    return;
-  } catch {
-    // Copilot not available — fall through to clipboard fallback
-  }
-
-  // Fallback: copy the #file: reference so the user can paste it manually
-  const fileRef = `#file:.agent/skills/${skillId}`;
-  try {
-    await vscode.commands.executeCommand('workbench.action.chat.open', {
-      query: fileRef,
-      isPartialQuery: true,
-    });
-    vscode.window.showInformationMessage(
-      `$(check) '${skillName}' installed — skill files added to chat context`
-    );
-  } catch {
-    await vscode.env.clipboard.writeText(fileRef || content);
-    vscode.window.showInformationMessage(
-      `$(clippy) '${skillName}' installed — paste in chat to add as context (Ctrl+V)`
-    );
-  }
-}
+// Chat injection is handled by the shared openSkillsInChat utility (src/chat/openInChat.ts).
 
 export function registerBrowseCommand(
   manager: SkillsManager,

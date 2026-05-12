@@ -686,6 +686,21 @@
     "configuration": {
       "title": "AI Agent Skills",
       "properties": {
+        "aiSkills.openChatOnInstall": {
+          "type": "string",
+          "enum": [
+            "always",
+            "ask",
+            "never"
+          ],
+          "enumDescriptions": [
+            "Automatically open Copilot chat with the skill context after every install.",
+            "Ask after each install whether to open chat (shows a notification with an 'Open in Chat' button).",
+            "Never open chat automatically after installing a skill."
+          ],
+          "default": "always",
+          "description": "Controls whether skill context is automatically injected into Copilot chat after a skill is installed from the sidebar."
+        },
         "aiSkills.confirmOverwrite": {
           "type": "boolean",
           "default": true,
