@@ -7,6 +7,8 @@ interface GetSkillInfoInput {
   skillId: string;
   /** Include full content preview. Default: false */
   includePreview?: boolean;
+  /** Response format. Default: markdown */
+  outputFormat?: 'markdown' | 'json';
 }
 
 interface SkillInfo {
@@ -19,6 +21,14 @@ interface SkillInfo {
   installed: boolean;
   installedPath?: string;
   preview?: string;
+}
+
+interface SkillInfoJsonResponse {
+  skill: Omit<SkillInfo, 'preview'>;
+  preview?: {
+    truncated: boolean;
+    text: string;
+  };
 }
 
 /**
@@ -42,7 +52,7 @@ export class GetSkillInfoTool implements vscode.LanguageModelTool<GetSkillInfoIn
     options: vscode.LanguageModelToolInvocationOptions<GetSkillInfoInput>,
     _token: vscode.CancellationToken
   ): Promise<vscode.LanguageModelToolResult> {
-    const { skillId, includePreview = false } = options.input;
+    const { skillId, includePreview = false, outputFormat = 'markdown' } = options.input;
 
     // Validate skill ID format
     if (!isValidSkillId(skillId)) {
@@ -83,10 +93,41 @@ export class GetSkillInfoTool implements vscode.LanguageModelTool<GetSkillInfoIn
       preview,
     };
 
-    const textResponse = buildSkillInfoResponse(skillInfo);
+    const textResponse =
+      outputFormat === 'json'
+        ? JSON.stringify(buildSkillInfoJsonResponse(skillInfo))
+        : buildSkillInfoResponse(skillInfo);
 
     return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(textResponse)]);
   }
+}
+
+function buildSkillInfoJsonResponse(info: SkillInfo): SkillInfoJsonResponse {
+  const previewLimit = 2000;
+  const previewText = info.preview
+    ? info.preview.length > previewLimit
+      ? info.preview.substring(0, previewLimit)
+      : info.preview
+    : undefined;
+
+  return {
+    skill: {
+      id: info.id,
+      name: info.name,
+      category: info.category,
+      description: info.description,
+      risk: info.risk,
+      source: info.source,
+      installed: info.installed,
+      installedPath: info.installedPath,
+    },
+    preview: previewText
+      ? {
+          truncated: info.preview !== undefined && info.preview.length > previewLimit,
+          text: previewText,
+        }
+      : undefined,
+  };
 }
 
 function buildSkillInfoResponse(info: SkillInfo): string {

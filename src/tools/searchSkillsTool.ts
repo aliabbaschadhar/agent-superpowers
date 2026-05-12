@@ -11,6 +11,8 @@ interface SearchSkillsInput {
   limit?: number;
   /** Include installation status in results. Default: true */
   includeInstalled?: boolean;
+  /** Response format. Default: markdown */
+  outputFormat?: 'markdown' | 'json';
 }
 
 interface SearchSkillResult {
@@ -34,6 +36,13 @@ interface FuseSearchResult {
   score?: number;
 }
 
+interface SearchSkillsJsonResponse {
+  query: string;
+  category?: string;
+  count: number;
+  results: SearchSkillResult[];
+}
+
 /**
  * Language Model Tool that searches the skill catalog by keyword.
  * Uses fuzzy search to match queries against skill names and descriptions.
@@ -55,7 +64,13 @@ export class SearchSkillsTool implements vscode.LanguageModelTool<SearchSkillsIn
     options: vscode.LanguageModelToolInvocationOptions<SearchSkillsInput>,
     _token: vscode.CancellationToken
   ): Promise<vscode.LanguageModelToolResult> {
-    const { query, category, limit = 20, includeInstalled = true } = options.input;
+    const {
+      query,
+      category,
+      limit = 20,
+      includeInstalled = true,
+      outputFormat = 'markdown',
+    } = options.input;
 
     if (!query || query.trim().length === 0) {
       return new vscode.LanguageModelToolResult([
@@ -106,10 +121,26 @@ export class SearchSkillsTool implements vscode.LanguageModelTool<SearchSkillsIn
       });
     }
 
-    const textResponse = buildSearchResponse(results, query, category);
+    const textResponse =
+      outputFormat === 'json'
+        ? JSON.stringify(buildSearchJsonResponse(results, query, category))
+        : buildSearchResponse(results, query, category);
 
     return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(textResponse)]);
   }
+}
+
+function buildSearchJsonResponse(
+  results: SearchSkillResult[],
+  query: string,
+  category?: string
+): SearchSkillsJsonResponse {
+  return {
+    query,
+    category,
+    count: results.length,
+    results,
+  };
 }
 
 function buildSearchResponse(

@@ -5,6 +5,8 @@ import { SkillUpdateTracker } from '../skills/SkillUpdateTracker';
 interface CheckUpdatesInput {
   /** Optional specific skill ID to check. If omitted, checks all installed skills. */
   skillId?: string;
+  /** Response format. Default: markdown */
+  outputFormat?: 'markdown' | 'json';
 }
 
 interface UpdateInfo {
@@ -13,6 +15,21 @@ interface UpdateInfo {
   category: string;
   hasUpdate: boolean;
   installedHash?: string;
+}
+
+interface CheckUpdatesJsonResponse {
+  skills: Array<{
+    id: string;
+    name: string;
+    category: string;
+    hasUpdate: boolean;
+    installedHashPrefix?: string;
+  }>;
+  summary: {
+    total: number;
+    updatesAvailable: number;
+    upToDate: number;
+  };
 }
 
 /**
@@ -42,7 +59,7 @@ export class CheckUpdatesTool implements vscode.LanguageModelTool<CheckUpdatesIn
     options: vscode.LanguageModelToolInvocationOptions<CheckUpdatesInput>,
     _token: vscode.CancellationToken
   ): Promise<vscode.LanguageModelToolResult> {
-    const { skillId } = options.input;
+    const { skillId, outputFormat = 'markdown' } = options.input;
 
     const installedIds = this.manager.getInstalledIds();
 
@@ -79,7 +96,10 @@ export class CheckUpdatesTool implements vscode.LanguageModelTool<CheckUpdatesIn
         installedHash: this.tracker.getHash(skillId),
       };
 
-      const response = buildSingleSkillUpdateResponse(updateInfo, content);
+      const response =
+        outputFormat === 'json'
+          ? JSON.stringify(buildUpdatesJsonResponse([updateInfo]))
+          : buildSingleSkillUpdateResponse(updateInfo, content);
       return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(response)]);
     }
 
@@ -107,9 +127,32 @@ export class CheckUpdatesTool implements vscode.LanguageModelTool<CheckUpdatesIn
       });
     }
 
-    const response = buildAllUpdatesResponse(updates);
+    const response =
+      outputFormat === 'json'
+        ? JSON.stringify(buildUpdatesJsonResponse(updates))
+        : buildAllUpdatesResponse(updates);
     return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(response)]);
   }
+}
+
+function buildUpdatesJsonResponse(updates: UpdateInfo[]): CheckUpdatesJsonResponse {
+  const skills = updates.map((u) => ({
+    id: u.id,
+    name: u.name,
+    category: u.category,
+    hasUpdate: u.hasUpdate,
+    installedHashPrefix: u.installedHash ? `${u.installedHash.substring(0, 16)}...` : undefined,
+  }));
+
+  const updatesAvailable = updates.filter((u) => u.hasUpdate).length;
+  return {
+    skills,
+    summary: {
+      total: updates.length,
+      updatesAvailable,
+      upToDate: updates.length - updatesAvailable,
+    },
+  };
 }
 
 function buildSingleSkillUpdateResponse(info: UpdateInfo, content: string): string {

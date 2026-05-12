@@ -27,7 +27,7 @@
 | **Workspace recommendations** | Auto-detects your stack and suggests relevant skills               |
 | **Favorites & Recents**       | Quick access to your most-used skills                              |
 | **Bulk install**              | Install an entire category or all skills at once                   |
-| **Language Model Tools**      | 6 AI tools for Copilot to discover, install, and manage skills     |
+| **Language Model Tools**      | 7 AI tools for Copilot to discover, install, and manage skills     |
 
 ### Install targets
 
@@ -139,7 +139,7 @@ Browse all 940+ available skills:
 
 ## Language Model Tools (for AI Assistants)
 
-This extension provides **6 Language Model Tools** that GitHub Copilot and other AI assistants can use programmatically during chat sessions:
+This extension provides **7 Language Model Tools** that GitHub Copilot and other AI assistants can use programmatically during chat sessions:
 
 ### 1. `aiSkills_requestSkill` — Install & Load Skill
 
@@ -282,6 +282,34 @@ This extension provides **6 Language Model Tools** that GitHub Copilot and other
 
 ---
 
+### 7. `aiSkills_planInstall` — Plan Install from Intent
+
+**Purpose:** Convert a natural-language request into recommended skill IDs and optionally install them in one step.
+
+**Input Schema:**
+
+```json
+{
+  "query": "string", // Required: Natural language request
+  "limit": "number", // Optional: Max recommendations (default: 8)
+  "includeInstalled": "boolean", // Optional: Include already installed skills (default: true)
+  "install": "boolean", // Optional: Install recommendations after confirmation (default: false)
+  "overwrite": "boolean", // Optional: Overwrite existing installed files (default: false)
+  "outputFormat": "\"markdown\"|\"json\"" // Optional: Response format (default: "markdown")
+}
+```
+
+**When to use:** When the user asks to install a set of skills by intent (e.g. "react testing", "API security").
+
+**Example:**
+
+```
+#tool:aiSkills_planInstall {"query": "react testing", "install": false}
+#tool:aiSkills_planInstall {"query": "secure REST APIs", "install": true, "outputFormat": "json"}
+```
+
+---
+
 ## Tool Usage Best Practices
 
 1. **Check catalog first** — Only call tools with skill IDs you can confirm exist
@@ -289,6 +317,7 @@ This extension provides **6 Language Model Tools** that GitHub Copilot and other
 3. **Call early** — Invoke tools at the start of your response so content is in context
 4. **Handle errors gracefully** — If a tool fails, proceed without retrying
 5. **Respect user confirmation** — Installation tools show confirmation dialogs for uninstalled skills
+6. **Use JSON when chaining tools** — Set `outputFormat: "json"` for machine-readable responses
 
 ---
 

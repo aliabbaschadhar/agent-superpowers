@@ -14,13 +14,25 @@ interface BatchInstallInput {
   category?: string;
   /** Overwrite existing skills without prompting. Default: false */
   overwrite?: boolean;
+  /** Response format. Default: markdown */
+  outputFormat?: 'markdown' | 'json';
 }
 
-interface BatchInstallResult {
+export interface BatchInstallResult {
   skillId: string;
   success: boolean;
   message: string;
   installedPath?: string;
+}
+
+interface BatchInstallJsonResponse {
+  summary: {
+    total: number;
+    installed: number;
+    skipped: number;
+    failed: number;
+  };
+  results: BatchInstallResult[];
 }
 
 /**
@@ -66,7 +78,7 @@ export class BatchInstallTool implements vscode.LanguageModelTool<BatchInstallIn
     options: vscode.LanguageModelToolInvocationOptions<BatchInstallInput>,
     token: vscode.CancellationToken
   ): Promise<vscode.LanguageModelToolResult> {
-    const { skillIds, category, overwrite = false } = options.input;
+    const { skillIds, category, overwrite = false, outputFormat = 'markdown' } = options.input;
 
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
     if (!workspaceFolder) {
@@ -166,12 +178,17 @@ export class BatchInstallTool implements vscode.LanguageModelTool<BatchInstallIn
       }
     }
 
-    const response = buildBatchInstallResponse(results, installedCount, skippedCount, failedCount);
+    const response =
+      outputFormat === 'json'
+        ? JSON.stringify(
+            buildBatchInstallJsonResponse(results, installedCount, skippedCount, failedCount)
+          )
+        : buildBatchInstallResponse(results, installedCount, skippedCount, failedCount);
     return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(response)]);
   }
 }
 
-async function installSkill(
+export async function installSkill(
   skill: SkillEntry,
   workspaceRoot: string,
   overwrite: boolean,
@@ -241,6 +258,23 @@ async function installSkill(
       message: `Failed: ${msg}`,
     };
   }
+}
+
+function buildBatchInstallJsonResponse(
+  results: BatchInstallResult[],
+  installed: number,
+  skipped: number,
+  failed: number
+): BatchInstallJsonResponse {
+  return {
+    summary: {
+      total: results.length,
+      installed,
+      skipped,
+      failed,
+    },
+    results,
+  };
 }
 
 function buildBatchInstallResponse(

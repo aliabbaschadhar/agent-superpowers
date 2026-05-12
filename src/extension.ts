@@ -39,6 +39,7 @@ import { registerSearchSkillsTool } from './tools/searchSkillsTool';
 import { registerGetSkillInfoTool } from './tools/getSkillInfoTool';
 import { registerCheckUpdatesTool } from './tools/checkUpdatesTool';
 import { registerBatchInstallTool } from './tools/batchInstallTool';
+import { registerPlanInstallTool } from './tools/planInstallTool';
 import { ERR_BUNDLE_INCOMPLETE, CMD_FILTER_TREE, CTX_UPDATES_AVAILABLE } from './constants';
 import { WorkspaceScanner } from './skills/WorkspaceScanner';
 import { initLogger, log } from './logger';
@@ -46,6 +47,7 @@ import { RecentSkills } from './recentSkills';
 import { FavoriteSkills } from './favoriteSkills';
 import { UserCollections } from './skills/UserCollections';
 import { SkillUpdateTracker } from './skills/SkillUpdateTracker';
+import { registerSkillsChatParticipant } from './chat/SkillsChatParticipant';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   initLogger(context);
@@ -184,6 +186,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     registerGetSkillInfoTool(manager),
     registerCheckUpdatesTool(manager, tracker),
     registerBatchInstallTool(manager, tracker),
+    registerPlanInstallTool(manager, tracker),
+    registerSkillsChatParticipant(manager),
     vscode.commands.registerCommand('aiSkills.refreshTree', async () => {
       await vscode.window.withProgress(
         {

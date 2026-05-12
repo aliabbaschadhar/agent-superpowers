@@ -6,6 +6,8 @@ interface ListInstalledInput {
   category?: string;
   /** Optional limit on number of results. Default: 100 */
   limit?: number;
+  /** Response format. Default: markdown */
+  outputFormat?: 'markdown' | 'json';
 }
 
 interface InstalledSkillInfo {
@@ -14,6 +16,12 @@ interface InstalledSkillInfo {
   category: string;
   description: string;
   installedPath?: string;
+}
+
+interface ListInstalledJsonResponse {
+  category?: string;
+  count: number;
+  skills: InstalledSkillInfo[];
 }
 
 /**
@@ -36,7 +44,7 @@ export class ListInstalledTool implements vscode.LanguageModelTool<ListInstalled
     options: vscode.LanguageModelToolInvocationOptions<ListInstalledInput>,
     _token: vscode.CancellationToken
   ): Promise<vscode.LanguageModelToolResult> {
-    const { category, limit = 100 } = options.input;
+    const { category, limit = 100, outputFormat = 'markdown' } = options.input;
 
     const installedIds = this.manager.getInstalledIds();
     const allSkills = this.manager.getAll();
@@ -65,10 +73,24 @@ export class ListInstalledTool implements vscode.LanguageModelTool<ListInstalled
       });
     }
 
-    const textResponse = buildInstalledSkillsResponse(result, category);
+    const textResponse =
+      outputFormat === 'json'
+        ? JSON.stringify(buildInstalledSkillsJsonResponse(result, category))
+        : buildInstalledSkillsResponse(result, category);
 
     return new vscode.LanguageModelToolResult([new vscode.LanguageModelTextPart(textResponse)]);
   }
+}
+
+function buildInstalledSkillsJsonResponse(
+  skills: InstalledSkillInfo[],
+  categoryFilter?: string
+): ListInstalledJsonResponse {
+  return {
+    category: categoryFilter,
+    count: skills.length,
+    skills,
+  };
 }
 
 function buildInstalledSkillsResponse(
